@@ -1,0 +1,88 @@
+{
+  "appName": {
+    "message": "Mark&Go",
+    "description": "The name of the application"
+  },
+  "appShortName": {
+    "message": "Mark&Go",
+    "description": "The short_name (maximum of 12 characters recommended) is a short version of the app's name."
+  },
+  "appDescription": {
+    "message": "Mark students' exams through highlights and go!",
+    "description": "The description of the application"
+  },
+  "browserActionTitle": {
+    "message": "Mark&Go",
+    "description": "The title of the browser action button"
+  },
+  "HypothesisLoginRequired": {
+    "message": "You are not logged in hypothesis, please login in Hypothes.is.",
+    "description": "Message to show when hypothesis login is required"
+  },
+  "GoogleSheetLoginRequired": {
+    "message": "You need to give permissions to access your Google Spreadsheet.",
+    "description": "Message to show when Google Sheets permission is required"
+  },
+  "ShareHypothesisGroup": {
+    "message": "Copy and share the group with your students to provide the feedback.",
+    "description": "Message to show when hypothesis group is created"
+  },
+  "Mode": {
+    "message": "Mode",
+    "description": "Sidebar mode header"
+  },
+  "Marking": {
+    "message": "Marking",
+    "description": "Sidebar highlight label"
+  },
+  "Evidencing": {
+    "message": "Evidencing",
+    "description": "Sidebar evidence annotation"
+  },
+  "Dimensions": {
+    "message": "Criteria",
+    "description": "Sidebar dimensions header"
+  },
+  "errorDeletingHypothesisAnnotation": {
+    "message": "Error deleting hypothesis annotation, please try it again",
+    "description": "Message when fails deleting annotation comment"
+  },
+  "errorUpdatingAnnotationComment": {
+    "message": "Error updating annotation comment, please try it again.",
+    "description": "Message when fails updating annotation comment"
+  },
+  "backToWorkspace": {
+    "message": "Back to workspace",
+    "description": "Text for link to return to workspace in sidebar"
+  },
+  "noEvidencesFoundForMarkingTitle": {
+    "message": "No evidences found for this mark"
+  },
+  "noEvidencesFoundForMarkingText": {
+    "message": "You haven't annotated any evidence for this mark, would you like to grade this student with $1?"
+  },
+  "unexpectedError": {
+    "message": "Unexpected error"
+  },
+  "expectedInfoMessageNotFound": {
+    "message": "An information message must go here, but the developer has forgotten to add it..."
+  },
+  "CurrentSelectionEmpty": {
+    "message": "Nothing to highlight, current selection is empty"
+  },
+  "CurrentSelectionNotAnnotable": {
+    "message": "The selected content cannot be highlighted, is not part of the document"
+  },
+  "MoodleWrongAssignmentPage": {
+    "message": "There was a problem when retrieving task information from moodle. Make sure that you are in the main page of the assignment."
+  },
+  "ErrorConfiguringHighlighter": {
+    "message": "There was a problem while creating the hypothes.is group. Please reload the page and try it again."
+  },
+  "ErrorRelatingMoodleAndTool": {
+    "message": "There was a problem while relating the tool with moodle. Please reload the page and try it again."
+  },
+  "ContactAdministrator": {
+    "message": "If the error continues, please <a href='https://github.com/haritzmedina/markandgo/issues' target='_blank'>contact to Mark&Go developers</a>."
+  }
+}

@@ -1,0 +1,65 @@
+{
+  "name": "__MSG_appName__",
+  "short_name": "__MSG_appShortName__",
+  "description": "__MSG_appDescription__",
+  "version": "0.1.3",
+  "manifest_version": 2,
+  "default_locale": "en",
+  "icons": {
+    "256": "images/icon-256.png"
+  },
+  "background": {
+    "scripts": [
+      "scripts/background.js"
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*/*", "file:///*/*"],
+      "exclude_matches": ["*://*/*grade/grading/*", "*://*/*mod/assign/view.php*"],
+      "js": ["scripts/contentScript.js"],
+      "css": ["styles/contentScript.css"],
+      "run_at": "document_start",
+      "all_frames": false
+    }, {
+      "matches": ["*://*/*grade/grading/*", "*://*/*mod/assign/view.php*"],
+      "js": ["scripts/moodleContentScript.js"],
+      "run_at": "document_end"
+    }, {
+      "matches": ["https://hypothes.is/groups/*/*"],
+      "js": ["scripts/hypothesisGroupContentScript.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "page_action": {
+    "default_icon": "images/icon-38-bw.png",
+    "default_title": "__MSG_browserActionTitle__"
+  },
+  "options_page": "pages/options.html",
+  "options_ui": {
+    "page": "pages/options.html",
+    "chrome_style": false,
+    "open_in_tab": true
+  },
+  "permissions": [
+    "contextMenus",
+    "downloads",
+    "https://hypothes.is/",
+    "identity",
+    "notifications",
+    "storage",
+    "tabs",
+    "webRequest",
+    "webRequestBlocking",
+    "*://www.dropbox.com/s/",
+    "file://*/*"
+  ],
+  "oauth2": {
+    "client_id": "1008657588862-r84qhkr8ggt9s36b4m8tr2uhg429o9on.apps.googleusercontent.com",
+    "scopes": [
+      "https://www.googleapis.com/auth/spreadsheets"
+    ]
+  },
+  "web_accessible_resources": ["pages/*.html", "content/*", "images/*"],
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzwi0PFfgFsQLO9m+ur61E2t0xOkKnGcjfRL1RShuf03qCb9HVDkG771nzZZxENtGAtZNyctLqp/zRgT+JUFp5PzYLfpCxs6O2fEHT5RYoJC7EnEjIOA3Q0eZ1PBFE0A+RlaMlY67rQ3HbDrK7KcKn0DTJ/FNzqL6N1v7bdXGJ3rHoZfMY1Sn+F1ULLZxsCRxXxpmTMVN1OU+U1vOteZLd49RsqPsipTwQwBcy5ss9EycoaoMo2yec7nCiPnoUYhW+nRS+zULQQUumxIA7olDFaGAZvOTceo0xdIJFeN0ajdjzAcxA2Gj/5nK3VVJKhjSJPe2RRKaqdWyhGKeoiBAowIDAQAB"
+}
