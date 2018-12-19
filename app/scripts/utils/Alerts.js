@@ -180,4 +180,16 @@ Alerts.alertType = {
   question: 'question'
 }
 
+Alerts.position = {
+  top: 'top',
+  topStart: 'top-start',
+  topEnd: 'top-end',
+  center: 'center',
+  centerStart: 'center-start',
+  centerEnd: 'center-end',
+  bottom: 'bottom',
+  bottomStart: 'bottom-start',
+  bottomEnd: 'bottom-end'
+}
+
 module.exports = Alerts

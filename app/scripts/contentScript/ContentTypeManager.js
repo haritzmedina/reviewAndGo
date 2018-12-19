@@ -43,23 +43,9 @@ class ContentTypeManager {
             // Is a local file
             if (window.PDFViewerApplication.url.startsWith('file:///')) {
               this.localFile = true
-              // Check in moodle download manager if the file exists
-              chrome.runtime.sendMessage({scope: 'annotationFile', cmd: 'fileMetadata', data: {filepath: URLUtils.retrieveMainUrl(window.PDFViewerApplication.url)}}, (fileMetadata) => {
-                if (_.isEmpty(fileMetadata)) {
-                  // Warn user document is not from moodle
-                  Alerts.warningAlert({
-                    text: 'Try to download the file again from moodle and if the error continues check <a href="https://github.com/haritzmedina/MarkAndGo/wiki/Most-common-errors-in-Mark&Go#file-is-not-from-moodle">this</a>.',
-                    title: 'This file is not downloaded from moodle'})
-                  this.documentURL = window.PDFViewerApplication.url
-                } else {
-                  this.fileMetadata = fileMetadata.file
-                  this.documentURL = fileMetadata.file.url
-                  this.getContextAndItemIdInLocalFile()
-                }
-                if (_.isFunction(callback)) {
-                  callback()
-                }
-              })
+              if (_.isFunction(callback)) {
+                callback()
+              }
             } else { // Is an online resource
               // Support in ajax websites web url change, web url can change dynamically, but locals never do
               this.initSupportWebURLChange()

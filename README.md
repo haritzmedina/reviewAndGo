@@ -1,25 +1,13 @@
-# Mark And Go
-[![Build Status](https://travis-ci.com/haritzmedina/MarkAndGo.svg?branch=master)](https://travis-ci.com/haritzmedina/MarkAndGo)
+# Review&Go
+[![Build Status](https://travis-ci.com/haritzmedina/reviewAndGo.svg?branch=master)](https://travis-ci.com/haritzmedina/reviewAndGo)
 
-Mark&Go is a chrome extension to allow teachers to mark digital exams and provide faster feedback using web annotations over Moodle.
+Review&Go is a chrome extension to allow conference and journal reviewers to review papers using annotations. 
 Main features:
-* Supports rubric-based assignment marking consuming rubrics from moodle and creating a customized color-based highlighter to annotate evidences and mark assignments in the context
-* Supports feedback messages providing in context
-* Automatically translates marks and comments done in the context to moodle, ready to publish feedback and marks to students.
-* Students can see teacher's comments and marks for their assignments in a click.
+* TODO
 
 # For End-users
 
-End users require a [Hypothesis](https://hypothes.is/) and [Moodle](https://moodle.org/). The extension can be downloaded from [Chrome Store](https://chrome.google.com/webstore/detail/markgo/kjedcndgienemldgjpjjnhjdhfoaocfa).
-
-# For Moodle service manager
-
-It is required that teachers have the following functionalities enabled in their moodle instance to allow Mark&Go get and push rubrics and students' feedback and marks:
-* core_grading_get_definitions
-* mod_assign_save_grade
-* core_enrol_get_enrolled_users
-
-Students don't require any special permissions.
+End users require a [Hypothesis](https://hypothes.is/) account. The extension can be downloaded from [Chrome Store](https://chrome.google.com/webstore/detail/markgo/kjedcndgienemldgjpjjnhjdhfoaocfa).
 
 # For developers
 

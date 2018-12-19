@@ -27,6 +27,8 @@ class TagManager {
     console.debug('Initializing TagManager')
     this.initTagsStructure(() => {
       this.initEventHandlers(() => {
+        // TODO Check if there are tags in the group or it is needed to create the default ones
+
         this.initAllTags(() => {
           console.debug('Initialized TagManager')
           if (_.isFunction(callback)) {

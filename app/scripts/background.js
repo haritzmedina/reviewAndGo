@@ -1,22 +1,8 @@
 // Enable chromereload by uncommenting this line:
 import 'chromereload/devonly'
 
-const VersionManager = require('./background/VersionManager')
-const TourManager = require('./background/TourManager')
-
 chrome.runtime.onInstalled.addListener((details) => {
   console.log('previousVersion', details.previousVersion)
-  // Tour manager
-  let tourManager = new TourManager()
-  tourManager.init((err, isShown) => {
-    // Version manager
-    let versionManager = new VersionManager()
-    if (err || !isShown) {
-      versionManager.init(details.previousVersion)
-    } else {
-      versionManager.setLatestVersion()
-    }
-  })
 })
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
@@ -28,11 +14,7 @@ chrome.tabs.onCreated.addListener((tab) => {
 })
 
 const HypothesisManager = require('./background/HypothesisManager')
-const GoogleSheetsManager = require('./background/GoogleSheetsManager')
 const Popup = require('./popup/Popup')
-const MoodleDownloadManager = require('./background/MoodleDownloadManager')
-const MoodleBackgroundManager = require('./background/MoodleBackgroundManager')
-const TaskManager = require('./background/TaskManager')
 
 const _ = require('lodash')
 
@@ -46,22 +28,6 @@ class Background {
     // Initialize hypothesis manager
     this.hypothesisManager = new HypothesisManager()
     this.hypothesisManager.init()
-
-    // Initialize google sheets manager
-    this.googleSheetsManager = new GoogleSheetsManager()
-    this.googleSheetsManager.init()
-
-    // Initialize moodle download manager
-    this.moodleDownloadManager = new MoodleDownloadManager()
-    this.moodleDownloadManager.init()
-
-    // Initialize moodle background manager
-    this.moodleBackgroundManager = new MoodleBackgroundManager()
-    this.moodleBackgroundManager.init()
-
-    // Initialize task manager
-    this.taskManager = new TaskManager()
-    this.taskManager.init()
 
     // Initialize page_action event handler
     chrome.pageAction.onClicked.addListener((tab) => {

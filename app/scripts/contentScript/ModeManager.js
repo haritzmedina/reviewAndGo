@@ -13,7 +13,7 @@ class ModeManager {
   }
 
   init (callback) {
-    if (window.abwa.roleManager.role === RolesManager.roles.teacher) {
+    if (window.abwa.rolesManager.role === RolesManager.roles.teacher) {
       if (window.abwa.annotationBasedInitializer.initAnnotation) {
         this.mode = ModeManager.modes.mark
         // Open sidebar
@@ -108,9 +108,8 @@ class ModeManager {
 }
 
 ModeManager.modes = {
-  'mark': 'mark',
-  'evidencing': 'evidencing',
-  'view': 'view'
+  'review': 'review', // Activated for the reviewer role
+  'view': 'view' // Activated for the author
 }
 
 module.exports = ModeManager

@@ -1,7 +1,10 @@
 const _ = require('lodash')
 const $ = require('jquery')
 const Alerts = require('../utils/Alerts')
-const CryptoUtils = require('../utils/CryptoUtils')
+const Config = require('../Config')
+const DefaultHighlighterGenerator = require('../specific/review/DefaultHighlighterGenerator')
+
+const GroupName = Config.review.groupName
 
 class GroupSelector {
   constructor () {
@@ -15,11 +18,17 @@ class GroupSelector {
     this.checkIsLoggedIn((err) => {
       if (err) {
         // Stop propagating the rest of the functions, because it is not logged in hypothesis
+        // Show that user need to log in hypothes.is to continue
+        Alerts.errorAlert({
+          title: 'Log in Hypothes.is required',
+          text: chrome.i18n.getMessage('HypothesisLoginRequired')
+        })
       } else {
         // Retrieve user profile (for further uses in other functionalities of the tool)
         this.retrieveUserProfile(() => {
           // Define current group
           this.defineCurrentGroup(() => {
+            console.debug('Initialized group selector')
             if (_.isFunction(callback)) {
               callback(null)
             }
@@ -28,17 +37,14 @@ class GroupSelector {
       }
     })
   }
+
   defineCurrentGroup (callback) {
-    let fileMetadata = window.abwa.contentTypeManager.fileMetadata
-    // Get group name from file metadata
-    let groupName = (new URL(fileMetadata.url)).host + fileMetadata.courseId + fileMetadata.studentId
-    let hashedGroupName = 'MG' + CryptoUtils.hash(groupName).substring(0, 23)
     // Load all the groups belonged to current user
     this.retrieveHypothesisGroups((err, groups) => {
       if (err) {
 
       } else {
-        let group = _.find(groups, (group) => { return group.name === hashedGroupName })
+        let group = _.find(groups, (group) => { return group.name === GroupName })
         if (_.isObject(group)) {
           // Current group will be that group
           this.currentGroup = group
@@ -46,8 +52,17 @@ class GroupSelector {
             callback(null)
           }
         } else {
-          // Warn user not group is defined, configure tool first
-          Alerts.errorAlert({text: 'You need to configure the tool before start marking exams. Make sure that you are correctly logged in Hypothes.is.', title: 'Tool is not correctly configured'}) // TODO i18n
+          // TODO i18n
+          Alerts.loadingAlert({title: 'First time reviewing?', text: 'It seems that it is your first time using Review&Go. We are configuring everything to start reviewing.', position: Alerts.position.center})
+          // TODO Create default group
+          DefaultHighlighterGenerator.createReviewHypothesisGroup((err, group) => {
+            if (err) {
+              Alerts.errorAlert({text: 'We are unable to create Hypothes.is group for Review&Go. Please check if you are logged in Hypothes.is.'})
+            } else {
+              this.currentGroup = group
+              callback(null)
+            }
+          })
         }
       }
     })

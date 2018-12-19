@@ -2,7 +2,7 @@ const GuideElement = require('./GuideElement')
 const jsYaml = require('js-yaml')
 const _ = require('lodash')
 const Level = require('./Level')
-const LanguageUtils = require('../utils/LanguageUtils')
+const LanguageUtils = require('../../utils/LanguageUtils')
 
 class Criteria extends GuideElement {
   constructor ({name, color, criteriaId, rubric}) {

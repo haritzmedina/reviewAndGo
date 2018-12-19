@@ -1,18 +1,18 @@
 {
   "appName": {
-    "message": "Mark&Go",
+    "message": "Review&Go",
     "description": "The name of the application"
   },
   "appShortName": {
-    "message": "Mark&Go",
+    "message": "Review&Go",
     "description": "The short_name (maximum of 12 characters recommended) is a short version of the app's name."
   },
   "appDescription": {
-    "message": "Mark students' exams through highlights and go!",
+    "message": "Review papers using highlights and go!",
     "description": "The description of the application"
   },
   "browserActionTitle": {
-    "message": "Mark&Go",
+    "message": "Review&Go",
     "description": "The title of the browser action button"
   },
   "HypothesisLoginRequired": {
@@ -83,6 +83,6 @@
     "message": "There was a problem while relating the tool with moodle. Please reload the page and try it again."
   },
   "ContactAdministrator": {
-    "message": "If the error continues, please <a href='https://github.com/haritzmedina/markandgo/issues' target='_blank'>contact to Mark&Go developers</a>."
+    "message": "If the error continues, please <a href='https://github.com/haritzmedina/reviewandgo/issues' target='_blank'>contact to Review&Go developers</a>."
   }
 }

@@ -1,4 +1,4 @@
-const LanguageUtils = require('../utils/LanguageUtils')
+const LanguageUtils = require('../../utils/LanguageUtils')
 const AnnotationGuide = require('./AnnotationGuide')
 
 class GuideElement {

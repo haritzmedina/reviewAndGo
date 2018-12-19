@@ -2,11 +2,11 @@
   "name": "__MSG_appName__",
   "short_name": "__MSG_appShortName__",
   "description": "__MSG_appDescription__",
-  "version": "0.1.3",
+  "version": "0.0.1",
   "manifest_version": 2,
   "default_locale": "en",
   "icons": {
-    "256": "images/icon-256.png"
+    "256": "images/icon-512.png"
   },
   "background": {
     "scripts": [
@@ -16,19 +16,10 @@
   "content_scripts": [
     {
       "matches": ["*://*/*", "file:///*/*"],
-      "exclude_matches": ["*://*/*grade/grading/*", "*://*/*mod/assign/view.php*"],
       "js": ["scripts/contentScript.js"],
       "css": ["styles/contentScript.css"],
       "run_at": "document_start",
       "all_frames": false
-    }, {
-      "matches": ["*://*/*grade/grading/*", "*://*/*mod/assign/view.php*"],
-      "js": ["scripts/moodleContentScript.js"],
-      "run_at": "document_end"
-    }, {
-      "matches": ["https://hypothes.is/groups/*/*"],
-      "js": ["scripts/hypothesisGroupContentScript.js"],
-      "run_at": "document_end"
     }
   ],
   "page_action": {
@@ -60,6 +51,5 @@
       "https://www.googleapis.com/auth/spreadsheets"
     ]
   },
-  "web_accessible_resources": ["pages/*.html", "content/*", "images/*"],
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzwi0PFfgFsQLO9m+ur61E2t0xOkKnGcjfRL1RShuf03qCb9HVDkG771nzZZxENtGAtZNyctLqp/zRgT+JUFp5PzYLfpCxs6O2fEHT5RYoJC7EnEjIOA3Q0eZ1PBFE0A+RlaMlY67rQ3HbDrK7KcKn0DTJ/FNzqL6N1v7bdXGJ3rHoZfMY1Sn+F1ULLZxsCRxXxpmTMVN1OU+U1vOteZLd49RsqPsipTwQwBcy5ss9EycoaoMo2yec7nCiPnoUYhW+nRS+zULQQUumxIA7olDFaGAZvOTceo0xdIJFeN0ajdjzAcxA2Gj/5nK3VVJKhjSJPe2RRKaqdWyhGKeoiBAowIDAQAB"
+  "web_accessible_resources": ["pages/*.html", "content/*", "images/*"]
 }

@@ -2,7 +2,7 @@ const GuideElement = require('./GuideElement')
 const jsYaml = require('js-yaml')
 const _ = require('lodash')
 
-const LanguageUtils = require('../utils/LanguageUtils')
+const LanguageUtils = require('../../utils/LanguageUtils')
 
 class Level extends GuideElement {
   constructor ({name, description, color, criteria, levelId}) {
