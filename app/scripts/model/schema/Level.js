@@ -5,7 +5,7 @@ const _ = require('lodash')
 const LanguageUtils = require('../../utils/LanguageUtils')
 
 class Level extends GuideElement {
-  constructor ({name, description, color, criteria, levelId}) {
+  constructor ({name, description = '', color, criteria, levelId}) {
     super({name, parentElement: criteria})
     this.color = color
     this.criteria = this.parentElement
@@ -25,9 +25,9 @@ class Level extends GuideElement {
         read: ['group:' + rubric.hypothesisGroup.id]
       },
       references: [],
-      tags: ['exam:isCriteriaOf:' + LanguageUtils.normalizeString(this.criteria.name), 'exam:mark:' + this.name, 'exam:cmid:' + rubric.cmid],
+      tags: ['review:isCriteriaOf:' + LanguageUtils.normalizeString(this.criteria.name), 'review:level:' + this.name],
       target: [],
-      text: jsYaml.dump({levelId: this.levelId, criteriaId: this.criteria.criteriaId, description: this.description}),
+      text: jsYaml.dump({description: this.description}),
       uri: rubric.hypothesisGroup.links ? rubric.hypothesisGroup.links.html : rubric.hypothesisGroup.url // Compatibility with both group representations getGroups and userProfile
     }
   }

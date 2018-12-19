@@ -217,7 +217,7 @@ class TextAnnotator extends ContentAnnotator {
       let annotation = TextAnnotator.constructAnnotation(selectors, event.detail.tags)
       window.abwa.hypothesisClientManager.hypothesisClient.createNewAnnotation(annotation, (err, annotation) => {
         if (err) {
-          window.alert('Unexpected error, unable to create annotation')
+          Alerts.errorAlert({text: 'Unexpected error, unable to create annotation'})
         } else {
           // Add to annotations
           this.currentAnnotations.push(annotation)

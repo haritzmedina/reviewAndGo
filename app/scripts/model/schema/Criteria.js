@@ -5,11 +5,11 @@ const Level = require('./Level')
 const LanguageUtils = require('../../utils/LanguageUtils')
 
 class Criteria extends GuideElement {
-  constructor ({name, color, criteriaId, rubric}) {
-    super({name, color, parentElement: rubric})
+  constructor ({name, color, criteriaId, review}) {
+    super({name, color, parentElement: review})
     this.criteriaId = criteriaId
     this.levels = this.childElements
-    this.rubric = this.parentElement
+    this.review = this.parentElement
   }
 
   toAnnotations () {
@@ -24,17 +24,17 @@ class Criteria extends GuideElement {
   }
 
   toAnnotation () {
-    let rubric = this.getAncestor()
+    let review = this.getAncestor()
     return {
-      group: rubric.hypothesisGroup.id,
+      group: review.hypothesisGroup.id,
       permissions: {
-        read: ['group:' + rubric.hypothesisGroup.id]
+        read: ['group:' + review.hypothesisGroup.id]
       },
       references: [],
-      tags: ['exam:criteria:' + LanguageUtils.normalizeString(this.name), 'exam:cmid:' + rubric.cmid],
+      tags: ['review:criteria:' + LanguageUtils.normalizeString(this.name)],
       target: [],
-      text: jsYaml.dump({criteriaId: this.criteriaId}),
-      uri: rubric.hypothesisGroup.links ? rubric.hypothesisGroup.links.html : rubric.hypothesisGroup.url // Compatibility with both group representations getGroups and userProfile
+      text: jsYaml.dump({description: this.description}),
+      uri: review.hypothesisGroup.links ? review.hypothesisGroup.links.html : review.hypothesisGroup.url // Compatibility with both group representations getGroups and userProfile
     }
   }
 

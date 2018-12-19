@@ -10,6 +10,7 @@ const Tag = require('./Tag')
 const TagGroup = require('./TagGroup')
 const Alerts = require('../utils/Alerts')
 const CircularJSON = require('circular-json-es6')
+const DefaultHighlighterGenerator = require('../specific/review/DefaultHighlighterGenerator')
 
 class TagManager {
   constructor (namespace, config) {
@@ -27,8 +28,6 @@ class TagManager {
     console.debug('Initializing TagManager')
     this.initTagsStructure(() => {
       this.initEventHandlers(() => {
-        // TODO Check if there are tags in the group or it is needed to create the default ones
-
         this.initAllTags(() => {
           console.debug('Initialized TagManager')
           if (_.isFunction(callback)) {
@@ -50,15 +49,6 @@ class TagManager {
         // Retrieve tags which has the namespace
         annotations = _.filter(annotations, (annotation) => {
           return this.hasANamespace(annotation, this.model.namespace)
-        })
-        // Remove slr:spreadsheet annotation ONLY for SLR case
-        annotations = _.filter(annotations, (annotation) => {
-          return !this.hasATag(annotation, 'slr:spreadsheet')
-        })
-        // Remove tags which are not for the current assignment
-        let cmid = window.abwa.contentTypeManager.fileMetadata.cmid
-        annotations = _.filter(annotations, (annotation) => {
-          return this.hasATag(annotation, 'exam:cmid:' + cmid)
         })
         if (_.isFunction(callback)) {
           callback(annotations)
@@ -110,17 +100,36 @@ class TagManager {
 
   initAllTags (callback) {
     this.getGroupAnnotations((annotations) => {
-      // Add to model
-      this.model.groupAnnotations = annotations
-      // Create tags based on annotations
-      this.currentTags = this.createTagsBasedOnAnnotations()
-      // Populate tags containers for the modes
-      this.createTagsButtonsForEvidencing()
-      this.createTagsButtonsForMarking()
-      this.createTagsButtonsForViewing()
-      if (_.isFunction(callback)) {
-        callback()
+      // Check if there are tags in the group or it is needed to create the default ones
+      let promise = Promise.resolve(annotations) // TODO Check if it is okay
+      if (annotations.length === 0) {
+        promise = new Promise((resolve) => {
+          if (!Alerts.isVisible()) {
+            Alerts.loadingAlert({title: 'Configuration in progress', text: 'We are configuring everything to start reviewing.', position: Alerts.position.center})
+          }
+          DefaultHighlighterGenerator.createDefaultAnnotations(window.abwa.groupSelector.currentGroup, (err, annotations) => {
+            if (err) {
+              Alerts.errorAlert({text: 'There was an error when configuring Review&Go highlighter'})
+            } else {
+              Alerts.closeAlert()
+              resolve(annotations)
+            }
+          })
+        })
       }
+      promise.then((annotations) => {
+        // Add to model
+        this.model.groupAnnotations = annotations
+        // Create tags based on annotations
+        this.currentTags = this.createTagsBasedOnAnnotations()
+        // Populate tags containers for the modes
+        this.createTagsButtonsForEvidencing()
+        this.createTagsButtonsForMarking()
+        this.createTagsButtonsForViewing()
+        if (_.isFunction(callback)) {
+          callback()
+        }
+      })
     })
   }
 
@@ -231,7 +240,6 @@ class TagManager {
 
   createTagsButtonsForEvidencing () {
     let arrayOfTagGroups = _.values(this.model.currentTags)
-    arrayOfTagGroups = _.orderBy(arrayOfTagGroups, 'config.options.criteriaId')
     for (let i = 0; i < arrayOfTagGroups.length; i++) {
       let tagGroup = arrayOfTagGroups[i]
       let button = this.createButton({

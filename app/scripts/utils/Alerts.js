@@ -170,6 +170,10 @@ class Alerts {
   static closeAlert () {
     swal.close()
   }
+
+  static isVisible () {
+    return swal.isVisible()
+  }
 }
 
 Alerts.alertType = {
