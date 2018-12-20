@@ -4,7 +4,6 @@ const jsYaml = require('js-yaml')
 const ModeManager = require('./ModeManager')
 const LanguageUtils = require('../utils/LanguageUtils')
 const ColorUtils = require('../utils/ColorUtils')
-const AnnotationUtils = require('../utils/AnnotationUtils')
 const Events = require('./Events')
 const Tag = require('./Tag')
 const TagGroup = require('./TagGroup')
@@ -124,7 +123,6 @@ class TagManager {
         this.currentTags = this.createTagsBasedOnAnnotations()
         // Populate tags containers for the modes
         this.createTagsButtonsForEvidencing()
-        this.createTagsButtonsForMarking()
         this.createTagsButtonsForViewing()
         if (_.isFunction(callback)) {
           callback()
@@ -146,6 +144,7 @@ class TagManager {
   }
 
   createTagsBasedOnAnnotations () {
+    // Get groups
     let tagGroupsAnnotations = {}
     for (let i = 0; i < this.model.groupAnnotations.length; i++) {
       let groupTag = this.retrieveTagNameByPrefix(this.model.groupAnnotations[i].tags, (this.model.namespace + ':' + this.model.config.grouped.group))
@@ -153,13 +152,17 @@ class TagManager {
         tagGroupsAnnotations[groupTag] = new TagGroup({name: groupTag, namespace: this.model.namespace, group: this.model.config.grouped.group, options: jsYaml.load(this.model.groupAnnotations[i].text)})
       }
     }
+    // Get groups names
     let groups = _.sortBy(_.keys(tagGroupsAnnotations))
+    // Get a list of colors
     let colorList = ColorUtils.getDifferentColors(groups.length)
+    // Set colors for each group
     let colors = {}
     for (let i = 0; i < groups.length; i++) {
       colors[groups[i]] = colorList[i]
       tagGroupsAnnotations[groups[i]].config.color = colorList[i]
     }
+    // Get elements for each subgroup
     for (let i = 0; i < this.model.groupAnnotations.length; i++) {
       let tagAnnotation = this.model.groupAnnotations[i]
       let tagName = this.retrieveTagNameByPrefix(this.model.groupAnnotations[i].tags, (this.model.namespace + ':' + this.model.config.grouped.subgroup))
@@ -180,6 +183,8 @@ class TagManager {
         }
       }
     }
+    // Order elements from tag group
+    // TODO Check if in this case is important to order elements from group
     tagGroupsAnnotations = _.map(tagGroupsAnnotations, (tagGroup) => {
       // TODO Check all elements, not only tags[0]
       if (_.isNaN(_.parseInt(tagGroup.tags[0].name))) {
@@ -247,107 +252,12 @@ class TagManager {
         color: ColorUtils.setAlphaToColor(tagGroup.config.color, 0.5),
         handler: (event) => {
           // Check if it is already marked to get current mark
-          let currentMark = this.getCurrentMarkForCriteria(tagGroup.config.name)
           let tags = [
-            this.model.namespace + ':' + this.model.config.grouped.relation + ':' + tagGroup.config.name,
-            'exam:cmid:' + window.abwa.contentTypeManager.fileMetadata.cmid
+            this.model.namespace + ':' + this.model.config.grouped.relation + ':' + tagGroup.config.name
           ]
-          if (!_.isUndefined(currentMark) && !_.isNull(currentMark)) {
-            tags.push(this.model.namespace + ':' + this.model.config.grouped.subgroup + ':' + currentMark)
-          }
           LanguageUtils.dispatchCustomEvent(Events.annotate, {tags: tags})
         }})
       this.tagsContainer.evidencing.append(button)
-    }
-  }
-
-  getCurrentMarkForCriteria (criteriaName) {
-    // TODO Get mark from any document for this student, not only in the current document ¿?
-    let otherAnnotationSameCriteria = _.find(window.abwa.contentAnnotator.currentAnnotations, (annotation) => {
-      let criteria = AnnotationUtils.getTagSubstringFromAnnotation(annotation, 'exam:isCriteriaOf:')
-      return criteria === criteriaName
-    })
-    if (_.isObject(otherAnnotationSameCriteria)) {
-      // Get if has mark
-      let mark = AnnotationUtils.getTagSubstringFromAnnotation(otherAnnotationSameCriteria, 'exam:mark:')
-      if (mark) {
-        return mark
-      } else {
-        return null
-      }
-    }
-  }
-
-  createTagsButtonsForMarking () {
-    let arrayOfTagGroups = _.values(this.model.currentTags)
-    arrayOfTagGroups = _.orderBy(arrayOfTagGroups, 'config.options.criteriaId')
-    for (let i = 0; i < arrayOfTagGroups.length; i++) {
-      let tagGroup = arrayOfTagGroups[i]
-      let panel = this.createGroupedButtons({
-        name: tagGroup.config.name,
-        color: tagGroup.config.color,
-        elements: tagGroup.tags,
-        groupHandler: (event) => {
-          // TODO Go to annotation with that group tag
-          window.abwa.contentAnnotator.goToFirstAnnotationOfTag('exam:isCriteriaOf:' + tagGroup.config.name)
-        },
-        buttonHandler: (event) => {
-          // Update all annotations for current document/tag
-          let oldTagList = ['exam:isCriteriaOf:' + tagGroup.config.name]
-          let newTagList = [
-            'exam:isCriteriaOf:' + tagGroup.config.name,
-            'exam:mark:' + event.target.dataset.mark,
-            'exam:cmid:' + window.abwa.contentTypeManager.fileMetadata.cmid
-          ]
-          window.abwa.contentAnnotator.updateTagsForAllAnnotationsWithTag(
-            oldTagList, newTagList,
-            (err, annotations) => {
-              if (err) {
-
-              } else {
-                //
-                console.debug('All annotations with criteria ' + tagGroup.config.name + ' has mark ' + event.target.dataset.mark)
-                // Reload all annotations
-                window.abwa.contentAnnotator.updateAllAnnotations((err, annotations) => {
-                  if (err) {
-                    console.error('Unexpected error when updating annotations')
-                  } else {
-                    window.abwa.contentAnnotator.redrawAnnotations()
-                  }
-                })
-                // If no annotations are found, create one for in page level with selected tags
-                if (annotations.length === 0) {
-                  Alerts.confirmAlert({
-                    title: chrome.i18n.getMessage('noEvidencesFoundForMarkingTitle'),
-                    text: chrome.i18n.getMessage('noEvidencesFoundForMarkingText', event.target.dataset.mark),
-                    alertType: Alerts.alertType.warning,
-                    callback: (err) => {
-                      if (err) {
-                        // Manage error
-                        window.alert('Unable to create alert for: noEvidencesFoundForMarking. Reload the page, and if the error continues please contact administrator.')
-                      } else {
-                        const TextAnnotator = require('./contentAnnotators/TextAnnotator')
-                        window.abwa.hypothesisClientManager.hypothesisClient.createNewAnnotation(TextAnnotator.constructAnnotation(null, newTagList), (err, annotation) => {
-                          if (err) {
-                            Alerts.errorAlert({text: err.message})
-                          } else {
-                            annotations.push(annotation)
-                            // Send event of mark
-                            LanguageUtils.dispatchCustomEvent(Events.mark, {criteria: tagGroup.config.name, mark: event.target.dataset.mark, annotations: annotations})
-                          }
-                        })
-                      }
-                    }
-                  })
-                } else {
-                  // Send event of mark
-                  LanguageUtils.dispatchCustomEvent(Events.mark, {criteria: tagGroup.config.name, mark: event.target.dataset.mark, annotations: annotations})
-                }
-              }
-            })
-        }
-      })
-      this.tagsContainer.marking.append(panel)
     }
   }
 
@@ -370,7 +280,7 @@ class TagManager {
     // Get tag groups for each annotation
     let tagGroups = _.uniq(_.map(currentAnnotations, (annotation) => {
       return _.find(tags, (tagGroup) => {
-        return tagGroup.config.name === annotation.tags[0].replace('exam:isCriteriaOf:', '')
+        return tagGroup.config.name === annotation.tags[0].replace('review:isCriteriaOf:', '')
       })
     }))
     // Remove tagGroups elements which are not the mark for the current student
@@ -378,13 +288,13 @@ class TagManager {
       _.remove(tagGroup.tags, (tag) => {
         return _.find(currentAnnotations, (annotation) => {
           let criteriaTag = _.find(annotation.tags, (annoTag) => {
-            return annoTag.includes('exam:isCriteriaOf:')
-          }).replace('exam:isCriteriaOf:', '')
+            return annoTag.includes('review:isCriteriaOf:')
+          }).replace('review:isCriteriaOf:', '')
           let markTag = _.find(annotation.tags, (annoTag) => {
-            return annoTag.includes('exam:mark:')
+            return annoTag.includes('review:level:')
           })
           if (markTag) {
-            markTag = markTag.replace('exam:mark:', '')
+            markTag = markTag.replace('review:level:', '')
             return tag.name !== markTag && tag.group.config.name === criteriaTag
           } else {
             return tag.group.config.name === criteriaTag
@@ -407,7 +317,7 @@ class TagManager {
         color: tagGroup.config.color,
         elements: tagGroup.tags,
         buttonHandler: (event) => {
-          window.abwa.contentAnnotator.goToFirstAnnotationOfTag('exam:isCriteriaOf:' + tagGroup.config.name)
+          window.abwa.contentAnnotator.goToFirstAnnotationOfTag('review:isCriteriaOf:' + tagGroup.config.name)
         }
       })
       this.tagsContainer.viewing.append(panel)
@@ -544,7 +454,6 @@ class TagManager {
   findAnnotationTagInstance (annotation) {
     let groupTag = this.getGroupFromAnnotation(annotation)
     if (annotation.tags.length > 1) {
-      // Check if has code defined, because other tags can be presented (like exam:studentId:X)
       if (this.hasCodeAnnotation(annotation)) {
         return this.getCodeFromAnnotation(annotation, groupTag)
       } else {
@@ -558,8 +467,8 @@ class TagManager {
   getGroupFromAnnotation (annotation) {
     let tags = annotation.tags
     let criteriaTag = _.find(tags, (tag) => {
-      return tag.includes('exam:isCriteriaOf:')
-    }).replace('exam:isCriteriaOf:')
+      return tag.includes('review:isCriteriaOf:')
+    }).replace('review:isCriteriaOf:')
     return _.find(window.abwa.tagManager.currentTags, (tagGroupInstance) => {
       return criteriaTag.includes(tagGroupInstance.config.name)
     })
@@ -567,8 +476,8 @@ class TagManager {
 
   getCodeFromAnnotation (annotation, groupTag) {
     let markTag = _.find(annotation.tags, (tag) => {
-      return tag.includes('exam:mark:')
-    }).replace('exam:mark:')
+      return tag.includes('review:level:')
+    }).replace('review:level:')
     return _.find(groupTag.tags, (tagInstance) => {
       return markTag.includes(tagInstance.name)
     })
@@ -576,7 +485,7 @@ class TagManager {
 
   hasCodeAnnotation (annotation) {
     return _.some(annotation.tags, (tag) => {
-      return tag.includes('exam:mark:')
+      return tag.includes('review:level:')
     })
   }
 }

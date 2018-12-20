@@ -35,7 +35,7 @@ class ContentTypeManager {
           this.pdfFingerprint = window.PDFViewerApplication.pdfDocument.pdfInfo.fingerprint
           // Get document URL
           if (this.urlParam) {
-            this.documentURL = this.urlParam
+            this.documentURL = this.urlParam || 'urn:x-pdf:' + this.pdfFingerprint
             if (_.isFunction(callback)) {
               callback()
             }
@@ -172,7 +172,11 @@ class ContentTypeManager {
   }
 
   getDocumentURIToSaveInHypothesis () {
-    return this.documentURL
+    if (this.localFile) {
+      return 'urn:x-pdf:' + this.pdfFingerprint
+    } else {
+      return this.documentURL
+    }
   }
 
   initSupportWebURLChange () {
