@@ -1,5 +1,6 @@
 const _ = require('lodash')
-const ReviewGenerator = require('./DefaultHighlighterGenerator')
+const ReviewGenerator = require('./ReviewGenerator')
+const CustomCriteriasManager = require('./CustomCriteriasManager')
 
 class ReviewContentScript {
   constructor (config) {
@@ -12,6 +13,13 @@ class ReviewContentScript {
     window.abwa.specific.reviewGenerator.init(() => {
 
     })
+    window.abwa.specific.customCriteriasManager = new CustomCriteriasManager()
+    window.abwa.specific.customCriteriasManager.init(() => {
+
+    })
+    if (_.isFunction(callback)) {
+      callback()
+    }
   }
 
   destroy () {

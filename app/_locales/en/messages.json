@@ -84,5 +84,8 @@
   },
   "ContactAdministrator": {
     "message": "If the error continues, please <a href='https://github.com/haritzmedina/reviewandgo/issues' target='_blank'>contact to Review&Go developers</a>."
+  },
+  "GeneratingReviewReport": {
+    "message": "Generating review report, please be patient."
   }
 }

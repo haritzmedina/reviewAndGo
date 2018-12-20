@@ -1,10 +1,12 @@
 const axios = require('axios')
+const _ = require('lodash')
+const Alerts = require('../../utils/Alerts')
 
 class ReviewGenerator {
   init (callback) {
-    // TODO Create generator button
+    // Create generator button
     let generatorWrapperURL = chrome.extension.getURL('pages/specific/review/generator.html')
-    axios.get(generatorWrapperURL, (response) => {
+    axios.get(generatorWrapperURL).then((response) => {
       document.querySelector('#groupSelectorContainer').insertAdjacentHTML('afterend', response.data)
       let imageURL = chrome.extension.getURL('/images/generator.png')
       this.container = document.querySelector('#reviewGenerator')
@@ -21,7 +23,12 @@ class ReviewGenerator {
   }
 
   generateReview () {
+    Alerts.loadingAlert({text: chrome.i18n.getMessage('GeneratingReviewReport')})
     // TODO generate the review from the annotations
+  }
+
+  destroy () {
+
   }
 }
 
