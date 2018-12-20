@@ -13,7 +13,7 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Mayor concern',
+          name: 'Major concern',
           description: ''
         }
       ]
@@ -31,7 +31,7 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Mayor concern',
+          name: 'Major concern',
           description: ''
         }
       ]
@@ -49,7 +49,7 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Mayor concern',
+          name: 'Major concern',
           description: ''
         }
       ]
@@ -67,7 +67,7 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Mayor concern',
+          name: 'Major concern',
           description: ''
         }
       ]
@@ -85,7 +85,7 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Mayor concern',
+          name: 'Major concern',
           description: ''
         }
       ]
@@ -103,7 +103,7 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Mayor concern',
+          name: 'Major concern',
           description: ''
         }
       ]
@@ -121,7 +121,7 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Mayor concern',
+          name: 'Major concern',
           description: ''
         }
       ]
@@ -139,7 +139,7 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Mayor concern',
+          name: 'Major concern',
           description: ''
         }
       ]
@@ -157,7 +157,7 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Mayor concern',
+          name: 'Major concern',
           description: ''
         }
       ]
@@ -175,7 +175,7 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Mayor concern',
+          name: 'Major concern',
           description: ''
         }
       ]
@@ -193,7 +193,7 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Mayor concern',
+          name: 'Major concern',
           description: ''
         }
       ]
@@ -211,7 +211,7 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Mayor concern',
+          name: 'Major concern',
           description: ''
         }
       ]
@@ -229,7 +229,7 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Mayor concern',
+          name: 'Major concern',
           description: ''
         }
       ]
@@ -247,7 +247,7 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Mayor concern',
+          name: 'Major concern',
           description: ''
         }
       ]
@@ -265,7 +265,7 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Mayor concern',
+          name: 'Major concern',
           description: ''
         }
       ]
@@ -283,7 +283,7 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Mayor concern',
+          name: 'Major concern',
           description: ''
         }
       ]
@@ -301,7 +301,7 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Mayor concern',
+          name: 'Major concern',
           description: ''
         }
       ]
