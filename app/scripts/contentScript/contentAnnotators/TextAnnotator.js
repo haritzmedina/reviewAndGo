@@ -6,6 +6,7 @@ const TagGroup = require('../TagGroup')
 const Events = require('../Events')
 const RolesManager = require('../RolesManager')
 const DOMTextUtils = require('../../utils/DOMTextUtils')
+const PDFTextUtils = require('../../utils/PDFTextUtils')
 const AnnotationUtils = require('../../utils/AnnotationUtils')
 const LanguageUtils = require('../../utils/LanguageUtils')
 const $ = require('jquery')
@@ -186,7 +187,12 @@ class TextAnnotator extends ContentAnnotator {
       let range = document.getSelection().getRangeAt(0)
       // Create FragmentSelector
       if (_.findIndex(window.abwa.contentTypeManager.documentType.selectors, (elem) => { return elem === 'FragmentSelector' }) !== -1) {
-        let fragmentSelector = DOMTextUtils.getFragmentSelector(range)
+        let fragmentSelector = null
+        if (window.abwa.contentTypeManager.documentType === ContentTypeManager.documentTypes.pdf) {
+          fragmentSelector = PDFTextUtils.getFragmentSelector(range)
+        } else {
+          fragmentSelector = DOMTextUtils.getFragmentSelector(range)
+        }
         if (fragmentSelector) {
           selectors.push(fragmentSelector)
         }

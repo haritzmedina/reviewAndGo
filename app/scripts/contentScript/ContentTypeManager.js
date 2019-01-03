@@ -199,7 +199,7 @@ ContentTypeManager.documentTypes = {
   },
   pdf: {
     name: 'pdf',
-    selectors: ['TextPositionSelector', 'TextQuoteSelector']
+    selectors: ['FragmentSelector', 'TextPositionSelector', 'TextQuoteSelector']
   }
 }
 
