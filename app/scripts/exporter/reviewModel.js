@@ -1,3 +1,4 @@
+/* eslint-disable */
 
 class Review {
   constructor(){
