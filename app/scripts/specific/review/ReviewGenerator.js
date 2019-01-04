@@ -45,10 +45,13 @@ class ReviewGenerator {
       }
       if (criterion == null || level == null) continue
       let textQuoteSelector = null
+      let pageNumber = null
       for (let k in annotations[a].target) {
         if (annotations[a].target[k].selector.find((e) => { return e.type === 'TextQuoteSelector' }) != null) {
           textQuoteSelector = annotations[a].target[k].selector.find((e) => { return e.type === 'TextQuoteSelector' })
-          break
+        }
+        if (annotations[a].target[k].selector.find((e) => { return e.type === 'FragmentSelector'}) != null){
+          pageNumber = annotations[a].target[k].selector.find((e) => { return e.type === 'FragmentSelector'}).page
         }
       }
       switch (level) {
@@ -58,7 +61,7 @@ class ReviewGenerator {
             let m
             if (textQuoteSelector != null) {
               m = new MajorConcern(criterion, null)
-              let w = new Annotation(textQuoteSelector.exact, null, annotations[a].text)
+              let w = new Annotation(textQuoteSelector.exact, pageNumber, annotations[a].text)
               m.inserAnnotation(w)
             } else {
               m = new MajorConcern(criterion, annotations[a].text)
@@ -66,7 +69,7 @@ class ReviewGenerator {
             r.insertMajorConcern(m)
           } else {
             if (textQuoteSelector != null) {
-              let w = new Annotation(textQuoteSelector.exact, null, annotations[a].text)
+              let w = new Annotation(textQuoteSelector.exact, pageNumber, annotations[a].text)
               mc.inserAnnotation(w)
             }
           }
@@ -77,7 +80,7 @@ class ReviewGenerator {
             let m
             if (textQuoteSelector !== null) {
               m = new MinorConcern(criterion, null)
-              let w = new Annotation(textQuoteSelector.exact, null, annotations[a].text)
+              let w = new Annotation(textQuoteSelector.exact, pageNumber, annotations[a].text)
               m.inserAnnotation(w)
             } else {
               m = new MinorConcern(criterion, annotations[a].text)
@@ -85,7 +88,7 @@ class ReviewGenerator {
             r.insertMinorConcern(m)
           } else {
             if (textQuoteSelector !== null) {
-              let w = new Annotation(textQuoteSelector.exact, null, annotations[a].text)
+              let w = new Annotation(textQuoteSelector.exact, pageNumber, annotations[a].text)
               minC.inserAnnotation(w)
             }
           }
@@ -96,7 +99,7 @@ class ReviewGenerator {
             let m
             if (textQuoteSelector !== null) {
               m = new Strength(criterion, null)
-              let w = new Annotation(textQuoteSelector.exact, null, annotations[a].text)
+              let w = new Annotation(textQuoteSelector.exact, pageNumber, annotations[a].text)
               m.inserAnnotation(w)
             } else {
               m = new Strength(criterion, annotations[a].text)
@@ -104,7 +107,7 @@ class ReviewGenerator {
             r.insertStrength(m)
           } else {
             if (textQuoteSelector !== null) {
-              let w = new Annotation(textQuoteSelector.exact, null, annotations[a].text)
+              let w = new Annotation(textQuoteSelector.exact, pageNumber, annotations[a].text)
               st.inserAnnotation(w)
             }
           }
