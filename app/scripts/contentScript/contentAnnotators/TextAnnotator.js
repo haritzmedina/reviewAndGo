@@ -18,6 +18,10 @@ const Alerts = require('../../utils/Alerts')
 const ANNOTATION_OBSERVER_INTERVAL_IN_SECONDS = 3
 const ANNOTATIONS_UPDATE_INTERVAL_IN_SECONDS = 60
 
+const ReviewerAssistant = require('../../specific/review/ReviewAssistant')
+
+let swal = require('sweetalert2')
+
 class TextAnnotator extends ContentAnnotator {
   constructor (config) {
     super()
@@ -547,6 +551,7 @@ class TextAnnotator extends ContentAnnotator {
               let level = _.find(groupTag.tags, (tag) => { return tag.name === levelName })
               this.giveLevelToAnnotationHandler(annotation, level)
             }
+            ReviewerAssistant.checkBalanced()
           },
           items: items
         }
@@ -730,44 +735,134 @@ class TextAnnotator extends ContentAnnotator {
     let isSidebarOpened = window.abwa.sidebar.isOpened()
     this.closeSidebar()
     // Open sweetalert
-    Alerts.inputTextAlert({
-      input: 'textarea',
-      inputPlaceholder: annotation.text || 'Type your feedback here...',
-      inputValue: annotation.text || '',
-      callback: (err, result) => {
-        if (err) {
-          window.alert('Unable to load alert. Is this an annotable document?')
-        } else {
-          // Update annotation
-          annotation.text = result || ''
-          window.abwa.hypothesisClientManager.hypothesisClient.updateAnnotation(
-            annotation.id,
-            annotation,
-            (err, annotation) => {
-              if (err) {
-                // Show error message
-                Alerts.errorAlert({text: chrome.i18n.getMessage('errorUpdatingAnnotationComment')})
-              } else {
-                // Update current annotations
-                let currentIndex = _.findIndex(this.currentAnnotations, (currentAnnotation) => { return annotation.id === currentAnnotation.id })
-                this.currentAnnotations.splice(currentIndex, 1, annotation)
-                // Update all annotations
-                let allIndex = _.findIndex(this.allAnnotations, (currentAnnotation) => { return annotation.id === currentAnnotation.id })
-                this.allAnnotations.splice(allIndex, 1, annotation)
-                // Dispatch updated annotations events
-                LanguageUtils.dispatchCustomEvent(Events.updatedCurrentAnnotations, {currentAnnotations: this.currentAnnotations})
-                LanguageUtils.dispatchCustomEvent(Events.updatedAllAnnotations, {annotations: this.allAnnotations})
-                // Redraw annotations
-                DOMTextUtils.unHighlightElements([...document.querySelectorAll('[data-annotation-id="' + annotation.id + '"]')])
-                this.highlightAnnotation(annotation)
+    let that = this
+
+    let updateAnnotation = (comment,literature) => {
+      annotation.text = JSON.stringify({comment:comment,suggestedLiterature:literature});
+      //annotation.text = newComment || ''
+      window.abwa.hypothesisClientManager.hypothesisClient.updateAnnotation(
+        annotation.id,
+        annotation,
+        (err, annotation) => {
+          if (err) {
+            // Show error message
+            Alerts.errorAlert({text: chrome.i18n.getMessage('errorUpdatingAnnotationComment')})
+          } else {
+            // Update current annotations
+            let currentIndex = _.findIndex(that.currentAnnotations, (currentAnnotation) => { return annotation.id === currentAnnotation.id })
+            that.currentAnnotations.splice(currentIndex, 1, annotation)
+            // Update all annotations
+            let allIndex = _.findIndex(that.allAnnotations, (currentAnnotation) => { return annotation.id === currentAnnotation.id })
+            that.allAnnotations.splice(allIndex, 1, annotation)
+            // Dispatch updated annotations events
+            LanguageUtils.dispatchCustomEvent(Events.updatedCurrentAnnotations, {currentAnnotations: that.currentAnnotations})
+            LanguageUtils.dispatchCustomEvent(Events.updatedAllAnnotations, {annotations: that.allAnnotations})
+            // Redraw annotations
+            DOMTextUtils.unHighlightElements([...document.querySelectorAll('[data-annotation-id="' + annotation.id + '"]')])
+            that.highlightAnnotation(annotation)
+          }
+        })
+      if (isSidebarOpened) {
+        that.openSidebar()
+      }
+    }
+    let showAlert = (form) => {
+
+      let suggestedLiteratureHtml = (lit) => {
+        let html = '';
+        for(let i in lit){
+          html += '<li><a class="removeReference"></a><span title="'+lit[i]+'">'+lit[i]+'</span></li>';
+        }
+        return html;
+      }
+
+      swal({
+        html: '<textarea id="swal-textarea" class="swal2-textarea" placeholder="Type your feedback here...">'+form.comment+'</textarea>' + '<input placeholder="Suggest literature" id="swal-input1" class="swal2-input"><ul id="literatureList">'+suggestedLiteratureHtml(form.suggestedLiterature)+'</ul>',
+        showLoaderOnConfirm: true,
+        preConfirm: () => {
+          let newComment = $("#swal-textarea").val();
+          let suggestedLiterature = Array.from($("#literatureList li span")).map((e) => {return $(e).attr("title")});
+          if(newComment!==null&&newComment!==''){
+            console.log("get sentiment ",newComment);
+            $.ajax("http://text-processing.com/api/sentiment/", {
+              method: 'POST',
+              data: {text: newComment}
+            }).done(function (ret) {
+              console.log(ret);
+              if(ret.label==='neg'&&ret.probability.neg>0.5){
+                swal({
+                  type: 'warning',
+                  text: 'The message may be ofensive. Please modify it.',
+                  showCancelButton: true,
+                  cancelButtonText: "Modify comment",
+                  confirmButtonText: "Save as it is",
+                  reverseButtons: true
+                }).then((result) => {
+                  if(result.value){
+                    updateAnnotation(newComment,suggestedLiterature);
+                  }
+                  else if(result.dismiss === swal.DismissReason.cancel){
+                    showAlert({comment:newComment,suggestedLiterature:suggestedLiterature});
+                  }
+                })
+              }
+              else{
+                // Update annotation
+                updateAnnotation(newComment,suggestedLiterature);
               }
             })
-          if (isSidebarOpened) {
-            this.openSidebar()
           }
+          else{
+            // Update annotation
+            updateAnnotation("",suggestedLiterature);
+          }
+        },
+        onOpen: () => {
+          $(".removeReference").on("click",function(){
+            $(this).closest("li").remove();
+          })
         }
-      }
-    })
+      })
+
+      $("#swal-input1").autocomplete({
+        source: function(request, response) {
+          $.ajax({
+            url: "http://dblp.org/search/publ/api",
+            data: {
+              q: request.term,
+              format: 'json',
+              h: 5
+            },
+            success: function(data){
+              response(data.result.hits.hit.map((e) => {return {label:e.info.title+' ('+e.info.year+')', value:e.info.title+' ('+e.info.year+')', info: e.info}}));
+            }
+          });
+        },
+        minLength: 3,
+        delay: 500,
+        select: function(event, ui){
+          console.log("select");
+          let content = ui.item.info.authors.author.join(", ")+': '+ui.item.info.title+' ('+ui.item.info.year+')';
+          let a = document.createElement("a");
+          a.className = "removeReference";
+          a.addEventListener("click",function(e){
+            $(e.target).closest("li").remove();
+          })
+          let li = document.createElement("li");
+          $(li).append(a,'<span title="'+content+'">'+content+'</span>');
+          $("#literatureList").append(li);
+          setTimeout(function(){
+            $("#swal-input1").val("");
+          },10);
+        },
+        appendTo: ".swal2-container",
+        create: function() {
+          $(".ui-autocomplete").css("max-width",$("#swal2-content").width());
+        }
+      })
+    }
+    if(annotation.text===null||annotation.text==='') showAlert({comment:'',suggestedLiterature:[]});
+    else showAlert(JSON.parse(annotation.text));
   }
 
   retrieveHighlightClassName () {
