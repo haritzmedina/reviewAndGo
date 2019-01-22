@@ -7,7 +7,7 @@ Main features:
 
 # For End-users
 
-End users require a [Hypothesis](https://hypothes.is/) account. The extension can be downloaded from [Chrome Store](https://chrome.google.com/webstore/detail/markgo/kjedcndgienemldgjpjjnhjdhfoaocfa).
+End users require a [Hypothesis](https://hypothes.is/) account. The extension can be downloaded from [Chrome Store](https://chrome.google.com/webstore/detail/reviewgo/hgiannlbfceoomjmcgedbmkfeblbcogi).
 
 # For developers
 
