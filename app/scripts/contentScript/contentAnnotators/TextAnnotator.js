@@ -550,8 +550,8 @@ class TextAnnotator extends ContentAnnotator {
               let levelName = key.replace('level_', '')
               let level = _.find(groupTag.tags, (tag) => { return tag.name === levelName })
               this.giveLevelToAnnotationHandler(annotation, level)
+              ReviewerAssistant.checkBalanced()
             }
-            ReviewerAssistant.checkBalanced()
           },
           items: items
         }
