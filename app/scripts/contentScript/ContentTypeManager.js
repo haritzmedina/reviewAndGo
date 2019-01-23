@@ -96,7 +96,11 @@ class ContentTypeManager {
   destroy (callback) {
     if (this.documentType === ContentTypeManager.documentTypes.pdf) {
       // Reload to original pdf website
-      window.location.href = this.documentURL
+      if (_.isUndefined(this.documentURL) || _.isNull(this.documentURL)) {
+        window.location.href = window.PDFViewerApplication.baseUrl
+      } else {
+        window.location.href = this.documentURL
+      }
     } else {
       if (_.isFunction(callback)) {
         callback()
