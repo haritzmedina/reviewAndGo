@@ -3,6 +3,7 @@ const DefaultCriterias = {
     {
       name: 'Relevance',
       description: 'Relevance of the problem for the practice at hand',
+      group: 'Relevance',
       levels: [
         {
           name: 'Strength',
@@ -20,6 +21,7 @@ const DefaultCriterias = {
     },
     {
       name: 'Significance',
+      group: 'Relevance',
       description: 'Significance of the problem for the practice at hand',
       levels: [
         {
@@ -38,6 +40,7 @@ const DefaultCriterias = {
     },
     {
       name: 'Depth of analysis',
+      group: 'Relevance',
       description: 'Depth of analysis of the problem',
       levels: [
         {
@@ -56,6 +59,7 @@ const DefaultCriterias = {
     },
     {
       name: 'Adoption',
+      group: 'Relevance',
       description: 'Artefact adoption and use by real organisations',
       levels: [
         {
@@ -74,6 +78,7 @@ const DefaultCriterias = {
     },
     {
       name: 'Generative potential',
+      group: 'Relevance',
       description: 'Generative potential of the artefact for further development',
       levels: [
         {
@@ -92,6 +97,7 @@ const DefaultCriterias = {
     },
     {
       name: 'Transferability',
+      group: 'Relevance',
       description: 'Transferability of the artefact to other areas',
       levels: [
         {
@@ -110,6 +116,7 @@ const DefaultCriterias = {
     },
     {
       name: 'Artefact',
+      group: 'Design',
       description: 'Existence of an artefact',
       levels: [
         {
@@ -128,6 +135,7 @@ const DefaultCriterias = {
     },
     {
       name: 'Novelty',
+      group: 'Design',
       description: 'Novelty of the new artefact',
       levels: [
         {
@@ -146,6 +154,7 @@ const DefaultCriterias = {
     },
     {
       name: 'Evaluation',
+      group: 'Design',
       description: 'Evaluation of the artefact',
       levels: [
         {
@@ -164,6 +173,7 @@ const DefaultCriterias = {
     },
     {
       name: 'Solution comparison',
+      group: 'Design',
       description: 'Comparison of the artefact to other extant solutions',
       levels: [
         {
@@ -182,6 +192,7 @@ const DefaultCriterias = {
     },
     {
       name: 'Behavior explanation',
+      group: 'Design',
       description: 'Clear understanding of why the new artefact works (or doesn\'t work)',
       levels: [
         {
@@ -200,6 +211,7 @@ const DefaultCriterias = {
     },
     {
       name: 'Research methods',
+      group: 'Rigor',
       description: 'Rigorous use of the research methods',
       levels: [
         {
@@ -218,6 +230,7 @@ const DefaultCriterias = {
     },
     {
       name: 'Justificatory knowledge',
+      group: 'Rigor',
       description: 'Usage of kernel theory(ies) or justificatory knowledge',
       levels: [
         {
@@ -236,6 +249,7 @@ const DefaultCriterias = {
     },
     {
       name: 'Meta-requirements',
+      group: 'Rigor',
       description: 'Meta-requirements',
       levels: [
         {
@@ -254,6 +268,7 @@ const DefaultCriterias = {
     },
     {
       name: 'Meta-design',
+      group: 'Rigor',
       description: 'Meta-design',
       levels: [
         {
@@ -272,6 +287,7 @@ const DefaultCriterias = {
     },
     {
       name: 'Testable hypotheses',
+      group: 'Rigor',
       description: 'Testable hypotheses',
       levels: [
         {
@@ -290,6 +306,7 @@ const DefaultCriterias = {
     },
     {
       name: 'Nascent Theory',
+      group: 'Rigor',
       description: 'Constructs as representations of the entities of interest in the theory',
       levels: [
         {

@@ -29,6 +29,10 @@
   padding: 5px 0 0;
 }
 
+.tagButtonContainer[aria-expanded="false"] {
+  display: none;
+}
+
 .tagButton {
   cursor: pointer;
   margin-bottom: 5px;

@@ -10,6 +10,7 @@ const TagGroup = require('./TagGroup')
 const Alerts = require('../utils/Alerts')
 const CircularJSON = require('circular-json-es6')
 const DefaultHighlighterGenerator = require('../specific/review/DefaultHighlighterGenerator')
+const DefaultCriterias = require('../specific/review/DefaultCriterias')
 
 class TagManager {
   constructor (namespace, config) {
@@ -153,15 +154,22 @@ class TagManager {
       }
     }
     // Get groups names
-    let groups = _.sortBy(_.keys(tagGroupsAnnotations))
+    let groups = _.map(_.uniqBy(DefaultCriterias.criteria, (criteria) => { return criteria.group }), 'group')
     // Get a list of colors
     let colorList = ColorUtils.getDifferentColors(groups.length)
     // Set colors for each group
+    let array = _.toArray(tagGroupsAnnotations)
     let colors = {}
-    for (let i = 0; i < groups.length; i++) {
+    for (let i = 0; i < array.length; i++) {
+      let tagGroup = tagGroupsAnnotations[array[i].config.name]
+      let color = colorList[_.findIndex(groups, (groupName) => { return groupName === tagGroup.config.options.group })]
+      colors[tagGroup.config.name] = color
+      tagGroup.config.color = color
+    }
+    /* for (let i = 0; i < groups.length; i++) {
       colors[groups[i]] = colorList[i]
       tagGroupsAnnotations[groups[i]].config.color = colorList[i]
-    }
+    } */
     // Get elements for each subgroup
     for (let i = 0; i < this.model.groupAnnotations.length; i++) {
       let tagAnnotation = this.model.groupAnnotations[i]
@@ -243,13 +251,33 @@ class TagManager {
     return null
   }
 
+  collapseExpandGroupedButtonsHandler (event) {
+    let parent = event.target.parentElement
+    let tagButtonContainer = parent.querySelector('.tagButtonContainer')
+    if (tagButtonContainer.getAttribute('aria-expanded') === 'true') {
+      tagButtonContainer.setAttribute('aria-expanded', 'false')
+    } else {
+      tagButtonContainer.setAttribute('aria-expanded', 'true')
+    }
+  }
+
   createTagsButtonsForEvidencing () {
+    let groups = _.map(_.uniqBy(DefaultCriterias.criteria, (criteria) => { return criteria.group }), 'group')
+    for (let i = 0; i < groups.length; i++) {
+      let group = groups[i]
+      this.tagsContainer.evidencing.append(this.createGroupedButtons({name: group, groupHandler: this.collapseExpandGroupedButtonsHandler}))
+    }
+    // Create the group Other
+    this.tagsContainer.evidencing.append(this.createGroupedButtons({name: 'Other', groupHandler: this.collapseExpandGroupedButtonsHandler}))
+    // Create the default groups for annotations
+    // Insert buttons in each of the groups
     let arrayOfTagGroups = _.values(this.model.currentTags)
     for (let i = 0; i < arrayOfTagGroups.length; i++) {
       let tagGroup = arrayOfTagGroups[i]
       let button = this.createButton({
         name: tagGroup.config.name,
         color: ColorUtils.setAlphaToColor(tagGroup.config.color, 0.5),
+        description: tagGroup.config.options.description,
         handler: (event) => {
           // Check if it is already marked to get current mark
           let tags = [
@@ -257,7 +285,8 @@ class TagManager {
           ]
           LanguageUtils.dispatchCustomEvent(Events.annotate, {tags: tags})
         }})
-      this.tagsContainer.evidencing.append(button)
+      // Insert in its corresponding group container
+      this.tagsContainer.evidencing.querySelector('[title="' + tagGroup.config.options.group + '"]').nextElementSibling.append(button)
     }
   }
 
@@ -354,7 +383,7 @@ class TagManager {
     // Create event handler for tag group
     groupNameSpan.addEventListener('click', groupHandler)
     // Create buttons and add to the container
-    if (elements.length > 0) { // Only create group containers for groups which have elements
+    if (_.isArray(elements) && elements.length > 0) { // Only create group containers for groups which have elements
       for (let i = 0; i < elements.length; i++) {
         let element = elements[i]
         let button = this.createButton({
