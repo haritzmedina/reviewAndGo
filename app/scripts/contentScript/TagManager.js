@@ -252,12 +252,11 @@ class TagManager {
   }
 
   collapseExpandGroupedButtonsHandler (event) {
-    let parent = event.target.parentElement
-    let tagButtonContainer = parent.querySelector('.tagButtonContainer')
-    if (tagButtonContainer.getAttribute('aria-expanded') === 'true') {
-      tagButtonContainer.setAttribute('aria-expanded', 'false')
+    let tagGroup = event.target.parentElement
+    if (tagGroup.getAttribute('aria-expanded') === 'true') {
+      tagGroup.setAttribute('aria-expanded', 'false')
     } else {
-      tagButtonContainer.setAttribute('aria-expanded', 'true')
+      tagGroup.setAttribute('aria-expanded', 'true')
     }
   }
 

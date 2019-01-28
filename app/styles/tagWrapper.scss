@@ -21,16 +21,36 @@
   -webkit-margin-before: 3px;
 }
 
+.groupName:after{
+  background-image: url($chromeExtensionMainURL + 'images/arrowUp.svg');
+  background-size: 15px 15px;
+  display: inline-block;
+  width: 0px;
+  height: 15px;
+  content:"";
+  padding-right: 15px;
+  float:right;
+}
+
 .tagContainer[aria-hidden="true"]{
   display: none;
 }
 
-.tagButtonContainer{
-  padding: 5px 0 0;
+/* Collapsable tag group */
+
+.tagGroup[aria-expanded="false"] {
+  .tagButtonContainer {
+    height: 0;
+    overflow: hidden;
+  }
+
+  .groupName:after {
+    background-image: url($chromeExtensionMainURL + 'images/arrowDown.svg');
+  }
 }
 
-.tagButtonContainer[aria-expanded="false"] {
-  display: none;
+.tagButtonContainer{
+  padding: 5px 0 0;
 }
 
 .tagButton {
