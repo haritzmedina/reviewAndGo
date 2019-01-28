@@ -1,3 +1,4 @@
+/* eslint-disable */
 
 const Alerts = require('../../utils/Alerts')
 const Config = require('../../Config')
