@@ -30,6 +30,7 @@
   content:"";
   padding-right: 15px;
   float:right;
+  transition: transform 0.5s;
 }
 
 .tagContainer[aria-hidden="true"]{
@@ -45,7 +46,7 @@
   }
 
   .groupName:after {
-    background-image: url($chromeExtensionMainURL + 'images/arrowDown.svg');
+    transform: rotate(180deg);
   }
 }
 
@@ -57,7 +58,7 @@
   cursor: pointer;
   margin-bottom: 5px;
   display: block;
-  border: 3px solid black;
+  border: 1px solid black;
   background-color: rgba(200,200,200,0.8);
   margin-left: auto;
   margin-right: auto;
@@ -69,6 +70,10 @@
   max-width: calc( #{$sideBarWidth} - 0.6rem - 10px);
   min-width: calc( #{$sideBarWidth} - 0.6rem - 10px);
   text-overflow: ellipsis;
+}
+
+.tagButton[data-chosen="true"] {
+  border: 3px solid black;
 }
 
 .tagButton[role="annotation"] {

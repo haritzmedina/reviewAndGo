@@ -406,8 +406,52 @@ class TagManager {
       handler: (event) => { this.modeChangeHandler(event) }
     }
     this.events.modeChange.element.addEventListener(this.events.modeChange.event, this.events.modeChange.handler, false)
+    // For annotation event, reload sidebar with elements chosen and not chosen ones
+    this.events.annotationCreated = {
+      element: document,
+      event: Events.annotationCreated,
+      handler: (event) => { this.reloadTagsChosen() }
+    }
+    this.events.annotationCreated.element.addEventListener(this.events.annotationCreated.event, this.events.annotationCreated.handler, false)
+    // For delete event, reload sidebar with elements chosen and not chosen ones
+    this.events.annotationDeleted = {
+      element: document,
+      event: Events.annotationDeleted,
+      handler: (event) => { this.reloadTagsChosen() }
+    }
+    this.events.annotationDeleted.element.addEventListener(this.events.annotationDeleted.event, this.events.annotationDeleted.handler, false)
+    // When annotations are reloaded
+    this.events.updatedAllAnnotations = {
+      element: document,
+      event: Events.updatedAllAnnotations,
+      handler: (event) => { this.reloadTagsChosen() }
+    }
+    this.events.updatedAllAnnotations.element.addEventListener(this.events.updatedAllAnnotations.event, this.events.updatedAllAnnotations.handler, false)
+    // Callback
     if (_.isFunction(callback)) {
       callback()
+    }
+  }
+
+  reloadTagsChosen () {
+    // Uncheck all the tags
+    let tagButtons = document.querySelectorAll('.tagButton')
+    for (let i = 0; i < tagButtons.length; i++) {
+      let tagButton = tagButtons[i]
+      tagButton.dataset.chosen = 'false'
+    }
+    // Retrieve annotated tags
+    let annotations = window.abwa.contentAnnotator.allAnnotations
+    let annotatedTagGroups = []
+    for (let i = 0; i < annotations.length; i++) {
+      annotatedTagGroups.push(this.getGroupFromAnnotation(annotations[i]))
+    }
+    annotatedTagGroups = _.uniq(annotatedTagGroups)
+    // Check annotated tags
+    for (let i = 0; i < annotatedTagGroups.length; i++) {
+      let tagGroup = annotatedTagGroups[i]
+      let tagButton = this.tagsContainer.evidencing.querySelector('.tagButton[data-mark="' + tagGroup.config.name + '"]')
+      tagButton.dataset.chosen = 'true'
     }
   }
 
