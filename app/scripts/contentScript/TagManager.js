@@ -278,11 +278,10 @@ class TagManager {
         color: ColorUtils.setAlphaToColor(tagGroup.config.color, 0.5),
         description: tagGroup.config.options.description,
         handler: (event) => {
-          // Check if it is already marked to get current mark
           let tags = [
             this.model.namespace + ':' + this.model.config.grouped.relation + ':' + tagGroup.config.name
           ]
-          LanguageUtils.dispatchCustomEvent(Events.annotate, {tags: tags})
+          LanguageUtils.dispatchCustomEvent(Events.annotate, {tags: tags, chosen: event.target.dataset.chosen})
         }})
       // Insert in its corresponding group container
       this.tagsContainer.evidencing.querySelector('[title="' + tagGroup.config.options.group + '"]').nextElementSibling.append(button)

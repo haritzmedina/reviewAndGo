@@ -17,15 +17,15 @@
   text-align: center;
   padding-top: 3px;
   padding-bottom: 3px;
-  -webkit-margin-after: 3px;
-  -webkit-margin-before: 3px;
+  margin-bottom: 3px;
+  cursor: pointer;
 }
 
 .groupName:after{
   background-image: url($chromeExtensionMainURL + 'images/arrowUp.svg');
   background-size: 15px 15px;
   display: inline-block;
-  width: 0px;
+  width: 0;
   height: 15px;
   content:"";
   padding-right: 15px;
@@ -52,6 +52,7 @@
 
 .tagButtonContainer{
   padding: 5px 0 0;
+  transition: height 0.5s;
 }
 
 .tagButton {

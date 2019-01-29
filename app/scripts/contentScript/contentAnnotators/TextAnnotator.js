@@ -180,7 +180,13 @@ class TextAnnotator extends ContentAnnotator {
       let selectors = []
       // If selection is empty, return null
       if (document.getSelection().toString().length === 0) {
-        Alerts.infoAlert({text: chrome.i18n.getMessage('CurrentSelectionEmpty')})
+        // If tag element is not checked, no navigation allowed
+        if (event.detail.chosen === 'true') {
+          // Navigate to the first annotation for this tag
+          this.goToFirstAnnotationOfTag(event.detail.tags[0])
+        } else {
+          Alerts.infoAlert({text: chrome.i18n.getMessage('CurrentSelectionEmpty')})
+        }
         return
       }
       // If selection is child of sidebar, return null
