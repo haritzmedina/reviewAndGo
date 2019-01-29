@@ -33,23 +33,10 @@
     "open_in_tab": true
   },
   "permissions": [
-    "contextMenus",
-    "downloads",
     "https://hypothes.is/",
-    "identity",
-    "notifications",
     "storage",
     "tabs",
-    "webRequest",
-    "webRequestBlocking",
-    "*://www.dropbox.com/s/",
     "file://*/*"
   ],
-  "oauth2": {
-    "client_id": "1008657588862-r84qhkr8ggt9s36b4m8tr2uhg429o9on.apps.googleusercontent.com",
-    "scopes": [
-      "https://www.googleapis.com/auth/spreadsheets"
-    ]
-  },
   "web_accessible_resources": ["pages/*.html", "content/*", "images/*"]
 }
