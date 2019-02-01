@@ -44,6 +44,13 @@ class ReviewGenerator {
       this.overviewImage.addEventListener('click', () => {
         this.generateCanvas()
       })
+      // Set resume image and event
+      let resumeImageURL = chrome.extension.getURL('/images/resume.png')
+      this.resumeImage = this.container.querySelector('#resumeButton')
+      this.resumeImage.src = resumeImageURL
+      this.resumeImage.addEventListener('click', () => {
+        this.resume()
+      })
       if (_.isFunction(callback)) {
         callback()
       }
@@ -205,7 +212,6 @@ class ReviewGenerator {
       Alerts.closeAlert()
     })
   }
-
   deleteAnnotations () {
     // Ask user if they are sure to delete it
     Alerts.confirmAlert({
@@ -226,7 +232,9 @@ class ReviewGenerator {
     })
 
   }
-
+  resume (){
+    if(window.abwa.contentAnnotator.allAnnotations.length>0) window.abwa.contentAnnotator.goToAnnotation(window.abwa.contentAnnotator.allAnnotations.reduce((max,a) => new Date(a.updated) > new Date(max.updated) ? a : max))
+  }
   destroy () {
 
   }
