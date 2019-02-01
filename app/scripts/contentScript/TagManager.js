@@ -170,15 +170,27 @@ class TagManager {
     }
     // Order elements from tag group
     // TODO Check if in this case is important to order elements from group
-    /* tagGroupsAnnotations = _.map(tagGroupsAnnotations, (tagGroup) => {
+    tagGroupsAnnotations = _.map(tagGroupsAnnotations, (tagGroup) => {
       // TODO Check all elements, not only tags[0]
-      if (_.isNaN(_.parseInt(tagGroup.tags[0].name))) {
+      if (_.isArray(tagGroup.tags) && _.has(tagGroup.tags[0], 'name') && _.isNaN(_.parseInt(tagGroup.tags[0].name))) {
         tagGroup.tags = _.sortBy(tagGroup.tags, 'name')
       } else {
         tagGroup.tags = _.sortBy(tagGroup.tags, (tag) => _.parseInt(tag.name))
       }
       return tagGroup
-    }) */
+    })
+    // Set color for each code
+    tagGroupsAnnotations = _.map(tagGroupsAnnotations, (tagGroup) => {
+      if (tagGroup.tags.length > 0) {
+        tagGroup.tags = _.map(tagGroup.tags, (tag, index) => {
+          let color = ColorUtils.setAlphaToColor(colors[tagGroup.config.name], 0.2 + index / tagGroup.tags.length * 0.8)
+          tag.options.color = color
+          tag.color = color
+          return tag
+        })
+      }
+      return tagGroup
+    })
     // Hash to array
     return _.sortBy(tagGroupsAnnotations, 'config.name')
   }

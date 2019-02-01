@@ -812,13 +812,11 @@ class TextAnnotator extends ContentAnnotator {
           let newComment = $('#swal-textarea').val()
           let suggestedLiterature = Array.from($('#literatureList li span')).map((e) => { return $(e).attr('title') })
           if (newComment !== null && newComment !== '') {
-            console.log('get sentiment ', newComment)
             $.ajax('http://text-processing.com/api/sentiment/', {
               method: 'POST',
               data: {text: newComment}
             }).done(function (ret) {
-              console.log(ret)
-              if (ret.label === 'neg' && ret.probability.neg > 0.5) {
+              if (ret.label === 'neg' && ret.probability.neg > 0.55) {
                 swal({
                   type: 'warning',
                   text: 'The message may be ofensive. Please modify it.',
@@ -867,8 +865,11 @@ class TextAnnotator extends ContentAnnotator {
         minLength: 3,
         delay: 500,
         select: function (event, ui) {
-          console.log('select')
-          let content = ui.item.info.authors.author.join(', ') + ': ' + ui.item.info.title + ' (' + ui.item.info.year + ')'
+          let content = ''
+          if(ui.item.info.authors!==null&&Array.isArray(ui.item.info.authors.author)) content += ui.item.info.authors.author.join(', ') + ': '
+          else if(ui.item.info.authors!==null) content += ui.item.info.authors.author + ': '
+          if(ui.item.info.title!==null) content += ui.item.info.title
+          if(ui.item.info.year!==null) content += ' (' + ui.item.info.year + ')'
           let a = document.createElement('a')
           a.className = 'removeReference'
           a.addEventListener('click', function (e) {

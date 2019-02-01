@@ -11,6 +11,10 @@ const Config = require('../../Config')
 const FileSaver = require('file-saver')
 
 const Events = require('../../contentScript/Events')
+const DefaultCriterias = require('./DefaultCriterias')
+
+
+let swal = require('sweetalert2')
 
 class ReviewGenerator {
   init (callback) {
@@ -33,12 +37,19 @@ class ReviewGenerator {
       this.deleteAnnotationsImage.addEventListener('click', () => {
         this.deleteAnnotations()
       })
+      // Set create canvas image and event
+      let overviewImageURL = chrome.extension.getURL('/images/overview.png')
+      this.overviewImage = this.container.querySelector('#overviewButton')
+      this.overviewImage.src = overviewImageURL
+      this.overviewImage.addEventListener('click', () => {
+        this.generateCanvas()
+      })
       if (_.isFunction(callback)) {
         callback()
       }
     })
   }
-  parseAnnotations (annotations) {
+  parseAnnotations (annotations){
     const criterionTag = Config.review.namespace + ':' + Config.review.tags.grouped.relation + ':'
     const levelTag = Config.review.namespace + ':' + Config.review.tags.grouped.subgroup + ':'
     const majorConcernLevel = 'Major concern'
@@ -53,78 +64,23 @@ class ReviewGenerator {
         if (annotations[a].tags[t].indexOf(criterionTag) != -1) criterion = annotations[a].tags[t].replace(criterionTag, '').trim()
         if (annotations[a].tags[t].indexOf(levelTag) != -1) level = annotations[a].tags[t].replace(levelTag, '').trim()
       }
-      if (criterion == null || level == null) continue
+      //if (criterion == null || level == null) continue
       let textQuoteSelector = null
+      let highlightText = '';
       let pageNumber = null
       for (let k in annotations[a].target) {
         if (annotations[a].target[k].selector.find((e) => { return e.type === 'TextQuoteSelector' }) != null) {
           textQuoteSelector = annotations[a].target[k].selector.find((e) => { return e.type === 'TextQuoteSelector' })
+          highlightText = textQuoteSelector.exact
         }
         if (annotations[a].target[k].selector.find((e) => { return e.type === 'FragmentSelector'}) != null){
           pageNumber = annotations[a].target[k].selector.find((e) => { return e.type === 'FragmentSelector'}).page
         }
       }
-      switch (level) {
-        case majorConcernLevel:
-          let mc = r.majorConcerns.find((m) => { return m.criterion === criterion })
-          if (mc == null) {
-            let m
-            if (textQuoteSelector != null) {
-              m = new MajorConcern(criterion, null)
-              let w = new Annotation(textQuoteSelector.exact, pageNumber, annotations[a].text)
-              m.inserAnnotation(w)
-            } else {
-              m = new MajorConcern(criterion, annotations[a].text)
-            }
-            r.insertMajorConcern(m)
-          } else {
-            if (textQuoteSelector != null) {
-              let w = new Annotation(textQuoteSelector.exact, pageNumber, annotations[a].text)
-              mc.inserAnnotation(w)
-            }
-          }
-          break
-        case minorConcernLevel:
-          let minC = r.minorConcerns.find((m) => { return m.criterion === criterion })
-          if (minC == null) {
-            let m
-            if (textQuoteSelector !== null) {
-              m = new MinorConcern(criterion, null)
-              let w = new Annotation(textQuoteSelector.exact, pageNumber, annotations[a].text)
-              m.inserAnnotation(w)
-            } else {
-              m = new MinorConcern(criterion, annotations[a].text)
-            }
-            r.insertMinorConcern(m)
-          } else {
-            if (textQuoteSelector !== null) {
-              let w = new Annotation(textQuoteSelector.exact, pageNumber, annotations[a].text)
-              minC.inserAnnotation(w)
-            }
-          }
-          break
-        case strengthLevel:
-          let st = r.strengths.find((m) => { return m.criterion === criterion })
-          if (st == null) {
-            let m
-            if (textQuoteSelector !== null) {
-              m = new Strength(criterion, null)
-              let w = new Annotation(textQuoteSelector.exact, pageNumber, annotations[a].text)
-              m.inserAnnotation(w)
-            } else {
-              m = new Strength(criterion, annotations[a].text)
-            }
-            r.insertStrength(m)
-          } else {
-            if (textQuoteSelector !== null) {
-              let w = new Annotation(textQuoteSelector.exact, pageNumber, annotations[a].text)
-              st.inserAnnotation(w)
-            }
-          }
-          break
-        default:
-          break
-      }
+      let annotationText = annotations[a].text!==null&&annotations[a].text!=='' ? JSON.parse(annotations[a].text) : {comment:'',suggestedLiterature:[]}
+      let comment = annotationText.comment !== null ? annotationText.comment : null
+      let suggestedLiterature = annotationText.suggestedLiterature !== null ? annotationText.suggestedLiterature : []
+      r.insertAnnotation(new Annotation(annotations[a].id,criterion,level,highlightText,pageNumber,comment,suggestedLiterature))
     }
     return r
   }
@@ -133,8 +89,121 @@ class ReviewGenerator {
     let review = this.parseAnnotations(window.abwa.contentAnnotator.allAnnotations)
     let report = review.toString()
     let blob = new Blob([report], {type: 'text/plain;charset=utf-8'})
-    FileSaver.saveAs(blob, 'reviewReport.txt')
+    let title = window.PDFViewerApplication.baseUrl !== null ? window.PDFViewerApplication.baseUrl.split("/")[window.PDFViewerApplication.baseUrl.split("/").length-1].replace(/\.pdf/i,"") : ""
+    let docTitle = 'Review report'
+    if(title!=='') docTitle += ' for '+title
+    FileSaver.saveAs(blob, docTitle+'.txt')
     Alerts.closeAlert()
+  }
+  generateCanvas () {
+    window.abwa.sidebar.closeSidebar()
+    Alerts.loadingAlert({text: chrome.i18n.getMessage('GeneratingReviewReport')})
+    let review = this.parseAnnotations(window.abwa.contentAnnotator.allAnnotations)
+    let canvasPageURL = chrome.extension.getURL('pages/specific/review/reviewCanvas.html')
+    axios.get(canvasPageURL).then((response) => {
+      document.body.insertAdjacentHTML('afterend', response.data)
+      let canvasContainer = document.querySelector("#canvasContainer")
+      document.querySelector("#canvasOverlay").addEventListener("click",function(){
+        document.querySelector("#canvasOverlay").parentNode.removeChild(document.querySelector("#canvasOverlay"))
+      })
+      document.querySelector("#canvasContainer").addEventListener("click",function(e){
+        e.stopPropagation()
+      })
+      document.addEventListener("keydown",function(e){
+        if(e.keyCode==27&&document.querySelector("#canvasOverlay")!=null) document.querySelector("#canvasOverlay").parentNode.removeChild(document.querySelector("#canvasOverlay"))
+      })
+
+      let canvasClusters = {}
+      let criteriaList = []
+      DefaultCriterias.criteria.forEach((e) => {
+        if(e.name=="Typos") return
+        criteriaList.push(e.name)
+        if(canvasClusters[e.group]==null) canvasClusters[e.group] = [e.name]
+        else canvasClusters[e.group].push(e.name);
+      })
+
+      review.annotations.forEach((e) => {
+        if(e.criterion=="Typos"||criteriaList.indexOf(e.criterion)!=-1) return
+        if(canvasClusters["Other"]==null) canvasClusters["Other"] = [e.criterion]
+        else canvasClusters["Other"].push(e.criterion)
+        criteriaList.push(e.criterion)
+      })
+
+      let clusterTemplate = document.querySelector("#propertyClusterTemplate")
+      let columnTemplate = document.querySelector("#clusterColumnTemplate")
+      let propertyTemplate = document.querySelector("#clusterPropertyTemplate")
+      let annotationTemplate = document.querySelector("#annotationTemplate")
+      let clusterHeight = 100.0/Object.keys(canvasClusters).length
+
+      let getCriterionLevel = (annotations) => {
+        if(annotations.length===0) return 'emptyCluster'
+        if(annotations[0].level==null||annotations[0].level=='') return 'unsorted'
+        let criterionLevel = annotations[0].level
+        for(let i=1;i<annotations.length;i++){
+          if(annotations[i].level==null||annotations[i].level=='') return 'unsorted'
+          else if(annotations[i].level!=criterionLevel) return 'unsorted'
+        }
+        return criterionLevel.replace(/\s/g,'')
+      }
+
+      let displayAnnotation = (annotation) => {
+        let swalContent = '';
+        if(annotation.highlightText!=null&&annotation.highlightText!='') swalContent += '<h2 style="text-align:left;margin-bottom:10px;">Highlight</h2><div style="text-align:justify;font-style:italic">"'+annotation.highlightText.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'"</div>'
+        if(annotation.comment!=null&&annotation.comment!='') swalContent += '<h2 style="text-align:left;margin-top:10px;margin-bottom:10px;">Comment</h2><div style="text-align:justify;">'+annotation.comment.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>'
+        swal({
+          html: swalContent,
+          confirmButtonText: "View in context"
+        }).then((result) => {
+          if(result.value){
+            document.querySelector("#canvasOverlay").parentNode.removeChild(document.querySelector("#canvasOverlay"))
+            window.abwa.contentAnnotator.goToAnnotation(window.abwa.contentAnnotator.allAnnotations.find((e) => {return e.id==annotation.id}))
+          }
+        })
+      }
+
+      for(let key in canvasClusters){
+        let clusterElement = clusterTemplate.content.cloneNode(true)
+        clusterElement.querySelector(".propertyCluster").style.height = clusterHeight+'%'
+        clusterElement.querySelector(".clusterLabel span").innerText = key
+        let clusterContainer = clusterElement.querySelector('.clusterContainer')
+        let currentColumn = null
+        for(let i=0;i<canvasClusters[key].length;i++){
+          if(i%2==0||canvasClusters[key].length==2){
+            currentColumn = columnTemplate.content.cloneNode(true)
+            if(canvasClusters[key].length==1) currentColumn.querySelector('.clusterColumn').style.width = "100%"
+            else if(canvasClusters[key].length==2) currentColumn.querySelector('.clusterColumn').style.width = "50%"
+            else currentColumn.querySelector('.clusterColumn').style.width = parseFloat(100.0/Math.ceil(canvasClusters[key].length/2)).toString()+'%'
+          }
+          let clusterProperty = propertyTemplate.content.cloneNode(true)
+          clusterProperty.querySelector(".propertyLabel").innerText = canvasClusters[key][i]
+          if(canvasClusters[key].length==1||canvasClusters[key].length==2||(canvasClusters[key].length%2==1&&i==canvasClusters[key].length-1)) clusterProperty.querySelector(".clusterProperty").style.height = "100%"
+          else clusterProperty.querySelector(".clusterProperty").style.height = "50%";
+          clusterProperty.querySelector(".clusterProperty").style.width = "100%";
+
+          let criterionAnnotations = review.annotations.filter((e) => {return e.criterion === canvasClusters[key][i]})
+          if(criterionAnnotations.length==0) clusterProperty.querySelector('.propertyAnnotations').style.display = 'none'
+          clusterProperty.querySelector('.clusterProperty').className += ' '+getCriterionLevel(criterionAnnotations)
+
+          let annotationWidth = 100.0/criterionAnnotations.length
+          for(let j=0;j<criterionAnnotations.length;j++){
+            let annotationElement = annotationTemplate.content.cloneNode(true)
+            annotationElement.querySelector('.annotation').style.width = annotationWidth+'%'
+            if(criterionAnnotations[j].highlightText!=null) annotationElement.querySelector('.annotation').innerText = '"'+criterionAnnotations[j].highlightText+'"'
+            if(criterionAnnotations[j].level!=null) annotationElement.querySelector('.annotation').className += ' '+criterionAnnotations[j].level.replace(/\s/g,'')
+            else annotationElement.querySelector('.annotation').className += ' unsorted'
+            annotationElement.querySelector('.annotation').addEventListener('click',function(){
+              displayAnnotation(criterionAnnotations[j])
+            })
+            clusterProperty.querySelector('.propertyAnnotations').appendChild(annotationElement)
+          }
+
+          currentColumn.querySelector('.clusterColumn').appendChild(clusterProperty)
+          if(i%2==1||i==canvasClusters[key].length-1||canvasClusters[key].length==2) clusterContainer.appendChild(currentColumn)
+        }
+        canvasContainer.appendChild(clusterElement)
+      }
+      Alerts.closeAlert()
+    })
   }
 
   deleteAnnotations () {
