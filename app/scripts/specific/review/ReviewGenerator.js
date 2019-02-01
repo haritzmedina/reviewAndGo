@@ -3,11 +3,14 @@
 const axios = require('axios')
 const _ = require('lodash')
 const Alerts = require('../../utils/Alerts')
+const LanguageUtils = require('../../utils/LanguageUtils')
 
 const {Review, Mark, MajorConcern, MinorConcern, Strength, Annotation} = require('../../exporter/reviewModel.js')
 
 const Config = require('../../Config')
 const FileSaver = require('file-saver')
+
+const Events = require('../../contentScript/Events')
 
 class ReviewGenerator {
   init (callback) {
@@ -15,13 +18,20 @@ class ReviewGenerator {
     let generatorWrapperURL = chrome.extension.getURL('pages/specific/review/generator.html')
     axios.get(generatorWrapperURL).then((response) => {
       document.querySelector('#groupSelectorContainer').insertAdjacentHTML('afterend', response.data)
-      let imageURL = chrome.extension.getURL('/images/generator.png')
       this.container = document.querySelector('#reviewGenerator')
-      this.imageElement = this.container.querySelector('#reviewGeneratorButton')
-      this.imageElement.src = imageURL
-      this.imageElement.title = 'Generate review'
-      this.imageElement.addEventListener('click', () => {
+      // Set generator image and event
+      let generatorImageURL = chrome.extension.getURL('/images/generator.png')
+      this.generatorImage = this.container.querySelector('#reviewGeneratorButton')
+      this.generatorImage.src = generatorImageURL
+      this.generatorImage.addEventListener('click', () => {
         this.generateReview()
+      })
+      // Set delete annotations image and event
+      let deleteAnnotationsImageURL = chrome.extension.getURL('/images/deleteAnnotations.png')
+      this.deleteAnnotationsImage = this.container.querySelector('#deleteAnnotationsButton')
+      this.deleteAnnotationsImage.src = deleteAnnotationsImageURL
+      this.deleteAnnotationsImage.addEventListener('click', () => {
+        this.deleteAnnotations()
       })
       if (_.isFunction(callback)) {
         callback()
@@ -125,6 +135,27 @@ class ReviewGenerator {
     let blob = new Blob([report], {type: 'text/plain;charset=utf-8'})
     FileSaver.saveAs(blob, 'reviewReport.txt')
     Alerts.closeAlert()
+  }
+
+  deleteAnnotations () {
+    // Ask user if they are sure to delete it
+    Alerts.confirmAlert({
+      alertType: Alerts.alertType.question,
+      title: chrome.i18n.getMessage('DeleteAllAnnotationsConfirmationTitle'),
+      text: chrome.i18n.getMessage('DeleteAllAnnotationsConfirmationMessage'),
+      callback: (err, toDelete) => {
+        // It is run only when the user confirms the dialog, so delete all the annotations
+        if (err) {
+          // Nothing to do
+        } else {
+          // Dispatch delete all annotations event
+          LanguageUtils.dispatchCustomEvent(Events.deleteAllAnnotations)
+          // TODO Check if it is better to maintain the sidebar opened or not
+          window.abwa.sidebar.openSidebar()
+        }
+      }
+    })
+
   }
 
   destroy () {

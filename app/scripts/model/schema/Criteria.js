@@ -5,12 +5,13 @@ const Level = require('./Level')
 const LanguageUtils = require('../../utils/LanguageUtils')
 
 class Criteria extends GuideElement {
-  constructor ({name, color, review, group = 'Other', description}) {
+  constructor ({name, color, review, group = 'Other', description, custom = false}) {
     super({name, color, parentElement: review})
     this.levels = this.childElements
     this.group = group
     this.review = this.parentElement
     this.description = description
+    this.custom = custom
   }
 
   toAnnotations () {
@@ -36,7 +37,8 @@ class Criteria extends GuideElement {
       target: [],
       text: jsYaml.dump({
         description: this.description,
-        group: this.group
+        group: this.group,
+        custom: this.custom
       }),
       uri: review.hypothesisGroup.links ? review.hypothesisGroup.links.html : review.hypothesisGroup.url // Compatibility with both group representations getGroups and userProfile
     }

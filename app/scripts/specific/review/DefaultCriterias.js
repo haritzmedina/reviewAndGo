@@ -322,6 +322,26 @@ const DefaultCriterias = {
           description: ''
         }
       ]
+    },
+    {
+      name: 'Typos',
+      group: 'Other',
+      description: 'Typos',
+      levels: []
+    }
+  ],
+  defaultLevels: [
+    {
+      name: 'Strength',
+      description: ''
+    },
+    {
+      name: 'Minor concern',
+      description: ''
+    },
+    {
+      name: 'Major concern',
+      description: ''
     }
   ]
 }
