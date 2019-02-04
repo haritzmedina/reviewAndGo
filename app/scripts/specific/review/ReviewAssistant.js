@@ -42,7 +42,7 @@ const ReviewAssistant = {
       r.insertAnnotation(new Annotation(annotations[a].id,criterion,level,highlightText,pageNumber,comment,suggestedLiterature))
     }
     return r
-  }
+  },
   checkBalanced(){
     let review = this.parseAnnotations(window.abwa.contentAnnotator.allAnnotations);
     let strengthNum = review.strengths.length;
