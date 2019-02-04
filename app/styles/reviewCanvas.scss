@@ -89,15 +89,16 @@
 .annotation{
   float:left;
   border-right:solid 1px #79a9f7;
-  padding: 2px;
+  padding: 7px;
   overflow-y:hidden;
-  font-size:1em;
+  font-size:1.1em;
   box-sizing: border-box;
   cursor:pointer;
-  text-align:center;
+  text-align:justify;
   vertical-align: middle;
   height:100%;
   overflow-x:hidden;
+  word-break: break-all;
 }
 .clusterColumn{
   float:left;

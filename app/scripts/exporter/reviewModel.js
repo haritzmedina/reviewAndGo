@@ -476,6 +476,10 @@ class Review {
   get typos(){
     return this.annotations.filter((e) => {return e.criterion==="Typos"})
   }
+  get references(){
+    let references = [].concat.apply([],this.annotations.map((e) => {return e.suggestedLiterature!=null ? e.suggestedLiterature : []}))
+    return references.filter((item,pos) => {return references.indexOf(item) === pos}).sort()
+  }
   toString(){
     // Summary of the work
     let t = "<Summarize the work>\n\n";
@@ -544,7 +548,18 @@ class Review {
         t += '\n'
       }
     }
-    t += "<Comments for editors>";
+
+    // References
+    let references = this.references
+    if(references.length>0){
+      t += "REFERENCES:\n"
+      for(let i=0;i<references.length;i++){
+        t += "\n["+(i+1)+"] "+references[i]
+      }
+    }
+
+    t += "\n\n<Comments for editors>";
+
     return t;
   }
 }
@@ -799,11 +814,17 @@ class AnnotationGroup {
       if(this._annotations[i].comment!=null) t += '\n\t'+this._annotations[i].comment;
     }
     let literature = [].concat.apply([],this._annotations.map((e) => {return e.suggestedLiterature}))
+    let reviewReferences = this._review.references
     if(literature.length>0){
       t += '\n\tI would encourage the authors to look at the following papers: ';
       for(let j in literature){
-        t += '\n\t\t- '+literature[j];
+        t += '['+(reviewReferences.indexOf(literature[j])+1)+']'
+        if(j===literature.length-2&&literature.length>1) t += ' and '
+        else if(literature.length>1&&j<literature.length-1) t += ', '
       }
+      /*for(let j in literature){
+        t += '\n\t\t- '+literature[j];
+      }*/
     }
     return t
   }

@@ -1,25 +1,6 @@
 const DefaultCriterias = {
   criteria: [
     {
-      name: 'Relevance',
-      description: 'Relevance of the problem for the practice at hand',
-      group: 'Relevance',
-      levels: [
-        {
-          name: 'Strength',
-          description: ''
-        },
-        {
-          name: 'Minor concern',
-          description: ''
-        },
-        {
-          name: 'Major concern',
-          description: ''
-        }
-      ]
-    },
-    {
       name: 'Significance',
       group: 'Relevance',
       description: 'Significance of the problem for the practice at hand',
@@ -29,11 +10,11 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Minor concern',
+          name: 'Minor weakness',
           description: ''
         },
         {
-          name: 'Major concern',
+          name: 'Major weakness',
           description: ''
         }
       ]
@@ -48,11 +29,11 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Minor concern',
+          name: 'Minor weakness',
           description: ''
         },
         {
-          name: 'Major concern',
+          name: 'Major weakness',
           description: ''
         }
       ]
@@ -67,11 +48,11 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Minor concern',
+          name: 'Minor weakness',
           description: ''
         },
         {
-          name: 'Major concern',
+          name: 'Major weakness',
           description: ''
         }
       ]
@@ -86,11 +67,11 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Minor concern',
+          name: 'Minor weakness',
           description: ''
         },
         {
-          name: 'Major concern',
+          name: 'Major weakness',
           description: ''
         }
       ]
@@ -105,11 +86,11 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Minor concern',
+          name: 'Minor weakness',
           description: ''
         },
         {
-          name: 'Major concern',
+          name: 'Major weakness',
           description: ''
         }
       ]
@@ -124,11 +105,11 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Minor concern',
+          name: 'Minor weakness',
           description: ''
         },
         {
-          name: 'Major concern',
+          name: 'Major weakness',
           description: ''
         }
       ]
@@ -143,11 +124,11 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Minor concern',
+          name: 'Minor weakness',
           description: ''
         },
         {
-          name: 'Major concern',
+          name: 'Major weakness',
           description: ''
         }
       ]
@@ -162,11 +143,11 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Minor concern',
+          name: 'Minor weakness',
           description: ''
         },
         {
-          name: 'Major concern',
+          name: 'Major weakness',
           description: ''
         }
       ]
@@ -181,11 +162,11 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Minor concern',
+          name: 'Minor weakness',
           description: ''
         },
         {
-          name: 'Major concern',
+          name: 'Major weakness',
           description: ''
         }
       ]
@@ -200,11 +181,11 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Minor concern',
+          name: 'Minor weakness',
           description: ''
         },
         {
-          name: 'Major concern',
+          name: 'Major weakness',
           description: ''
         }
       ]
@@ -219,11 +200,11 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Minor concern',
+          name: 'Minor weakness',
           description: ''
         },
         {
-          name: 'Major concern',
+          name: 'Major weakness',
           description: ''
         }
       ]
@@ -238,11 +219,11 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Minor concern',
+          name: 'Minor weakness',
           description: ''
         },
         {
-          name: 'Major concern',
+          name: 'Major weakness',
           description: ''
         }
       ]
@@ -257,11 +238,11 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Minor concern',
+          name: 'Minor weakness',
           description: ''
         },
         {
-          name: 'Major concern',
+          name: 'Major weakness',
           description: ''
         }
       ]
@@ -276,11 +257,11 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Minor concern',
+          name: 'Minor weakness',
           description: ''
         },
         {
-          name: 'Major concern',
+          name: 'Major weakness',
           description: ''
         }
       ]
@@ -295,11 +276,11 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Minor concern',
+          name: 'Minor weakness',
           description: ''
         },
         {
-          name: 'Major concern',
+          name: 'Major weakness',
           description: ''
         }
       ]
@@ -314,11 +295,11 @@ const DefaultCriterias = {
           description: ''
         },
         {
-          name: 'Minor concern',
+          name: 'Minor weakness',
           description: ''
         },
         {
-          name: 'Major concern',
+          name: 'Major weakness',
           description: ''
         }
       ]
@@ -336,11 +317,11 @@ const DefaultCriterias = {
       description: ''
     },
     {
-      name: 'Minor concern',
+      name: 'Minor weakness',
       description: ''
     },
     {
-      name: 'Major concern',
+      name: 'Major weakness',
       description: ''
     }
   ]
