@@ -59,8 +59,8 @@ class ReviewGenerator {
   parseAnnotations (annotations){
     const criterionTag = Config.review.namespace + ':' + Config.review.tags.grouped.relation + ':'
     const levelTag = Config.review.namespace + ':' + Config.review.tags.grouped.subgroup + ':'
-    const majorConcernLevel = 'Major concern'
-    const minorConcernLevel = 'Minor concern'
+    const majorConcernLevel = 'Major weakness'
+    const minorConcernLevel = 'Minor weakness'
     const strengthLevel = 'Strength'
     let r = new Review()
 
