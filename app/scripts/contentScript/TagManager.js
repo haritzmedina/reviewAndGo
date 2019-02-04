@@ -241,7 +241,7 @@ class TagManager {
       let tagGroup = arrayOfTagGroups[i]
       let button = TagManager.createButton({
         name: tagGroup.config.name,
-        color: ColorUtils.setAlphaToColor(tagGroup.config.color, 0.5),
+        color: ColorUtils.setAlphaToColor(tagGroup.config.color, 0.3),
         description: tagGroup.config.options.description,
         handler: (event) => {
           let tags = [
@@ -255,7 +255,7 @@ class TagManager {
     }
   }
 
-  static createButton ({name, color = 'white', description, handler, role}) {
+  static createButton ({name, color = 'grey', description, handler, role}) {
     let tagButtonTemplate = document.querySelector('#tagButtonTemplate')
     let tagButton = $(tagButtonTemplate.content.firstElementChild).clone().get(0)
     tagButton.innerText = name
@@ -268,9 +268,22 @@ class TagManager {
     tagButton.setAttribute('role', role || 'annotation')
     if (color) {
       $(tagButton).css('background-color', color)
+      tagButton.dataset.baseColor = color
     }
     // Set handler for button
     tagButton.addEventListener('click', handler)
+    // Tag button background color change
+    // TODO It should be better to set it as a CSS property, but currently there is not an option for that
+    tagButton.addEventListener('mouseenter', () => {
+      tagButton.style.backgroundColor = ColorUtils.setAlphaToColor(ColorUtils.colorFromString(tagButton.dataset.baseColor), 0.7)
+    })
+    tagButton.addEventListener('mouseleave', () => {
+      if (tagButton.dataset.chosen === 'true') {
+        tagButton.style.backgroundColor = ColorUtils.setAlphaToColor(ColorUtils.colorFromString(tagButton.dataset.baseColor), 0.6)
+      } else {
+        tagButton.style.backgroundColor = tagButton.dataset.baseColor
+      }
+    })
     return tagButton
   }
 
@@ -342,6 +355,7 @@ class TagManager {
     for (let i = 0; i < tagButtons.length; i++) {
       let tagButton = tagButtons[i]
       tagButton.dataset.chosen = 'false'
+      tagButton.style.background = ColorUtils.setAlphaToColor(ColorUtils.colorFromString(tagButton.style.backgroundColor), 0.3)
     }
     // Retrieve annotated tags
     let annotations = window.abwa.contentAnnotator.allAnnotations
@@ -355,6 +369,8 @@ class TagManager {
       let tagGroup = annotatedTagGroups[i]
       let tagButton = this.tagsContainer.evidencing.querySelector('.tagButton[data-mark="' + tagGroup.config.name + '"]')
       tagButton.dataset.chosen = 'true'
+      // Change to a darker color
+      tagButton.style.background = ColorUtils.setAlphaToColor(ColorUtils.colorFromString(tagButton.style.backgroundColor), 0.6)
     }
   }
 

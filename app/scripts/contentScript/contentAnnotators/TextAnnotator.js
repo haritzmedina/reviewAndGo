@@ -866,10 +866,17 @@ class TextAnnotator extends ContentAnnotator {
         delay: 500,
         select: function (event, ui) {
           let content = ''
-          if(ui.item.info.authors!==null&&Array.isArray(ui.item.info.authors.author)) content += ui.item.info.authors.author.join(', ') + ': '
-          else if(ui.item.info.authors!==null) content += ui.item.info.authors.author + ': '
-          if(ui.item.info.title!==null) content += ui.item.info.title
-          if(ui.item.info.year!==null) content += ' (' + ui.item.info.year + ')'
+          if (ui.item.info.authors !== null && Array.isArray(ui.item.info.authors.author)) {
+            content += ui.item.info.authors.author.join(', ') + ': '
+          } else if (ui.item.info.authors !== null) {
+            content += ui.item.info.authors.author + ': '
+          }
+          if (ui.item.info.title !== null) {
+            content += ui.item.info.title
+          }
+          if (ui.item.info.year !== null) {
+            content += ' (' + ui.item.info.year + ')'
+          }
           let a = document.createElement('a')
           a.className = 'removeReference'
           a.addEventListener('click', function (e) {
@@ -936,6 +943,16 @@ class TextAnnotator extends ContentAnnotator {
       let queryTextSelector = _.find(annotation.target[0].selector, (selector) => { return selector.type === 'TextQuoteSelector' })
       if (queryTextSelector && queryTextSelector.exact) {
         window.PDFViewerApplication.findController.executeCommand('find', {query: queryTextSelector.exact, phraseSearch: true})
+        // Get page for the annotation
+        let fragmentSelector = _.find(annotation.target[0].selector, (selector) => { return selector.type === 'FragmentSelector' })
+        if (fragmentSelector && fragmentSelector.page) {
+          // Check if annotation was found by 'find' command, otherwise go to page
+          setTimeout(() => {
+            if (window.PDFViewerApplication.page !== fragmentSelector.page) {
+              window.PDFViewerApplication.page = fragmentSelector.page
+            }
+          })
+        }
       }
     } else { // Else, try to find the annotation by data-annotation-id element attribute
       let firstElementToScroll = document.querySelector('[data-annotation-id="' + annotation.id + '"]')

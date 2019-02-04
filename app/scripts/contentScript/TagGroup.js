@@ -8,7 +8,7 @@ class TagGroup {
   }
 
   getColor () {
-    return ColorUtils.setAlphaToColor(this.config.color, 0.5)
+    return ColorUtils.setAlphaToColor(this.config.color, 0.3)
   }
 }
 

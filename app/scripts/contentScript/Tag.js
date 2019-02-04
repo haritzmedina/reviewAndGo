@@ -9,7 +9,7 @@ class Tag {
     this.annotation = config.annotation || null
     if (config.options && config.options.color) {
       if (!ColorUtils.hasAlpha(config.options.color)) {
-        this.color = ColorUtils.setAlphaToColor(config.options.color, 0.5) // Set a 0.5 alpha to all colors without alpha
+        this.color = ColorUtils.setAlphaToColor(config.options.color, 0.3) // Set a 0.5 alpha to all colors without alpha
       } else {
         this.color = config.options.color
       }
