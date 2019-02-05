@@ -115,7 +115,7 @@ class Review {
       }
     }
 
-    t += "\n\n<Comments for editors>";
+    t += "\n\n<Comments to editors>";
 
     return t;
   }

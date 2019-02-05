@@ -911,7 +911,8 @@ class TextAnnotator extends ContentAnnotator {
       // Check if something is selected
       if (document.getSelection().toString().length !== 0) {
         if ($(event.target).parents('#abwaSidebarWrapper').toArray().length === 0 &&
-          $(event.target).parents('.swal2-container').toArray().length === 0
+          $(event.target).parents('.swal2-container').toArray().length === 0 &&
+          $(event.target).parents('#canvasContainer').toArray().length === 0
         ) {
           this.openSidebar()
         }
