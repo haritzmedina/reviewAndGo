@@ -13,7 +13,7 @@
 .groupName{
   background: $subContainerHeaderBackgroundColor;
   color:white;
-  font-size: 1rem;
+  font-size: 1.5rem;
   text-align: center;
   padding-top: 3px;
   padding-bottom: 3px;
@@ -23,14 +23,25 @@
 
 .groupName:after{
   background-image: url($chromeExtensionMainURL + 'images/arrowUp.svg');
-  background-size: 15px 15px;
+  background-size: 20px 20px;
   display: inline-block;
   width: 0;
   height: 15px;
   content:"";
-  padding-right: 15px;
+  padding-right: 20px;
   float:right;
   transition: transform 0.5s;
+}
+
+.groupName:before{
+  background-image: url($chromeExtensionMainURL + 'images/pin.png');
+  background-size: 20px 20px;
+  display: inline-block;
+  width: 0;
+  height: 15px;
+  content:"";
+  padding-right: 20px;
+  float:left;
 }
 
 .tagContainer[aria-hidden="true"]{

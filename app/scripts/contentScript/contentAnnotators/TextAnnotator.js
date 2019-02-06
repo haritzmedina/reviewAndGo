@@ -18,7 +18,7 @@ const Alerts = require('../../utils/Alerts')
 const ANNOTATION_OBSERVER_INTERVAL_IN_SECONDS = 3
 const ANNOTATIONS_UPDATE_INTERVAL_IN_SECONDS = 60
 
-const ReviewerAssistant = require('../../specific/review/ReviewAssistant')
+const ReviewAssistant = require('../../specific/review/ReviewAssistant')
 const Config = require('../../Config')
 let swal = require('sweetalert2')
 
@@ -549,8 +549,6 @@ class TextAnnotator extends ContentAnnotator {
   }
 
   createContextMenuForAnnotation (annotation) {
-    // Get elements for current group
-    let groupTag = window.abwa.tagManager.getGroupFromAnnotation(annotation)
     $.contextMenu({
       selector: '[data-annotation-id="' + annotation.id + '"]',
       build: () => {
@@ -558,19 +556,8 @@ class TextAnnotator extends ContentAnnotator {
         let items = {}
         // If current user is the same as author, allow to remove annotation or add a comment
         if (window.abwa.rolesManager.role === RolesManager.roles.reviewer) {
-          //  If a reply already exist show reply, otherwise show comment
-          let replies = this.getRepliesForAnnotation(annotation)
-          if (replies.length > 0) {
-            items['reply'] = {name: 'Reply'}
-          } else {
-            items['comment'] = {name: 'Comment'}
-          }
+          items['comment'] = {name: 'Comment'}
           items['delete'] = {name: 'Delete'}
-          //items['separator'] = {'type': 'cm_separator'}
-          // Construct levels
-          /*_.forEach(groupTag.tags, (tag) => {
-            items['level_' + tag.name] = {name: tag.name}
-          })*/
         } else if (window.abwa.rolesManager.role === RolesManager.roles.author) {
           // This is disabled by now, maybe in the future it will be interesting to provide a reply mechanism
           // In the same way, if the author cannot reply to reviewer annotation, the rest of the functionality in this .js about replying will not be used
@@ -582,15 +569,7 @@ class TextAnnotator extends ContentAnnotator {
               this.deleteAnnotationHandler(annotation)
             } else if (key === 'comment') {
               this.commentAnnotationHandler(annotation)
-            } else if (key === 'reply') {
-              this.replyAnnotationHandler(annotation)
-            } /*else if (key.startsWith('level_')) {
-              let levelName = key.replace('level_', '')
-              let level = _.find(groupTag.tags, (tag) => { return tag.name === levelName })
-              console.log(level)
-              this.giveLevelToAnnotationHandler(annotation, level)
-              ReviewerAssistant.checkBalanced()
-            }*/
+            }
           },
           items: items
         }
@@ -818,6 +797,7 @@ class TextAnnotator extends ContentAnnotator {
             // Redraw annotations
             DOMTextUtils.unHighlightElements([...document.querySelectorAll('[data-annotation-id="' + annotation.id + '"]')])
             that.highlightAnnotation(annotation)
+            ReviewAssistant.checkBalanced()
           }
         })
       if (isSidebarOpened) {
