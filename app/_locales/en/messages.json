@@ -16,7 +16,7 @@
     "description": "The title of the browser action button"
   },
   "HypothesisLoginRequired": {
-    "message": "You are not logged in hypothesis, please login in Hypothes.is.",
+    "message": "You are not logged in hypothesis, please login in Hypothes.is or check internet connection.",
     "description": "Message to show when hypothesis login is required"
   },
   "GoogleSheetLoginRequired": {

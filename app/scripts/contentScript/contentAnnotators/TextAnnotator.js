@@ -355,20 +355,25 @@ class TextAnnotator extends ContentAnnotator {
    */
   initAnnotationsObserver (callback) {
     this.observerInterval = setInterval(() => {
-      if (this.currentAnnotations) {
-        for (let i = 0; i < this.currentAnnotations.length; i++) {
-          let annotation = this.currentAnnotations[i]
-          // Search if annotation exist
-          let element = document.querySelector('[data-annotation-id="' + annotation.id + '"]')
-          // If annotation doesn't exist, try to find it
-          if (!_.isElement(element)) {
-            Promise.resolve().then(() => { this.highlightAnnotation(annotation) })
+      console.debug('Observer interval')
+      // If a swal is displayed, do not execute highlighting observer
+      if (document.querySelector('.swal2-container') === null) { // TODO Look for a better solution...
+        if (this.currentAnnotations) {
+          for (let i = 0; i < this.currentAnnotations.length; i++) {
+            let annotation = this.currentAnnotations[i]
+            // Search if annotation exist
+            let element = document.querySelector('[data-annotation-id="' + annotation.id + '"]')
+            // If annotation doesn't exist, try to find it
+            if (!_.isElement(element)) {
+              Promise.resolve().then(() => { this.highlightAnnotation(annotation) })
+            }
           }
         }
       }
     }, ANNOTATION_OBSERVER_INTERVAL_IN_SECONDS * 1000)
     // TODO Improve the way to highlight to avoid this interval (when search in PDFs it is highlighted empty element instead of element)
     this.cleanInterval = setInterval(() => {
+      console.debug('Clean interval')
       let highlightedElements = document.querySelectorAll('.highlightedAnnotation')
       highlightedElements.forEach((element) => {
         if (element.innerText === '') {
@@ -459,17 +464,8 @@ class TextAnnotator extends ContentAnnotator {
       let color = tagInstance.getColor()
       try {
         let highlightedElements = []
-        // TODO Remove this case for google drive
-        if (window.location.href.includes('drive.google.com')) {
-          // Ensure popup exists
-          if (document.querySelector('.a-b-r-x')) {
-            highlightedElements = DOMTextUtils.highlightContent(
-              annotation.target[0].selector, classNameToHighlight, annotation.id)
-          }
-        } else {
-          highlightedElements = DOMTextUtils.highlightContent(
-            annotation.target[0].selector, classNameToHighlight, annotation.id)
-        }
+        highlightedElements = DOMTextUtils.highlightContent(
+          annotation.target[0].selector, classNameToHighlight, annotation.id)
         // Highlight in same color as button
         highlightedElements.forEach(highlightedElement => {
           // If need to highlight, set the color corresponding to, in other case, maintain its original color
@@ -497,7 +493,9 @@ class TextAnnotator extends ContentAnnotator {
         // Create context menu event for highlighted elements
         this.createContextMenuForAnnotation(annotation)
         // Create click event to move to next annotation
-        this.createNextAnnotationHandler(annotation)
+        // this.createNextAnnotationHandler(annotation)
+        // Create double click event handler
+        this.createDoubleClickEventHandler(annotation)
       } catch (e) {
         // TODO Handle error (maybe send in callback the error ¿?)
         if (_.isFunction(callback)) {
@@ -508,6 +506,16 @@ class TextAnnotator extends ContentAnnotator {
           callback()
         }
       }
+    }
+  }
+
+  createDoubleClickEventHandler (annotation) {
+    let highlights = document.querySelectorAll('[data-annotation-id="' + annotation.id + '"]')
+    for (let i = 0; i < highlights.length; i++) {
+      let highlight = highlights[i]
+      highlight.addEventListener('dblclick', () => {
+        this.commentAnnotationHandler(annotation)
+      })
     }
   }
 
@@ -731,31 +739,39 @@ class TextAnnotator extends ContentAnnotator {
   }
 
   deleteAnnotationHandler (annotation) {
-    // Delete annotation
-    window.abwa.hypothesisClientManager.hypothesisClient.deleteAnnotation(annotation.id, (err, result) => {
-      if (err) {
-        // Unable to delete this annotation
-        console.error('Error while trying to delete annotation %s', annotation.id)
-      } else {
-        if (!result.deleted) {
-          // Alert user error happened
-          Alerts.errorAlert({text: chrome.i18n.getMessage('errorDeletingHypothesisAnnotation')})
-        } else {
-          // Remove annotation from data model
-          _.remove(this.currentAnnotations, (currentAnnotation) => {
-            return currentAnnotation.id === annotation.id
-          })
-          LanguageUtils.dispatchCustomEvent(Events.updatedCurrentAnnotations, {currentAnnotations: this.currentAnnotations})
-          _.remove(this.allAnnotations, (currentAnnotation) => {
-            return currentAnnotation.id === annotation.id
-          })
-          LanguageUtils.dispatchCustomEvent(Events.updatedAllAnnotations, {annotations: this.allAnnotations})
-          // Dispatch deleted annotation event
-          LanguageUtils.dispatchCustomEvent(Events.annotationDeleted, {annotation: annotation})
-          // Unhighlight annotation highlight elements
-          DOMTextUtils.unHighlightElements([...document.querySelectorAll('[data-annotation-id="' + annotation.id + '"]')])
-          console.debug('Deleted annotation ' + annotation.id)
-        }
+    // Ask for confirmation
+    Alerts.confirmAlert({
+      alertType: Alerts.alertType.question,
+      title: 'Delete annotation',
+      text: 'Are you sure you want to delete this annotation?',
+      callback: () => {
+        // Delete annotation
+        window.abwa.hypothesisClientManager.hypothesisClient.deleteAnnotation(annotation.id, (err, result) => {
+          if (err) {
+            // Unable to delete this annotation
+            console.error('Error while trying to delete annotation %s', annotation.id)
+          } else {
+            if (!result.deleted) {
+              // Alert user error happened
+              Alerts.errorAlert({text: chrome.i18n.getMessage('errorDeletingHypothesisAnnotation')})
+            } else {
+              // Remove annotation from data model
+              _.remove(this.currentAnnotations, (currentAnnotation) => {
+                return currentAnnotation.id === annotation.id
+              })
+              LanguageUtils.dispatchCustomEvent(Events.updatedCurrentAnnotations, {currentAnnotations: this.currentAnnotations})
+              _.remove(this.allAnnotations, (currentAnnotation) => {
+                return currentAnnotation.id === annotation.id
+              })
+              LanguageUtils.dispatchCustomEvent(Events.updatedAllAnnotations, {annotations: this.allAnnotations})
+              // Dispatch deleted annotation event
+              LanguageUtils.dispatchCustomEvent(Events.annotationDeleted, {annotation: annotation})
+              // Unhighlight annotation highlight elements
+              DOMTextUtils.unHighlightElements([...document.querySelectorAll('[data-annotation-id="' + annotation.id + '"]')])
+              console.debug('Deleted annotation ' + annotation.id)
+            }
+          }
+        })
       }
     })
   }

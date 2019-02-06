@@ -16,6 +16,16 @@ class AnnotationUtils {
     }
   }
 
+  static modifyTag (annotation, oldTag, newTag) {
+    let index = _.findIndex(annotation.tags, (tag) => { return oldTag === tag })
+    if (index > -1) {
+      annotation.tags[index] = newTag
+      return annotation
+    } else {
+      return null
+    }
+  }
+
   static isReplyOf (formerAnnotation, replyAnnotation) {
     if (_.has(replyAnnotation, 'references')) {
       return !!_.find(replyAnnotation.references, (ref) => { return ref === formerAnnotation.id })
