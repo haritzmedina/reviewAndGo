@@ -33,7 +33,7 @@ class Review {
     return this.annotations.filter((e) => {return e.criterion==="Typos"})
   }
   get references(){
-    let references = [].concat.apply([],this.annotations.map((e) => {return e.suggestedLiterature!=null ? e.suggestedLiterature : []}))
+    let references = [].concat.apply([],this.annotations.filter((e) => {return e.level!=null&&e.level!=''}).map((e) => {return e.suggestedLiterature!=null ? e.suggestedLiterature : []}))
     return references.filter((item,pos) => {return references.indexOf(item) === pos}).sort()
   }
   toString(){

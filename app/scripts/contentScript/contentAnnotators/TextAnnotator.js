@@ -19,7 +19,7 @@ const ANNOTATION_OBSERVER_INTERVAL_IN_SECONDS = 3
 const ANNOTATIONS_UPDATE_INTERVAL_IN_SECONDS = 60
 
 const ReviewerAssistant = require('../../specific/review/ReviewAssistant')
-
+const Config = require('../../Config')
 let swal = require('sweetalert2')
 
 class TextAnnotator extends ContentAnnotator {
@@ -557,12 +557,12 @@ class TextAnnotator extends ContentAnnotator {
           } else {
             items['comment'] = {name: 'Comment'}
           }
-          items['delete'] = {name: 'Delete annotation'}
-          items['separator'] = {'type': 'cm_separator'}
+          items['delete'] = {name: 'Delete'}
+          //items['separator'] = {'type': 'cm_separator'}
           // Construct levels
-          _.forEach(groupTag.tags, (tag) => {
+          /*_.forEach(groupTag.tags, (tag) => {
             items['level_' + tag.name] = {name: tag.name}
-          })
+          })*/
         } else if (window.abwa.rolesManager.role === RolesManager.roles.author) {
           // This is disabled by now, maybe in the future it will be interesting to provide a reply mechanism
           // In the same way, if the author cannot reply to reviewer annotation, the rest of the functionality in this .js about replying will not be used
@@ -576,12 +576,13 @@ class TextAnnotator extends ContentAnnotator {
               this.commentAnnotationHandler(annotation)
             } else if (key === 'reply') {
               this.replyAnnotationHandler(annotation)
-            } else if (key.startsWith('level_')) {
+            } /*else if (key.startsWith('level_')) {
               let levelName = key.replace('level_', '')
               let level = _.find(groupTag.tags, (tag) => { return tag.name === levelName })
+              console.log(level)
               this.giveLevelToAnnotationHandler(annotation, level)
               ReviewerAssistant.checkBalanced()
-            }
+            }*/
           },
           items: items
         }
@@ -767,9 +768,16 @@ class TextAnnotator extends ContentAnnotator {
     // Open sweetalert
     let that = this
 
-    let updateAnnotation = (comment, literature) => {
+    let updateAnnotation = (comment, literature, level) => {
       annotation.text = JSON.stringify({comment: comment, suggestedLiterature: literature})
-      // annotation.text = newComment || ''
+
+      // Assign level to annotation
+      if(level!=null){
+        let tagGroup = window.abwa.tagManager.getGroupFromAnnotation(annotation)
+        let pole = tagGroup.tags.find((e) => {return e.name===level})
+        annotation.tags = pole.tags
+      }
+
       window.abwa.hypothesisClientManager.hypothesisClient.updateAnnotation(
         annotation.id,
         annotation,
@@ -787,6 +795,10 @@ class TextAnnotator extends ContentAnnotator {
             // Dispatch updated annotations events
             LanguageUtils.dispatchCustomEvent(Events.updatedCurrentAnnotations, {currentAnnotations: that.currentAnnotations})
             LanguageUtils.dispatchCustomEvent(Events.updatedAllAnnotations, {annotations: that.allAnnotations})
+
+            // Not sure if this goes here
+            LanguageUtils.dispatchCustomEvent(Events.comment, {annotation: annotation})
+
             // Redraw annotations
             DOMTextUtils.unHighlightElements([...document.querySelectorAll('[data-annotation-id="' + annotation.id + '"]')])
             that.highlightAnnotation(annotation)
@@ -804,13 +816,25 @@ class TextAnnotator extends ContentAnnotator {
         }
         return html
       }
+      let hasLevel = (annotation,level) => {
+        return annotation.tags.find((e) => {return e===Config.review.namespace+':'+Config.review.tags.grouped.subgroup+':'+level})!=null
+      }
+
+      let groupTag = window.abwa.tagManager.getGroupFromAnnotation(annotation)
+      let poles = groupTag.tags.map((e) => {return e.name})
+      let poleChoiceRadio = poles.length>0? '<h3>Pole</h3>' : ''
+      poles.forEach((e)=>{poleChoiceRadio += '<input type="radio" name="pole" class="swal2-radio poleRadio" value="'+e+'" '
+        if(hasLevel(annotation,e)) poleChoiceRadio+= 'checked'
+        poleChoiceRadio += '><span class="swal2-label" style="margin-right:5%;">'+e+'</span>'
+      })
 
       swal({
-        html: '<textarea id="swal-textarea" class="swal2-textarea" placeholder="Type your feedback here...">' + form.comment + '</textarea>' + '<input placeholder="Suggest literature" id="swal-input1" class="swal2-input"><ul id="literatureList">' + suggestedLiteratureHtml(form.suggestedLiterature) + '</ul>',
+        html: poleChoiceRadio+'<textarea id="swal-textarea" class="swal2-textarea" placeholder="Type your feedback here...">' + form.comment + '</textarea>' + '<input placeholder="Suggest literature" id="swal-input1" class="swal2-input"><ul id="literatureList">' + suggestedLiteratureHtml(form.suggestedLiterature) + '</ul>',
         showLoaderOnConfirm: true,
         preConfirm: () => {
           let newComment = $('#swal-textarea').val()
           let suggestedLiterature = Array.from($('#literatureList li span')).map((e) => { return $(e).attr('title') })
+          let level = $('.poleRadio:checked') != null && $('.poleRadio:checked').length ===1 ? $('.poleRadio:checked')[0].value : null
           if (newComment !== null && newComment !== '') {
             $.ajax('http://text-processing.com/api/sentiment/', {
               method: 'POST',
@@ -826,19 +850,19 @@ class TextAnnotator extends ContentAnnotator {
                   reverseButtons: true
                 }).then((result) => {
                   if (result.value) {
-                    updateAnnotation(newComment, suggestedLiterature)
+                    updateAnnotation(newComment, suggestedLiterature, level)
                   } else if (result.dismiss === swal.DismissReason.cancel) {
                     showAlert({comment: newComment, suggestedLiterature: suggestedLiterature})
                   }
                 })
               } else {
                 // Update annotation
-                updateAnnotation(newComment, suggestedLiterature)
+                updateAnnotation(newComment, suggestedLiterature,level)
               }
             })
           } else {
             // Update annotation
-            updateAnnotation('', suggestedLiterature)
+            updateAnnotation('', suggestedLiterature,level)
           }
         },
         onOpen: () => {

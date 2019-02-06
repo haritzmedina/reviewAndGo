@@ -140,7 +140,7 @@ class ReviewGenerator {
       let columnTemplate = document.querySelector("#clusterColumnTemplate")
       let propertyTemplate = document.querySelector("#clusterPropertyTemplate")
       let annotationTemplate = document.querySelector("#annotationTemplate")
-      let clusterHeight = 100.0/Object.keys(canvasClusters).length
+      //let clusterHeight = 100.0/Object.keys(canvasClusters).length
 
       let getCriterionLevel = (annotations) => {
         if(annotations.length===0) return 'emptyCluster'
@@ -169,9 +169,34 @@ class ReviewGenerator {
         })
       }
 
+      let getGroupAnnotationCount = (group) => {
+        let i = 0
+        canvasClusters[group].forEach((e) => {i += review.annotations.filter((a) => {return a.criterion===e}).length})
+        return i
+      }
+      let getColumnAnnotationCount = (properties) => {
+        let i = 0
+        properties.forEach((e) => {i += review.annotations.filter((a) => {return a.criterion===e}).length})
+        return i
+      }
+      let getGroupHeight = (group) => {
+        if(review.annotations.filter((e)=>{return e.criterion!=="Typos"}).length===0) return 33.3333
+        return 15.0+getGroupAnnotationCount(group)*(100.0-15*Object.keys(canvasClusters).length)/review.annotations.filter((e)=>{return e.criterion!=="Typos"}).length
+      }
+      let getColumnWidth = (properties,group) => {
+        if(getGroupAnnotationCount(group)===0) return 100.0/Math.ceil(canvasClusters[group].length/2)
+        return 15.0+getColumnAnnotationCount(properties)*(100.0-15*Math.ceil(canvasClusters[group].length/2))/getGroupAnnotationCount(group)
+      }
+      let getPropertyHeight = (property,properties) => {
+        if(properties.length==1) return 100
+        if(getColumnAnnotationCount(properties)==0&&properties.length==2) return 50
+        return 15.0+review.annotations.filter((e)=>{return e.criterion===property}).length*(100.0-15*2)/getColumnAnnotationCount(properties)
+      }
+
       for(let key in canvasClusters){
         let clusterElement = clusterTemplate.content.cloneNode(true)
-        clusterElement.querySelector(".propertyCluster").style.height = clusterHeight+'%'
+        //clusterElement.querySelector(".propertyCluster").style.height = clusterHeight+'%'
+        clusterElement.querySelector(".propertyCluster").style.height = getGroupHeight(key)+'%'
         clusterElement.querySelector(".clusterLabel span").innerText = key
         let clusterContainer = clusterElement.querySelector('.clusterContainer')
         let currentColumn = null
@@ -179,13 +204,21 @@ class ReviewGenerator {
           if(i%2==0||canvasClusters[key].length==2){
             currentColumn = columnTemplate.content.cloneNode(true)
             if(canvasClusters[key].length==1) currentColumn.querySelector('.clusterColumn').style.width = "100%"
-            else if(canvasClusters[key].length==2) currentColumn.querySelector('.clusterColumn').style.width = "50%"
-            else currentColumn.querySelector('.clusterColumn').style.width = parseFloat(100.0/Math.ceil(canvasClusters[key].length/2)).toString()+'%'
+            /*else if(canvasClusters[key].length==2) currentColumn.querySelector('.clusterColumn').style.width = "50%"
+            else currentColumn.querySelector('.clusterColumn').style.width = parseFloat(100.0/Math.ceil(canvasClusters[key].length/2)).toString()+'%'*/
+            else{
+              let columnWidth = i < canvasClusters[key].length-1 ? getColumnWidth([canvasClusters[key][i],canvasClusters[key][i+1]],key) : getColumnWidth([canvasClusters[key][i]],key)
+              currentColumn.querySelector('.clusterColumn').style.width = columnWidth+'%'
+            }
           }
           let clusterProperty = propertyTemplate.content.cloneNode(true)
           clusterProperty.querySelector(".propertyLabel").innerText = canvasClusters[key][i]
-          if(canvasClusters[key].length==1||canvasClusters[key].length==2||(canvasClusters[key].length%2==1&&i==canvasClusters[key].length-1)) clusterProperty.querySelector(".clusterProperty").style.height = "100%"
-          else clusterProperty.querySelector(".clusterProperty").style.height = "50%";
+          /*if(canvasClusters[key].length==1||canvasClusters[key].length==2||(canvasClusters[key].length%2==1&&i==canvasClusters[key].length-1)) clusterProperty.querySelector(".clusterProperty").style.height = "100%"
+          else clusterProperty.querySelector(".clusterProperty").style.height = "50%";*/
+          let propertyHeight = 100
+          if(i%2==0&&i<canvasClusters[key].length-1) propertyHeight = getPropertyHeight(canvasClusters[key][i],[canvasClusters[key][i],canvasClusters[key][i+1]])
+          else if(i%2==1) propertyHeight = getPropertyHeight(canvasClusters[key][i],[canvasClusters[key][i],canvasClusters[key][i-1]])
+          clusterProperty.querySelector(".clusterProperty").style.height = propertyHeight+'%'
           clusterProperty.querySelector(".clusterProperty").style.width = "100%";
 
           let criterionAnnotations = review.annotations.filter((e) => {return e.criterion === canvasClusters[key][i]})
@@ -195,11 +228,11 @@ class ReviewGenerator {
           let annotationWidth = 100.0/criterionAnnotations.length
           for(let j=0;j<criterionAnnotations.length;j++){
             let annotationElement = annotationTemplate.content.cloneNode(true)
-            annotationElement.querySelector('.annotation').style.width = annotationWidth+'%'
-            if(criterionAnnotations[j].highlightText!=null) annotationElement.querySelector('.annotation').innerText = '"'+criterionAnnotations[j].highlightText+'"'
-            if(criterionAnnotations[j].level!=null) annotationElement.querySelector('.annotation').className += ' '+criterionAnnotations[j].level.replace(/\s/g,'')
-            else annotationElement.querySelector('.annotation').className += ' unsorted'
-            annotationElement.querySelector('.annotation').addEventListener('click',function(){
+            annotationElement.querySelector('.canvasAnnotation').style.width = annotationWidth+'%'
+            if(criterionAnnotations[j].highlightText!=null) annotationElement.querySelector('.canvasAnnotation').innerText = '"'+criterionAnnotations[j].highlightText+'"'
+            if(criterionAnnotations[j].level!=null) annotationElement.querySelector('.canvasAnnotation').className += ' '+criterionAnnotations[j].level.replace(/\s/g,'')
+            else annotationElement.querySelector('.canvasAnnotation').className += ' unsorted'
+            annotationElement.querySelector('.canvasAnnotation').addEventListener('click',function(){
               displayAnnotation(criterionAnnotations[j])
             })
             clusterProperty.querySelector('.propertyAnnotations').appendChild(annotationElement)
