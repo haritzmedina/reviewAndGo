@@ -817,15 +817,29 @@ class TextAnnotator extends ContentAnnotator {
       }
 
       let groupTag = window.abwa.tagManager.getGroupFromAnnotation(annotation)
+      let criterionName = groupTag.config.name
       let poles = groupTag.tags.map((e) => {return e.name})
-      let poleChoiceRadio = poles.length>0? '<h3>Pole</h3>' : ''
+      //let poleChoiceRadio = poles.length>0 ? '<h3>Pole</h3>' : ''
+      let poleChoiceRadio = ''
       poles.forEach((e)=>{poleChoiceRadio += '<input type="radio" name="pole" class="swal2-radio poleRadio" value="'+e+'" '
         if(hasLevel(annotation,e)) poleChoiceRadio+= 'checked'
-        poleChoiceRadio += '><span class="swal2-label" style="margin-right:5%;">'+e+'</span>'
+        poleChoiceRadio += '><span class="swal2-label" style="margin-right:5%;" title="'+e+'">'
+        switch(e){
+          case 'Strength':
+            poleChoiceRadio += '💪🏾'
+            break;
+          case 'Major weakness':
+            poleChoiceRadio += '👎🏾👎🏾'
+            break;
+          case 'Minor weakness':
+            poleChoiceRadio += '👎🏾'
+            break;
+        }
+        poleChoiceRadio += '</span>'
       })
 
       swal({
-        html: poleChoiceRadio+'<textarea id="swal-textarea" class="swal2-textarea" placeholder="Type your feedback here...">' + form.comment + '</textarea>' + '<input placeholder="Suggest literature" id="swal-input1" class="swal2-input"><ul id="literatureList">' + suggestedLiteratureHtml(form.suggestedLiterature) + '</ul>',
+        html: '<h3>'+criterionName+'</h3>'+poleChoiceRadio+'<textarea id="swal-textarea" class="swal2-textarea" placeholder="Type your feedback here...">' + form.comment + '</textarea>' + '<input placeholder="Suggest literature" id="swal-input1" class="swal2-input"><ul id="literatureList">' + suggestedLiteratureHtml(form.suggestedLiterature) + '</ul>',
         showLoaderOnConfirm: true,
         preConfirm: () => {
           let newComment = $('#swal-textarea').val()

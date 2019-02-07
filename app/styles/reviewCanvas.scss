@@ -4,7 +4,7 @@
   position:fixed;
   top:0;
   left:0;
-  background-color:rgba(0,0,0,0.5);
+  background-color:rgba(0,0,0,0.7);
 }
 #canvasContainer{
   font-family: Calibri;
@@ -47,14 +47,26 @@
 .Strength{
   background-color:#95ed9b;
 }
+.canvasAnnotation.Strength:hover{
+  background-color:#4caa53;
+}
 .unsorted{
   background-color:white;
+}
+.canvasAnnotation.unsorted:hover{
+  background-color:#ddd;
 }
 .Majorweakness{
   background-color:#f97975;
 }
+.canvasAnnotation.Majorweakness:hover{
+  background-color:#cc4743;
+}
 .Minorweakness{
   background-color:#f3f4a8;
+}
+.canvasAnnotation.Minorweakness:hover{
+  background-color:#d3d648;
 }
 .emptyCluster{
   background-color:#ddd;
@@ -106,7 +118,42 @@
 }
 #canvasContainer .highlightedAnnotation{
   background-color:transparent !important;
+  color:black !important;
 }
 .swal2-content .highlightedAnnotation{
   background-color:transparent !important;
+  color:#545454 !important;
+}
+
+#canvasCloseButton {
+  position:fixed;
+  width: 40px;
+  height: 40px;
+  background: #f5f5f5;
+  position: fixed;
+  padding: 0;
+  margin: 0;
+  z-index: calc( #{$sidebarZIndex} + 1);
+  top: 1em;
+  right: 1em;
+  transition: all 0.5s ease;
+}
+
+#canvasCloseButton span {
+  margin: 0 auto;
+  width: 80%;
+  height: 2px;
+  margin: 0 auto;
+  display: block;
+  background: #555;
+  transition: all 0.8s cubic-bezier(0.810, -0.330, 0.345, 1.375);
+}
+#canvasCloseButton span:first-of-type {
+  transform: rotate(45deg) translate(14px, 14px);
+}
+#canvasCloseButton span:nth-of-type(2) {
+  opacity: 0;
+}
+#canvasCloseButton span:last-of-type {
+  transform: rotate(-45deg) translate(-11px, 11px);
 }
