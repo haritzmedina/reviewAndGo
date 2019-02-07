@@ -108,15 +108,19 @@ class Alerts {
         title: title,
         html: text,
         showConfirmButton: confirmButton,
-        onOpen: () => {
+        onBeforeOpen: () => {
           swal.showLoading()
           if (_.isFunction(timerIntervalHandler)) {
             timerInterval = setInterval(() => {
-              timerIntervalHandler(swal)
+              if (swal.isVisible()) {
+                timerIntervalHandler(swal)
+              } else {
+                clearInterval(timerInterval)
+              }
             }, 100)
           }
         },
-        onClose: () => {
+        onAfterClose: () => {
           clearInterval(timerInterval)
         }
       })

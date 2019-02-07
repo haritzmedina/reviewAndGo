@@ -4,6 +4,9 @@ const axios = require('axios')
 const _ = require('lodash')
 const Alerts = require('../../utils/Alerts')
 const LanguageUtils = require('../../utils/LanguageUtils')
+const Screenshots = require('./Screenshots')
+const $ = require('jquery')
+require('jquery-contextmenu/dist/jquery.contextMenu')
 
 const {Review, Mark, MajorConcern, MinorConcern, Strength, Annotation} = require('../../exporter/reviewModel.js')
 
@@ -28,7 +31,7 @@ class ReviewGenerator {
       this.generatorImage = this.container.querySelector('#reviewGeneratorButton')
       this.generatorImage.src = generatorImageURL
       this.generatorImage.addEventListener('click', () => {
-        this.generateReview()
+        this.generateReviewButtonHandler()
       })
       // Set delete annotations image and event
       let deleteAnnotationsImageURL = chrome.extension.getURL('/images/deleteAnnotations.png')
@@ -91,6 +94,35 @@ class ReviewGenerator {
     }
     return r
   }
+
+  generateReviewButtonHandler () {
+    // Create context menu
+    $.contextMenu({
+      selector: '#reviewGeneratorButton',
+      trigger: 'left',
+      build: () => {
+        // Create items for context menu
+        let items = {}
+        items['report'] = {name: 'Generate report'}
+        items['screenshot'] = {name: 'Generate annotated PDF'}
+        return {
+          callback: (key, opt) => {
+            if (key === 'report') {
+              this.generateReview()
+            } else if (key === 'screenshot') {
+              this.generateScreenshot()
+            }
+          },
+          items: items
+        }
+      }
+    })
+  }
+
+  generateScreenshot () {
+    Screenshots.takeScreenshot()
+  }
+
   generateReview () {
     Alerts.loadingAlert({text: chrome.i18n.getMessage('GeneratingReviewReport')})
     let review = this.parseAnnotations(window.abwa.contentAnnotator.allAnnotations)
@@ -102,6 +134,7 @@ class ReviewGenerator {
     FileSaver.saveAs(blob, docTitle+'.txt')
     Alerts.closeAlert()
   }
+
   generateCanvas () {
     window.abwa.sidebar.closeSidebar()
     Alerts.loadingAlert({text: chrome.i18n.getMessage('GeneratingReviewReport')})
