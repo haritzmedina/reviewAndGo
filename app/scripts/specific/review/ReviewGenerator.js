@@ -108,7 +108,7 @@ class ReviewGenerator {
     let review = this.parseAnnotations(window.abwa.contentAnnotator.allAnnotations)
     let canvasPageURL = chrome.extension.getURL('pages/specific/review/reviewCanvas.html')
     axios.get(canvasPageURL).then((response) => {
-      document.body.insertAdjacentHTML('afterend', response.data)
+      document.body.lastChild.insertAdjacentHTML('afterend', response.data)
       let canvasContainer = document.querySelector("#canvasContainer")
       document.querySelector("#canvasOverlay").addEventListener("click",function(){
         document.querySelector("#canvasOverlay").parentNode.removeChild(document.querySelector("#canvasOverlay"))
