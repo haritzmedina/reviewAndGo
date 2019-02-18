@@ -3,6 +3,7 @@ window.html2canvas = require('html2canvas')
 const FileSaver = require('file-saver')
 const JsPDF = require('jspdf')
 const Alerts = require('../../utils/Alerts')
+const _ = require('lodash')
 
 class Screenshots {
   static takeScreenshot (callback) {
@@ -65,6 +66,10 @@ class Screenshots {
           window.PDFViewerApplication.page = currentPage
           Alerts.closeAlert()
           pdf.save('activity.pdf')
+          // Callback
+          if (_.isFunction(callback)) {
+            callback()
+          }
         })
       }, 3000)
     } else {
