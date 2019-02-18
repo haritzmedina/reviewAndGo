@@ -52,7 +52,7 @@ class TagManager {
   getGroupAnnotations (callback) {
     window.abwa.hypothesisClientManager.hypothesisClient.searchAnnotations({
       url: window.abwa.groupSelector.currentGroup.links.html,
-      order: 'desc'
+      order: 'asc'
     }, (err, annotations) => {
       if (err) {
         Alerts.errorAlert({text: 'Unable to construct the highlighter. Please reload webpage and try it again.'})
@@ -136,14 +136,24 @@ class TagManager {
     // Get groups names
     let groups = _.map(_.uniqBy(DefaultCriterias.criteria, (criteria) => { return criteria.group }), 'group')
     // Get a list of colors
-    let colorList = ColorUtils.getDifferentColors(groups.length)
+    // The list of colors to retrieve are 1 per group + 1 per groupTags in "Other" group
+    let listOfOtherTags = _.filter(_.values(tagGroupsAnnotations), (tagGroup) => { return tagGroup.config.options.group === 'Other' })
+    let colorsList = ColorUtils.getDifferentColors(groups.length - 1 + listOfOtherTags.length)
+    let colorsGroup = colorsList.slice(0, groups.length - 1)
+    let colorsOthers = colorsList.slice(groups.length - 1)
     // Set colors for each group
     let array = _.toArray(tagGroupsAnnotations)
     let colors = {}
     for (let i = 0; i < array.length; i++) {
       let tagGroup = tagGroupsAnnotations[array[i].config.name]
-      let color = colorList[_.findIndex(groups, (groupName) => { return groupName === tagGroup.config.options.group })]
-      colors[tagGroup.config.name] = color
+      let color
+      if (tagGroup.config.options.group === 'Other') { // One color for each tag element with group Other
+        color = colorsOthers[_.findIndex(listOfOtherTags, (otherTagGroup) => { return otherTagGroup.config.name === tagGroup.config.name })]
+        colors[tagGroup.config.name] = color
+      } else {
+        color = colorsGroup[_.findIndex(groups, (groupName) => { return groupName === tagGroup.config.options.group })]
+        colors[tagGroup.config.name] = color
+      }
       tagGroup.config.color = color
     }
     // Get elements for each subgroup
@@ -358,19 +368,21 @@ class TagManager {
       tagButton.style.background = ColorUtils.setAlphaToColor(ColorUtils.colorFromString(tagButton.style.backgroundColor), 0.3)
     }
     // Retrieve annotated tags
-    let annotations = window.abwa.contentAnnotator.allAnnotations
-    let annotatedTagGroups = []
-    for (let i = 0; i < annotations.length; i++) {
-      annotatedTagGroups.push(this.getGroupFromAnnotation(annotations[i]))
-    }
-    annotatedTagGroups = _.uniq(annotatedTagGroups)
-    // Mark as chosen annotated tags
-    for (let i = 0; i < annotatedTagGroups.length; i++) {
-      let tagGroup = annotatedTagGroups[i]
-      let tagButton = this.tagsContainer.evidencing.querySelector('.tagButton[data-mark="' + tagGroup.config.name + '"]')
-      tagButton.dataset.chosen = 'true'
-      // Change to a darker color
-      tagButton.style.background = ColorUtils.setAlphaToColor(ColorUtils.colorFromString(tagButton.style.backgroundColor), 0.6)
+    if (window.abwa.contentAnnotator) {
+      let annotations = window.abwa.contentAnnotator.allAnnotations
+      let annotatedTagGroups = []
+      for (let i = 0; i < annotations.length; i++) {
+        annotatedTagGroups.push(this.getGroupFromAnnotation(annotations[i]))
+      }
+      annotatedTagGroups = _.uniq(annotatedTagGroups)
+      // Mark as chosen annotated tags
+      for (let i = 0; i < annotatedTagGroups.length; i++) {
+        let tagGroup = annotatedTagGroups[i]
+        let tagButton = this.tagsContainer.evidencing.querySelector('.tagButton[data-mark="' + tagGroup.config.name + '"]')
+        tagButton.dataset.chosen = 'true'
+        // Change to a darker color
+        tagButton.style.background = ColorUtils.setAlphaToColor(ColorUtils.colorFromString(tagButton.style.backgroundColor), 0.6)
+      }
     }
   }
 

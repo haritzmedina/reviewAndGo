@@ -7,7 +7,6 @@ const Events = {
   modeChanged: 'modeChanged',
   userFilterChange: 'userFilterChange',
   updatedAllAnnotations: 'updatedAllAnnotations',
-  updatedCurrentAnnotations: 'updatedCurrentAnnotations',
   updatedDocumentURL: 'updatedDocumentURL',
   comment: 'annotationComment',
   reply: 'reply',
