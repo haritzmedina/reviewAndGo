@@ -142,24 +142,32 @@ class ReviewGenerator {
     let canvasPageURL = chrome.extension.getURL('pages/specific/review/reviewCanvas.html')
     axios.get(canvasPageURL).then((response) => {
       document.body.lastChild.insertAdjacentHTML('afterend', response.data)
+      document.querySelector("#abwaSidebarButton").style.display = "none"
+
       let canvasContainer = document.querySelector("#canvasContainer")
       document.querySelector("#canvasOverlay").addEventListener("click",function(){
-        document.querySelector("#canvasOverlay").parentNode.removeChild(document.querySelector("#canvasOverlay"))
+        document.querySelector("#reviewCanvas").parentNode.removeChild(document.querySelector("#reviewCanvas"))
+        document.querySelector("#abwaSidebarButton").style.display = "block"
       })
       document.querySelector("#canvasContainer").addEventListener("click",function(e){
         e.stopPropagation()
       })
       document.addEventListener("keydown",function(e){
-        if(e.keyCode==27&&document.querySelector("#canvasOverlay")!=null) document.querySelector("#canvasOverlay").parentNode.removeChild(document.querySelector("#canvasOverlay"))
+        if(e.keyCode==27&&document.querySelector("#reviewCanvas")!=null) document.querySelector("#reviewCanvas").parentNode.removeChild(document.querySelector("#reviewCanvas"))
+        document.querySelector("#abwaSidebarButton").style.display = "block"
+      })
+      document.querySelector("#canvasCloseButton").addEventListener("click",function(){
+        document.querySelector("#reviewCanvas").parentNode.removeChild(document.querySelector("#reviewCanvas"))
+        document.querySelector("#abwaSidebarButton").style.display = "block"
       })
 
       let canvasClusters = {}
       let criteriaList = []
-      DefaultCriterias.criteria.forEach((e) => {
-        if(e.name=="Typos") return
-        criteriaList.push(e.name)
-        if(canvasClusters[e.group]==null) canvasClusters[e.group] = [e.name]
-        else canvasClusters[e.group].push(e.name);
+      abwa.tagManager.currentTags.forEach((e) => {
+        if(e.config.name=="Typos") return
+        criteriaList.push(e.config.name)
+        if(canvasClusters[e.config.options.group]==null) canvasClusters[e.config.options.group] = [e.config.name]
+        else canvasClusters[e.config.options.group].push(e.config.name)
       })
 
       review.annotations.forEach((e) => {
@@ -196,8 +204,9 @@ class ReviewGenerator {
           confirmButtonText: "View in context"
         }).then((result) => {
           if(result.value){
-            document.querySelector("#canvasOverlay").parentNode.removeChild(document.querySelector("#canvasOverlay"))
+            document.querySelector("#reviewCanvas").parentNode.removeChild(document.querySelector("#reviewCanvas"))
             window.abwa.contentAnnotator.goToAnnotation(window.abwa.contentAnnotator.allAnnotations.find((e) => {return e.id==annotation.id}))
+            document.querySelector("#abwaSidebarButton").style.display = "block"
           }
         })
       }
@@ -217,8 +226,9 @@ class ReviewGenerator {
         return 15.0+getGroupAnnotationCount(group)*(100.0-15*Object.keys(canvasClusters).length)/review.annotations.filter((e)=>{return e.criterion!=="Typos"}).length
       }
       let getColumnWidth = (properties,group) => {
+        let colNum = canvasClusters[group].length===2 ? 2 : Math.ceil(canvasClusters[group].length/2)
         if(getGroupAnnotationCount(group)===0) return 100.0/Math.ceil(canvasClusters[group].length/2)
-        return 15.0+getColumnAnnotationCount(properties)*(100.0-15*Math.ceil(canvasClusters[group].length/2))/getGroupAnnotationCount(group)
+        return 15.0+getColumnAnnotationCount(properties)*(100.0-15*colNum)/getGroupAnnotationCount(group)
       }
       let getPropertyHeight = (property,properties) => {
         if(properties.length==1) return 100
@@ -240,7 +250,10 @@ class ReviewGenerator {
             /*else if(canvasClusters[key].length==2) currentColumn.querySelector('.clusterColumn').style.width = "50%"
             else currentColumn.querySelector('.clusterColumn').style.width = parseFloat(100.0/Math.ceil(canvasClusters[key].length/2)).toString()+'%'*/
             else{
-              let columnWidth = i < canvasClusters[key].length-1 ? getColumnWidth([canvasClusters[key][i],canvasClusters[key][i+1]],key) : getColumnWidth([canvasClusters[key][i]],key)
+              let columnWidth
+              if(canvasClusters[key].length == 2) columnWidth = getColumnWidth([canvasClusters[key][i]],key)
+              else if(i < canvasClusters[key].length-1) columnWidth = getColumnWidth([canvasClusters[key][i],canvasClusters[key][i+1]],key)
+              else columnWidth = getColumnWidth([canvasClusters[key][i]],key)
               currentColumn.querySelector('.clusterColumn').style.width = columnWidth+'%'
             }
           }
@@ -249,7 +262,8 @@ class ReviewGenerator {
           /*if(canvasClusters[key].length==1||canvasClusters[key].length==2||(canvasClusters[key].length%2==1&&i==canvasClusters[key].length-1)) clusterProperty.querySelector(".clusterProperty").style.height = "100%"
           else clusterProperty.querySelector(".clusterProperty").style.height = "50%";*/
           let propertyHeight = 100
-          if(i%2==0&&i<canvasClusters[key].length-1) propertyHeight = getPropertyHeight(canvasClusters[key][i],[canvasClusters[key][i],canvasClusters[key][i+1]])
+          if(canvasClusters[key].length==2) propertyHeight = getPropertyHeight(canvasClusters[key][i],[canvasClusters[key][i]])
+          else if(i%2==0&&i<canvasClusters[key].length-1) propertyHeight = getPropertyHeight(canvasClusters[key][i],[canvasClusters[key][i],canvasClusters[key][i+1]])
           else if(i%2==1) propertyHeight = getPropertyHeight(canvasClusters[key][i],[canvasClusters[key][i],canvasClusters[key][i-1]])
           clusterProperty.querySelector(".clusterProperty").style.height = propertyHeight+'%'
           clusterProperty.querySelector(".clusterProperty").style.width = "100%";

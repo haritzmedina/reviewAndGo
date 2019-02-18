@@ -33,8 +33,12 @@ class Review {
     return this.annotations.filter((e) => {return e.criterion==="Typos"})
   }
   get references(){
-    let references = [].concat.apply([],this.annotations.filter((e) => {return e.level!=null&&e.level!=''}).map((e) => {return e.suggestedLiterature!=null ? e.suggestedLiterature : []}))
+    //let references = [].concat.apply([],this.annotations.filter((e) => {return e.level!=null&&e.level!=''}).map((e) => {return e.suggestedLiterature!=null ? e.suggestedLiterature : []}))
+    let references = [].concat.apply([],this.annotations.map((e) => {return e.suggestedLiterature!=null ? e.suggestedLiterature : []}))
     return references.filter((item,pos) => {return references.indexOf(item) === pos}).sort()
+  }
+  get unsortedAnnotations(){
+    return this.annotations.filter((e) => {return e.criterion!=="Typos"&&(e.level==null||e.level=="")})
   }
   toString(){
     // Summary of the work
@@ -103,6 +107,28 @@ class Review {
         t += '"'+this.typos[i].highlightText+'"'
         if(this.typos[i].comment!=null) t+= '\n\t'+this.typos[i].comment
         t += '\n'
+      }
+    }
+
+    // Other comments
+    if(this.unsortedAnnotations.length>0){
+      t += "OTHER COMMENTS:\n\n"
+      let reviewReferences = this.references
+      for(let i=0;i<this.unsortedAnnotations.length;i++){
+        t += "\t- "
+        if(this.unsortedAnnotations[i].page!=null) t+= '(Page '+this.unsortedAnnotations[i].page+'): '
+        t += '"'+this.unsortedAnnotations[i].highlightText+'"'
+        if(this.unsortedAnnotations[i].comment!=null) t+= '\n\t'+this.unsortedAnnotations[i].comment
+        let literature = this.unsortedAnnotations[i].suggestedLiterature!=null ? this.unsortedAnnotations[i].suggestedLiterature : []
+        if(literature.length>0){
+          t += '\n\tI would encourage the authors to look at the following papers: ';
+          for(let j in literature){
+            t += '['+(reviewReferences.indexOf(literature[j])+1)+']'
+            if(j===literature.length-2&&literature.length>1) t += ' and '
+            else if(literature.length>1&&j<literature.length-1) t += ', '
+          }
+        }
+        t += '\n\n'
       }
     }
 

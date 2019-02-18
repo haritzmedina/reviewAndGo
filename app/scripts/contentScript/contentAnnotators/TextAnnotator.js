@@ -817,17 +817,33 @@ class TextAnnotator extends ContentAnnotator {
       }
 
       let groupTag = window.abwa.tagManager.getGroupFromAnnotation(annotation)
+      let criterionName = groupTag.config.name
       let poles = groupTag.tags.map((e) => { return e.name })
-      let poleChoiceRadio = poles.length > 0 ? '<h3>Pole</h3>' : ''
+      // let poleChoiceRadio = poles.length>0 ? '<h3>Pole</h3>' : ''
+      let poleChoiceRadio = '<div>'
       poles.forEach((e) => {
         poleChoiceRadio += '<input type="radio" name="pole" class="swal2-radio poleRadio" value="' + e + '" '
         if (hasLevel(annotation, e)) poleChoiceRadio += 'checked'
-        poleChoiceRadio += '><span class="swal2-label" style="margin-right:5%;">' + e + '</span>'
+        poleChoiceRadio += '>'
+        switch (e) {
+          case 'Strength':
+            poleChoiceRadio += '<img class="poleImage" width="20" src="' + chrome.extension.getURL('images/strength.png') + '"/>'
+            break
+          case 'Major weakness':
+            poleChoiceRadio += '<img class="poleImage" width="20" src="' + chrome.extension.getURL('images/majorConcern.png') + '"/>'
+            break
+          case 'Minor weakness':
+            poleChoiceRadio += '<img class="poleImage" width="20" src="' + chrome.extension.getURL('images/minorConcern.png') + '"/>'
+            break
+        }
+        poleChoiceRadio += ' <span class="swal2-label" style="margin-right:5%;" title="\'+e+\'">' + e + '</span>'
       })
+      poleChoiceRadio += '</div>'
 
       swal({
-        html: poleChoiceRadio + '<textarea id="swal-textarea" class="swal2-textarea" placeholder="Type your feedback here...">' + form.comment + '</textarea>' + '<input placeholder="Suggest literature" id="swal-input1" class="swal2-input"><ul id="literatureList">' + suggestedLiteratureHtml(form.suggestedLiterature) + '</ul>',
+        html: '<h3 class="criterionName">' + criterionName + '</h3>' + poleChoiceRadio + '<textarea id="swal-textarea" class="swal2-textarea" placeholder="Type your feedback here...">' + form.comment + '</textarea>' + '<input placeholder="Suggest literature from DBLP" id="swal-input1" class="swal2-input"><ul id="literatureList">' + suggestedLiteratureHtml(form.suggestedLiterature) + '</ul>',
         showLoaderOnConfirm: true,
+        width: '40em',
         preConfirm: () => {
           let newComment = $('#swal-textarea').val()
           let suggestedLiterature = Array.from($('#literatureList li span')).map((e) => { return $(e).attr('title') })
@@ -867,6 +883,10 @@ class TextAnnotator extends ContentAnnotator {
             $(this).closest('li').remove()
           })
         }
+      })
+
+      $('.poleRadio + img').on('click', function () {
+        $(this).prev('.poleRadio').prop('checked', true)
       })
 
       $('#swal-input1').autocomplete({
