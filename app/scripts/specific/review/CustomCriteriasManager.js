@@ -231,9 +231,12 @@ class CustomCriteriasManager {
         criteriaDescription = document.getElementById('criteriaDescription').value
       },
       callback: () => {
-        this.modifyCriteria({
-          tagGroup: tagGroup, name: criteriaName, description: criteriaDescription
-        })
+        // Revise to execute only when OK button is pressed or criteria name and descriptions are not undefined
+        if (!_.isUndefined(criteriaName) && !_.isUndefined(criteriaDescription)) {
+          this.modifyCriteria({
+            tagGroup: tagGroup, name: criteriaName, description: criteriaDescription
+          })
+        }
       }
     })
   }
@@ -249,7 +252,7 @@ class CustomCriteriasManager {
         // Create new annotation
         let review = new Review({reviewId: ''})
         review.hypothesisGroup = window.abwa.groupSelector.currentGroup
-        let criteria = new Criteria({name, description, group: tagGroup.config.options.group, review})
+        let criteria = new Criteria({name, description, group: tagGroup.config.options.group, review, custom: true})
         let annotation = criteria.toAnnotation()
         window.abwa.hypothesisClientManager.hypothesisClient.updateAnnotation(oldAnnotation.id, annotation, (err, annotation) => {
           if (err) {
