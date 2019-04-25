@@ -1,8 +1,8 @@
 const DOM = require('../utils/DOM')
 const $ = require('jquery')
 
-const checkHypothesisLoggedIntervalInSeconds = 20 // fetch token every X seconds
-const checkHypothesisLoggedInWhenPromptInSeconds = 0.5 // When user is prompted to login, the checking should be with higher period
+const checkHypothesisLoggedIntervalInSeconds = 3600 // fetch token every X seconds
+const checkHypothesisLoggedInWhenPromptInSeconds = 5 // When user is prompted to login, the checking should be with higher period
 const maxTries = 10 // max tries before deleting the token
 
 class HypothesisManager {
@@ -101,7 +101,7 @@ class HypothesisManager {
             let interval = setInterval(() => {
               this.retrieveHypothesisToken((err, token) => {
                 if (err) {
-                  console.log('Checking again in %s seconds', checkHypothesisLoggedInWhenPromptInSeconds)
+                  console.debug('Checking again in %s seconds', checkHypothesisLoggedInWhenPromptInSeconds)
                 } else {
                   // Once logged in, take the token and close the tab
                   this.token = token
@@ -139,8 +139,43 @@ class HypothesisManager {
           this.changeTokenRetrieveInterval(checkHypothesisLoggedInWhenPromptInSeconds) // Reduce to 0.5 seconds
         } else if (request.cmd === 'stopListeningLogin') {
           this.changeTokenRetrieveInterval(checkHypothesisLoggedIntervalInSeconds) // Token retrieve to 20 seconds
+        } else if (request.cmd === 'getUserProfileMetadata') {
+          this.retrieveUserProfileMetadata((err, metadata) => {
+            if (err) {
+              sendResponse({error: 'Unable to retrieve profile metadata'})
+            } else {
+              sendResponse({metadata: metadata})
+            }
+          })
+          return true // Async response
         }
       }
+    })
+  }
+
+  retrieveUserProfileMetadata (callback) {
+    let callSettings = {
+      'async': true,
+      'crossDomain': true,
+      'url': 'https://hypothes.is/account/profile',
+      'method': 'GET'
+    }
+    $.ajax(callSettings).done((resultString) => {
+      let tempWrapper = document.createElement('div')
+      tempWrapper.innerHTML = resultString
+      try {
+        callback(null, {
+          displayName: tempWrapper.querySelector('[name="display_name"]').value,
+          description: tempWrapper.querySelector('[name="description"]').value,
+          location: tempWrapper.querySelector('[name="location"]').value,
+          link: tempWrapper.querySelector('[name="link"]').value,
+          orcid: tempWrapper.querySelector('[name="orcid"]').value
+        })
+      } catch (e) {
+        callback(e)
+      }
+    }).fail((error) => {
+      callback(error)
     })
   }
 }
