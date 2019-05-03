@@ -1,6 +1,12 @@
 const DOM = require('../utils/DOM')
 const $ = require('jquery')
 
+const ChromeStorage = require('../utils/ChromeStorage')
+
+const hypothesisSettings = require('../../settings/hypothesis')
+
+const OAuthClient = require('../utils/oauth-client')
+
 const checkHypothesisLoggedIntervalInSeconds = 3600 // fetch token every X seconds
 const checkHypothesisLoggedInWhenPromptInSeconds = 5 // When user is prompted to login, the checking should be with higher period
 const maxTries = 10 // max tries before deleting the token
@@ -14,6 +20,18 @@ class HypothesisManager {
   }
 
   init () {
+    this.client = new OAuthClient(hypothesisSettings)
+
+    const authWindow = OAuthClient.openAuthPopupWindow(window)
+
+    let promise = this.client.authorize(window, authWindow)
+
+    promise.then(code => {
+      this.client.exchangeAuthCode(code).then((token) => {
+        console.log(token)
+      })
+    })
+    /*
     // Try to load token for first time
     this.retrieveHypothesisToken((err, token) => {
       this.setToken(err, token)
@@ -27,6 +45,7 @@ class HypothesisManager {
 
     // Initialize replier for requests of hypothesis related metadata
     this.initResponserForGetToken()
+    */
   }
 
   createRetryHypothesisTokenRetrieve (intervalSeconds = checkHypothesisLoggedIntervalInSeconds) {
