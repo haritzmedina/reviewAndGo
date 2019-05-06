@@ -1,5 +1,4 @@
 const _ = require('lodash')
-const $ = require('jquery')
 const Alerts = require('../utils/Alerts')
 const Config = require('../Config')
 const DefaultHighlighterGenerator = require('../specific/review/DefaultHighlighterGenerator')
@@ -15,26 +14,15 @@ class GroupSelector {
 
   init (callback) {
     console.debug('Initializing group selector')
-    this.checkIsLoggedIn((err) => {
-      if (err) {
-        // Stop propagating the rest of the functions, because it is not logged in hypothesis
-        // Show that user need to log in hypothes.is to continue
-        Alerts.errorAlert({
-          title: 'Log in Hypothes.is required',
-          text: chrome.i18n.getMessage('HypothesisLoginRequired')
-        })
-      } else {
-        // Retrieve user profile (for further uses in other functionalities of the tool)
-        this.retrieveUserProfile(() => {
-          // Define current group
-          this.defineCurrentGroup(() => {
-            console.debug('Initialized group selector')
-            if (_.isFunction(callback)) {
-              callback(null)
-            }
-          })
-        })
-      }
+    // Retrieve user profile (for further uses in other functionalities of the tool)
+    this.retrieveUserProfile(() => {
+      // Define current group
+      this.defineCurrentGroup(() => {
+        console.debug('Initialized group selector')
+        if (_.isFunction(callback)) {
+          callback(null)
+        }
+      })
     })
   }
 
@@ -54,7 +42,7 @@ class GroupSelector {
         } else {
           // TODO i18n
           Alerts.loadingAlert({title: 'First time reviewing?', text: 'It seems that it is your first time using Review&Go. We are configuring everything to start reviewing.', position: Alerts.position.center})
-          // TODO Create default group
+          // Create default group
           DefaultHighlighterGenerator.createReviewHypothesisGroup((err, group) => {
             if (err) {
               Alerts.errorAlert({text: 'We are unable to create Hypothes.is group for Review&Go. Please check if you are logged in Hypothes.is.'})
@@ -63,33 +51,6 @@ class GroupSelector {
               callback(null)
             }
           })
-        }
-      }
-    })
-  }
-
-  checkIsLoggedIn (callback) {
-    let sidebarURL = chrome.extension.getURL('pages/sidebar/groupSelection.html')
-    $.get(sidebarURL, (html) => {
-      // Append sidebar to content
-      $('#abwaSidebarContainer').append($.parseHTML(html))
-      if (!window.abwa.hypothesisClientManager.isLoggedIn()) {
-        // Display login/sign up form
-        $('#notLoggedInGroupContainer').attr('aria-hidden', 'false')
-        // Hide group container
-        $('#loggedInGroupContainer').attr('aria-hidden', 'true')
-        // Hide purposes wrapper
-        $('#purposesWrapper').attr('aria-hidden', 'true')
-        // Start listening to when is logged in continuously
-        chrome.runtime.sendMessage({scope: 'hypothesis', cmd: 'startListeningLogin'})
-        // Open the sidebar to notify user that needs to log in
-        window.abwa.sidebar.openSidebar()
-        if (_.isFunction(callback)) {
-          callback(new Error('Is not logged in'))
-        }
-      } else {
-        if (_.isFunction(callback)) {
-          callback()
         }
       }
     })

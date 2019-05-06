@@ -39,6 +39,10 @@ class Alerts {
         type: Alerts.alertType.info,
         title: title,
         html: text
+      }).then(() => {
+        if (_.isFunction(callback)) {
+          callback(null)
+        }
       })
     }
   }

@@ -1,5 +1,6 @@
 const DOM = require('../utils/DOM')
 const $ = require('jquery')
+const _ = require('lodash')
 
 const ChromeStorage = require('../utils/ChromeStorage')
 
@@ -7,59 +8,108 @@ const hypothesisSettings = require('../../settings/hypothesis')
 
 const OAuthClient = require('../utils/oauth-client')
 
-const checkHypothesisLoggedIntervalInSeconds = 3600 // fetch token every X seconds
-const checkHypothesisLoggedInWhenPromptInSeconds = 5 // When user is prompted to login, the checking should be with higher period
-const maxTries = 10 // max tries before deleting the token
+const minutesBeforeToTreatTokenAsExpired = 59 // When the token has less than 20 minutes to refresh
 
+/**
+ * HypothesisManager handles hypothes.is-client-related operations in the background, login, logout, token management (autorize, refresh, revoke, store), and user metadata
+ */
 class HypothesisManager {
   constructor () {
     // Define token
-    this.token = null
-    // Define tries before logout
-    this.tries = 0
+    this.tokens = {}
   }
 
+  /**
+   * Initialization of Hypothesis Manager
+   */
   init () {
+    // Init oauth client
     this.client = new OAuthClient(hypothesisSettings)
+    // Load tokens from storage
+    this.loadTokensFromStorage((err, tokens) => {
+      if (err) {
+        console.warn('Unable to load tokens from storage. User need to login again.')
+      } else {
+        console.debug('Correctly loaded tokens from storage')
+        this.tokens = tokens
+      }
+    })
+    // Init responsers to retrieve from other scripts Hypothes.is related information
+    this.initResponsers()
+  }
 
+  refreshHypothesisToken (callback) {
+    // If refresh token exist refresh and return
+    if (_.isObject(this.tokens)) {
+      this.client.refreshToken(this.tokens.refreshToken).then((tokens) => {
+        // Save refresh token in chrome storage
+        this.saveTokensInStorage(tokens)
+      })
+    } else {
+      this.authorize((err) => {
+        if (err) {
+          if (_.isFunction(callback)) {
+            callback(err)
+          }
+        } else {
+          if (_.isFunction(callback)) {
+            callback(null, this.tokens)
+          }
+        }
+      })
+    }
+  }
+
+  /**
+   * Ask for authorization to the user and returns in the callback the access and refresh token
+   * @param callback
+   */
+  authorize (callback) {
     const authWindow = OAuthClient.openAuthPopupWindow(window)
 
     let promise = this.client.authorize(window, authWindow)
 
-    promise.then(code => {
-      this.client.exchangeAuthCode(code).then((token) => {
-        console.log(token)
+    promise.catch((reject) => {
+      // Return user has closed login window
+      if (_.isFunction(callback)) {
+        callback(new Error('Unable to autorize Hypothes.is.'))
+      }
+    }).then(code => {
+      this.client.exchangeAuthCode(code).then((tokens) => {
+        // Save tokens to return
+        this.tokens = tokens
+        // Save refresh token in chrome storage
+        this.saveTokensInStorage(tokens)
+        // Return tokens in callback
+        if (_.isFunction(callback)) {
+          callback(null, this.tokens)
+        }
       })
     })
-    /*
-    // Try to load token for first time
-    this.retrieveHypothesisToken((err, token) => {
-      this.setToken(err, token)
+  }
+
+  loadTokensFromStorage (callback) {
+    ChromeStorage.getData('hypothesisTokens', ChromeStorage.local, (err, data) => {
+      if (err) {
+        callback(new Error('Unable to retrieve tokens from storage.'))
+      } else {
+        try {
+          let parsedTokens = JSON.parse(data.data)
+          callback(null, parsedTokens)
+        } catch (e) {
+          callback(new Error('Unable to retrieve tokens from storage.'))
+        }
+      }
     })
-
-    // Create an observer to check if user is logged to hypothesis
-    this.createRetryHypothesisTokenRetrieve()
-
-    // Initialize replier for login form authentication
-    this.initShowHypothesisLoginForm()
-
-    // Initialize replier for requests of hypothesis related metadata
-    this.initResponserForGetToken()
-    */
   }
 
-  createRetryHypothesisTokenRetrieve (intervalSeconds = checkHypothesisLoggedIntervalInSeconds) {
-    let intervalHandler = () => {
-      this.retrieveHypothesisToken((err, token) => {
-        this.setToken(err, token)
-      })
-    }
-    this.retrieveTokenInterval = setInterval(intervalHandler, intervalSeconds * 1000)
-  }
-
-  changeTokenRetrieveInterval (seconds = checkHypothesisLoggedIntervalInSeconds) {
-    clearInterval(this.retrieveTokenInterval)
-    this.createRetryHypothesisTokenRetrieve(seconds)
+  saveTokensInStorage (tokens, callback) {
+    ChromeStorage.setData('hypothesisTokens', {data: JSON.stringify(tokens)}, ChromeStorage.local, (err, response) => {
+      console.debug('Saved token in storage')
+      if (_.isFunction(callback)) {
+        callback(err, response)
+      }
+    })
   }
 
   retrieveHypothesisToken (callback) {
@@ -93,71 +143,40 @@ class HypothesisManager {
     })
   }
 
-  setToken (err, token) {
-    if (err) {
-      console.error('The token is unreachable')
-      if (this.tries >= maxTries) { // The token is unreachable after some tries, probably the user is logged out
-        this.token = null // Probably the website is down or the user has been logged out
-        console.error('The token is deleted after unsuccessful %s tries', maxTries)
-      } else {
-        this.tries += 1 // The token is unreachable, add a done try
-        console.debug('The token is unreachable for %s time(s), but is maintained %s', this.tries, this.token)
-      }
-    } else {
-      console.debug('User is logged in Hypothesis. His token is %s', token)
-      this.token = token
-      this.tries = 0
-    }
-  }
-
-  initShowHypothesisLoginForm () {
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      if (request.scope === 'hypothesis') {
-        if (request.cmd === 'userLoginForm') {
-          // Create new tab on google chrome
-          chrome.tabs.create({url: 'https://hypothes.is/login'}, (tab) => {
-            // Retrieve hypothesis token periodically
-            let interval = setInterval(() => {
-              this.retrieveHypothesisToken((err, token) => {
-                if (err) {
-                  console.debug('Checking again in %s seconds', checkHypothesisLoggedInWhenPromptInSeconds)
-                } else {
-                  // Once logged in, take the token and close the tab
-                  this.token = token
-                  chrome.tabs.remove(tab.id, () => {
-                    clearInterval(interval)
-                    sendResponse({token: this.token})
-                  })
-                }
-              })
-            }, checkHypothesisLoggedInWhenPromptInSeconds * 1000)
-            // Set event for when user close the tab
-            let closeTabListener = (closedTabId) => {
-              if (closedTabId === tab.id && !this.token) {
-                // Remove listener for hypothesis token
-                clearInterval(interval)
-                // Hypothes.is login tab is closed
-                sendResponse({error: 'Hypothesis tab closed intentionally'})
-              }
-              chrome.tabs.onRemoved.removeListener(closeTabListener)
-            }
-            chrome.tabs.onRemoved.addListener(closeTabListener)
-          })
-        }
-      }
-      return true
-    })
-  }
-
-  initResponserForGetToken () {
+  initResponsers () {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (request.scope === 'hypothesis') {
         if (request.cmd === 'getToken') {
-          sendResponse(this.token)
-        } else if (request.cmd === 'startListeningLogin') {
-          this.changeTokenRetrieveInterval(checkHypothesisLoggedInWhenPromptInSeconds) // Reduce to 0.5 seconds
-        } else if (request.cmd === 'stopListeningLogin') {
-          this.changeTokenRetrieveInterval(checkHypothesisLoggedIntervalInSeconds) // Token retrieve to 20 seconds
+          if (this.checkTokenIsExpired()) {
+            this.refreshHypothesisToken((err, tokens) => {
+              if (err) {
+                sendResponse({error: 'Unable to retrieve token'})
+              } else {
+                sendResponse(this.tokens.accessToken)
+              }
+            })
+            return true // Async response
+          } else {
+            sendResponse(this.tokens.accessToken)
+          }
+        } else if (request.cmd === 'userLoginForm') {
+          this.authorize((err, tokens) => {
+            if (err) {
+              sendResponse({error: 'Unable to authorize Hypothesis client'})
+            } else {
+              sendResponse({token: tokens.accessToken})
+            }
+          })
+          return true // Async response
+        } else if (request.cmd === 'userLogout') {
+          this.logout((err) => {
+            if (err) {
+              sendResponse({error: 'Unable to logout from hypothes.is. Maybe token is already expired or connection to the server is unavailable right now.'})
+            } else {
+              sendResponse({})
+            }
+          })
+          return true // Async response
         } else if (request.cmd === 'getUserProfileMetadata') {
           this.retrieveUserProfileMetadata((err, metadata) => {
             if (err) {
@@ -195,6 +214,40 @@ class HypothesisManager {
       }
     }).fail((error) => {
       callback(error)
+    })
+  }
+
+  checkTokenIsExpired (callback) {
+    if (this.tokens) {
+      // Before X minutes to expire the token it is treated as expired to refresh again
+      if (this.tokens.expiresAt <= Date.now() - 1000 * 60 * minutesBeforeToTreatTokenAsExpired) {
+        return true
+      }
+    } else {
+      return true
+    }
+  }
+
+  logout (callback) {
+    // Revoke current tokens
+    this.revokeTokens(() => {
+      // Delete tokens from chrome storage
+      this.saveTokensInStorage({}, () => {
+        console.debug('User is logged out')
+        if (_.isFunction(callback)) {
+          callback()
+        }
+      })
+    })
+  }
+
+  revokeTokens (callback) {
+    this.client.revokeToken(this.tokens.accessToken).then(() => {
+      console.debug('Revoked token')
+      this.tokens = {}
+      if (_.isFunction(callback)) {
+        callback()
+      }
     })
   }
 }
