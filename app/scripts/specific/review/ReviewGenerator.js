@@ -24,7 +24,7 @@ class ReviewGenerator {
     // Create generator button
     let generatorWrapperURL = chrome.extension.getURL('pages/specific/review/generator.html')
     axios.get(generatorWrapperURL).then((response) => {
-      document.querySelector('#groupSelectorContainer').insertAdjacentHTML('afterend', response.data)
+      document.querySelector('#abwaSidebarContainer').insertAdjacentHTML('afterbegin', response.data)
       this.container = document.querySelector('#reviewGenerator')
       // Set generator image and event
       let generatorImageURL = chrome.extension.getURL('/images/generator.png')
