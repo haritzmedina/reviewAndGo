@@ -615,7 +615,7 @@ class TextAnnotator extends ContentAnnotator {
           let suggestedLiterature = Array.from($('#literatureList li span')).map((e) => { return $(e).attr('title') })
           let level = $('.poleRadio:checked') != null && $('.poleRadio:checked').length === 1 ? $('.poleRadio:checked')[0].value : null
           if (newComment !== null && newComment !== '') {
-            $.ajax('http://text-processing.com/api/sentiment/', {
+            $.ajax('https://text-processing.com/api/sentiment/', {
               method: 'POST',
               data: {text: newComment}
             }).done(function (ret) {
@@ -658,7 +658,7 @@ class TextAnnotator extends ContentAnnotator {
       $('#swal-input1').autocomplete({
         source: function (request, response) {
           $.ajax({
-            url: 'http://dblp.org/search/publ/api',
+            url: 'https://dblp.org/search/publ/api',
             data: {
               q: request.term,
               format: 'json',
