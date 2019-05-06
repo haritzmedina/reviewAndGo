@@ -13,7 +13,9 @@ function getPackFileType () {
   }
 }
 
-gulp.task('pack', gulp.series('build', () => {
+gulp.task('pack', gulp.series(() => {
+  global.noKeys = true // Not add extensions keys (e.g.: chrome extension key)
+}, 'build', () => {
   let name = packageDetails.name
   let version = packageDetails.version
   let filetype = getPackFileType()

@@ -9,7 +9,7 @@ import args from './lib/args'
 import fs from 'fs'
 import through2 from 'through2'
 
-let manifest = () => {
+let manifest = function () {
   return gulp.src('app/manifest.json')
     .pipe(plumber({
       errorHandler: error => {
@@ -25,15 +25,25 @@ let manifest = () => {
       )
     )
     .pipe(through2.obj({}, function (chunk, enc, cb) {
-      let fileContent = chunk.contents.toString(enc)
-      let chromeSettingsFileContent = fs.readFileSync('app/settings/chrome-manifest.json', 'utf8')
-      let manifest = JSON.parse(fileContent)
-      let chromeSettings = JSON.parse(chromeSettingsFileContent)
-      let bundledManifest = Object.assign(manifest, chromeSettings)
-      let stringifiedManifest = JSON.stringify(bundledManifest, null, 2)
-      chunk.contents = Buffer.from(stringifiedManifest)
-      this.push(chunk)
-      cb()
+      if (!global.noKeys) {
+        let fileContent = chunk.contents.toString(enc)
+        try {
+          let chromeSettingsFileContent = fs.readFileSync('app/settings/chrome-manifest.json', 'utf8')
+          let manifest = JSON.parse(fileContent)
+          let chromeSettings = JSON.parse(chromeSettingsFileContent)
+          let bundledManifest = Object.assign(manifest, chromeSettings)
+          let stringifiedManifest = JSON.stringify(bundledManifest, null, 2)
+          chunk.contents = Buffer.from(stringifiedManifest)
+        } catch (e) {
+          console.info('File chrome-manifest.json is not found.')
+        } finally {
+          this.push(chunk)
+          cb()
+        }
+      } else {
+        this.push(chunk)
+        cb()
+      }
     }))
     .pipe(gulp.dest(`dist/${args.vendor}`))
     .pipe(gulpif(args.watch, livereload()))
