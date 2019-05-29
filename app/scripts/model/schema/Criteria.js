@@ -77,6 +77,23 @@ class Criteria extends GuideElement {
     }
     return instancedCriteria
   }
+
+  toObject () {
+    let object = {
+      name: this.name,
+      group: this.group,
+      description: this.description,
+      levels: []
+    }
+    // For each level
+    for (let i = 0; i < this.levels.length; i++) {
+      let level = this.levels[i]
+      if (LanguageUtils.isInstanceOf(level, Level)) {
+        object.levels.push(level.toObject())
+      }
+    }
+    return object
+  }
 }
 
 module.exports = Criteria

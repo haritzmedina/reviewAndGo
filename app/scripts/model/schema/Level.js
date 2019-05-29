@@ -58,6 +58,13 @@ class Level extends GuideElement {
     let instancedLevel = Object.assign(new Level({}), level)
     return instancedLevel
   }
+
+  toObject () {
+    return {
+      name: this.name,
+      description: this.description
+    }
+  }
 }
 
 module.exports = Level

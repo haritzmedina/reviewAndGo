@@ -5,6 +5,7 @@ const _ = require('lodash')
 const Alerts = require('../../utils/Alerts')
 const LanguageUtils = require('../../utils/LanguageUtils')
 const Screenshots = require('./Screenshots')
+const ExportSchema = require('./ExportSchema')
 const $ = require('jquery')
 require('jquery-contextmenu/dist/jquery.contextMenu')
 
@@ -48,11 +49,18 @@ class ReviewGenerator {
         this.generateCanvas()
       })
       // Set resume image and event
-      let resumeImageURL = chrome.extension.getURL('/images/resume.png')
+      /* let resumeImageURL = chrome.extension.getURL('/images/resume.png')
       this.resumeImage = this.container.querySelector('#resumeButton')
       this.resumeImage.src = resumeImageURL
       this.resumeImage.addEventListener('click', () => {
         this.resume()
+      })*/
+      // Set import export image and event
+      let importExportImageURL = chrome.extension.getURL('/images/importExport.png')
+      this.importExportImage = this.container.querySelector('#importExportButton')
+      this.importExportImage.src = importExportImageURL
+      this.importExportImage.addEventListener('click', () => {
+        this.importExportButtonHandler()
       })
       if (_.isFunction(callback)) {
         callback()
@@ -117,6 +125,38 @@ class ReviewGenerator {
         }
       }
     })
+  }
+
+  importExportButtonHandler () {
+    // Create context menu
+    $.contextMenu({
+      selector: '#importExportButton',
+      trigger: 'left',
+      build: () => {
+        // Create items for context menu
+        let items = {}
+        items['import'] = {name: 'Import criteria configuration'}
+        items['export'] = {name: 'Export criteria configuration'}
+        return {
+          callback: (key, opt) => {
+            if (key === 'import') {
+              this.importCriteriaConfiguration()
+            } else if (key === 'export') {
+              this.exportCriteriaConfiguration()
+            }
+          },
+          items: items
+        }
+      }
+    })
+  }
+
+  exportCriteriaConfiguration () {
+    ExportSchema.exportSchemaToJSON(window.abwa.tagManager.model.groupAnnotations)
+  }
+
+  importCriteriaConfiguration () {
+    Alerts.infoAlert({text: 'Not implemented yet.'})
   }
 
   generateScreenshot () {

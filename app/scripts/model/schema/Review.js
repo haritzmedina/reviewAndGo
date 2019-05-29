@@ -1,9 +1,11 @@
 const AnnotationGuide = require('./AnnotationGuide')
 const Criteria = require('./Criteria')
 const Level = require('./Level')
+const LanguageUtils = require('../../utils/LanguageUtils')
+const DefaultCriterias = require('../../specific/review/DefaultCriterias')
 
 class Review extends AnnotationGuide {
-  constructor ({reviewId, hypothesisGroup}) {
+  constructor ({reviewId = '', hypothesisGroup = ''}) {
     super({name: reviewId, hypothesisGroup})
     this.criterias = this.guideElements
   }
@@ -29,6 +31,21 @@ class Review extends AnnotationGuide {
       review.criterias.push(criteria)
     }
     return review
+  }
+
+  toObject () {
+    let object = {
+      criteria: [],
+      defaultLevels: DefaultCriterias.defaultLevels
+    }
+    // For each criteria create the object
+    for (let i = 0; i < this.criterias.length; i++) {
+      let criteria = this.criterias[i]
+      if (LanguageUtils.isInstanceOf(criteria, Criteria)) {
+        object.criteria.push(criteria.toObject())
+      }
+    }
+    return object
   }
 }
 
