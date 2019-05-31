@@ -6,6 +6,8 @@ const Alerts = require('../../utils/Alerts')
 const LanguageUtils = require('../../utils/LanguageUtils')
 const Screenshots = require('./Screenshots')
 const ExportSchema = require('./ExportSchema')
+const ImportSchema = require('./ImportSchema')
+const ReviewSchema = require('../../model/schema/Review')
 const $ = require('jquery')
 require('jquery-contextmenu/dist/jquery.contextMenu')
 
@@ -152,11 +154,46 @@ class ReviewGenerator {
   }
 
   exportCriteriaConfiguration () {
-    ExportSchema.exportSchemaToJSON(window.abwa.tagManager.model.groupAnnotations)
+    ExportSchema.exportConfigurationSchemaToJSON(window.abwa.tagManager.model.groupAnnotations)
   }
 
   importCriteriaConfiguration () {
-    Alerts.infoAlert({text: 'Not implemented yet.'})
+    let currentGroupUrl = window.abwa.groupSelector.currentGroup.links.html || 'https://hypothes.is'
+    ImportSchema.askUserForConfigurationSchema((err, jsonObject) => {
+      Alerts.confirmAlert({
+        alertType: Alerts.alertType.warning,
+        title: 'Your configuration will be imported',
+        text: 'When the configuration is imported, a new highlighter and group is created. All your configuration and annotations are backed up, but they will be only accessible using Hypothes.is: <a href="' + currentGroupUrl + '" target="_blank">' + currentGroupUrl + '</a>',
+        callback: () => {
+          ImportSchema.backupReviewHypothesisGroup((err, result) => {
+            if (err) {
+              Alerts.errorAlert({text: 'Unable to backup current hypothes.is group. Error: ' + err.message})
+            } else {
+              ImportSchema.createReviewHypothesisGroup((err, newGroup) => {
+                if (err) {
+                  Alerts.errorAlert({text: 'Unable to create new Hypothes.is group. Error: ' + err.message})
+                } else {
+                  let review = ReviewSchema.fromCriterias(jsonObject.criteria)
+                  review.hypothesisGroup = newGroup
+                  Alerts.loadingAlert({title: 'Configuration in progress', text: 'We are configuring everything to start reviewing.', position: Alerts.position.center})
+                  ImportSchema.createConfigurationAnnotationsFromReview({
+                    review,
+                    callback: (err, annotations) => {
+                      if (err) {
+                        Alerts.errorAlert({ text: 'There was an error when configuring Review&Go highlighter' })
+                      } else {
+                        Alerts.closeAlert()
+                        window.location.reload() // TODO Temporal solution, it is better to reload the content on group change
+                      }
+                    }
+                  })
+                }
+              })
+            }
+          })
+        }
+      })
+    })
   }
 
   generateScreenshot () {

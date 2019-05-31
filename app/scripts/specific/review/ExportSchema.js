@@ -7,7 +7,7 @@ const FileSaver = require('file-saver')
 const jsYaml = require('js-yaml')
 
 class ExportSchema {
-  static exportSchemaToJSON (schemeAnnotations) {
+  static exportConfigurationSchemaToJSON (schemeAnnotations) {
     // Get criteria annotations
     let criteriaAnnotations = _.filter(schemeAnnotations, (annotation) => {
       return _.find(annotation.tags, (tag) => { return tag.includes('review:criteria:') })

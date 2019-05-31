@@ -85,6 +85,9 @@ class Criteria extends GuideElement {
       description: this.description,
       levels: []
     }
+    if (this.custom) {
+      object.custom = true
+    }
     // For each level
     for (let i = 0; i < this.levels.length; i++) {
       let level = this.levels[i]

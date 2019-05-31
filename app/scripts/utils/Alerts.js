@@ -6,7 +6,7 @@ if (document && document.head) {
 }
 
 class Alerts {
-  static confirmAlert ({alertType = Alerts.alertType.info, title = '', text = '', callback}) {
+  static confirmAlert ({alertType = Alerts.alertType.info, title = '', text = '', cancelButtonText = 'Cancel', confirmButtonText = 'OK', callback}) {
     Alerts.tryToLoadSwal()
     if (_.isNull(swal)) {
       if (_.isFunction(callback)) {
@@ -17,12 +17,36 @@ class Alerts {
         title: title,
         html: text,
         type: alertType,
-        showCancelButton: true
+        showCancelButton: true,
+        cancelButtonText: cancelButtonText,
+        confirmButtonText: confirmButtonText
       }).then((result) => {
         if (result.value) {
           if (_.isFunction(callback)) {
             callback(null, result.value)
           }
+        }
+      })
+    }
+  }
+
+  static chooseAlert ({alertType = Alerts.alertType.info, title = '', text = '', cancelButtonText, confirmButtonText, callback}) {
+    Alerts.tryToLoadSwal()
+    if (_.isNull(swal)) {
+      if (_.isFunction(callback)) {
+        callback(new Error('Unable to load swal'))
+      }
+    } else {
+      swal({
+        title: title,
+        html: text,
+        type: alertType,
+        showCancelButton: true,
+        cancelButtonText: cancelButtonText,
+        confirmButtonText: confirmButtonText
+      }).then((result) => {
+        if (_.isFunction(callback)) {
+          callback(null, result.value)
         }
       })
     }
@@ -127,7 +151,7 @@ class Alerts {
     }
   }
 
-  static inputTextAlert ({input = 'text', inputPlaceholder = '', inputValue = '', showCancelButton = true, html = '', callback}) {
+  static inputTextAlert ({title, input = 'text', inputPlaceholder = '', inputValue = '', showCancelButton = true, html = '', callback}) {
     Alerts.tryToLoadSwal()
     if (_.isNull(swal)) {
       if (_.isFunction(callback)) {
@@ -135,6 +159,7 @@ class Alerts {
       }
     } else {
       swal({
+        title: title,
         input: input,
         inputPlaceholder: inputPlaceholder,
         inputValue: inputValue,

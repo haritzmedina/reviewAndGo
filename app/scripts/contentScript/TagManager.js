@@ -8,8 +8,9 @@ const Events = require('./Events')
 const Tag = require('./Tag')
 const TagGroup = require('./TagGroup')
 const Alerts = require('../utils/Alerts')
-const DefaultHighlighterGenerator = require('../specific/review/DefaultHighlighterGenerator')
+const ImportSchema = require('../specific/review/ImportSchema')
 const DefaultCriterias = require('../specific/review/DefaultCriterias')
+const Review = require('../model/schema/Review')
 
 class TagManager {
   constructor (namespace, config) {
@@ -85,15 +86,57 @@ class TagManager {
       let promise = Promise.resolve(annotations) // TODO Check if it is okay
       if (annotations.length === 0) {
         promise = new Promise((resolve) => {
-          if (!Alerts.isVisible()) {
-            Alerts.loadingAlert({title: 'Configuration in progress', text: 'We are configuring everything to start reviewing.', position: Alerts.position.center})
-          }
-          DefaultHighlighterGenerator.createDefaultAnnotations(window.abwa.groupSelector.currentGroup, (err, annotations) => {
-            if (err) {
-              Alerts.errorAlert({text: 'There was an error when configuring Review&Go highlighter'})
-            } else {
-              Alerts.closeAlert()
-              resolve(annotations)
+          Alerts.chooseAlert({
+            title: 'First time reviewing?',
+            alertType: Alerts.alertType.question,
+            text: 'It seems that it is your first time using Review&Go. Do you want to import your own schema configuration or use the default one?',
+            confirmButtonText: 'My own configuration',
+            cancelButtonText: 'Default configuration',
+            callback: (err, result) => {
+              if (err) {
+                window.alert('Error loading swal')
+              } else {
+                let configuration
+                let promiseParseConfiguration = new Promise((resolve, reject) => {
+                  if (result) { // Own configuration
+                    ImportSchema.askUserForConfigurationSchema((err, userConfiguration) => {
+                      if (err) {
+                        reject(new Error('Bad json file'))
+                      } else {
+                        configuration = userConfiguration
+                        resolve(configuration)
+                      }
+                    })
+                  } else { // Default configuration
+                    configuration = DefaultCriterias
+                    resolve(configuration)
+                  }
+                })
+                promiseParseConfiguration.catch((message) => {
+                  Alerts.errorAlert({text: 'Error configuring the highlighter: ' + message})
+                }).then(() => {
+                  if (!Alerts.isVisible()) {
+                    Alerts.loadingAlert({title: 'Configuration in progress', text: 'We are configuring everything to start reviewing.', position: Alerts.position.center})
+                  }
+                  // Create configuration in to group
+                  // Create review schema from default criterias
+                  let review = Review.fromCriterias(configuration.criteria)
+                  review.hypothesisGroup = window.abwa.groupSelector.currentGroup
+                  Alerts.loadingAlert({title: 'Configuration in progress', text: 'We are configuring everything to start reviewing.', position: Alerts.position.center})
+                  ImportSchema.createConfigurationAnnotationsFromReview({
+                    review,
+                    callback: (err, annotations) => {
+                      if (err) {
+                        Alerts.errorAlert({ text: 'There was an error when configuring Review&Go highlighter' })
+                      } else {
+                        Alerts.closeAlert()
+                        window.abwa.sidebar.openSidebar() // Open sidebar to notify the user that the highlighter is created and ready to use
+                        resolve(annotations)
+                      }
+                    }
+                  })
+                })
+              }
             }
           })
         })

@@ -2,7 +2,7 @@ const _ = require('lodash')
 const $ = require('jquery')
 const Alerts = require('../utils/Alerts')
 const Config = require('../Config')
-const DefaultHighlighterGenerator = require('../specific/review/DefaultHighlighterGenerator')
+const ImportSchema = require('../specific/review/ImportSchema')
 
 const GroupName = Config.review.groupName
 
@@ -52,10 +52,7 @@ class GroupSelector {
             callback(null)
           }
         } else {
-          // TODO i18n
-          Alerts.loadingAlert({title: 'First time reviewing?', text: 'It seems that it is your first time using Review&Go. We are configuring everything to start reviewing.', position: Alerts.position.center})
-          // TODO Create default group
-          DefaultHighlighterGenerator.createReviewHypothesisGroup((err, group) => {
+          ImportSchema.createReviewHypothesisGroup((err, group) => {
             if (err) {
               Alerts.errorAlert({text: 'We are unable to create Hypothes.is group for Review&Go. Please check if you are logged in Hypothes.is.'})
             } else {
