@@ -196,7 +196,7 @@ class TextAnnotator extends ContentAnnotator {
       }
       // Construct the annotation to send to hypothesis
       let annotation = TextAnnotator.constructAnnotation(selectors, event.detail.tags)
-      window.abwa.hypothesisClientManager.hypothesisClient.createNewAnnotation(annotation, (err, annotation) => {
+      window.abwa.storageManager.client.createNewAnnotation(annotation, (err, annotation) => {
         if (err) {
           Alerts.errorAlert({text: 'Unexpected error, unable to create annotation'})
         } else {
@@ -353,7 +353,7 @@ class TextAnnotator extends ContentAnnotator {
 
   updateAllAnnotations (callback) {
     // Retrieve annotations for current url and group
-    window.abwa.hypothesisClientManager.hypothesisClient.searchAnnotations({
+    window.abwa.storageManager.client.searchAnnotations({
       url: window.abwa.contentTypeManager.getDocumentURIToSearchInHypothesis(),
       uri: window.abwa.contentTypeManager.getDocumentURIToSaveInHypothesis(),
       group: window.abwa.groupSelector.currentGroup.id,
@@ -498,10 +498,10 @@ class TextAnnotator extends ContentAnnotator {
       text: 'Are you sure you want to delete this annotation?',
       callback: () => {
         // Delete annotation
-        window.abwa.hypothesisClientManager.hypothesisClient.deleteAnnotation(annotation.id, (err, result) => {
+        window.abwa.storageManager.client.deleteAnnotation(annotation.id, (err, result) => {
           if (err) {
             // Unable to delete this annotation
-            console.error('Error while trying to delete annotation %s', annotation.id)
+            Alerts.errorAlert({text: 'Error while trying to delete annotation. Error: ' + err.message})
           } else {
             if (!result.deleted) {
               // Alert user error happened
@@ -540,7 +540,7 @@ class TextAnnotator extends ContentAnnotator {
         annotation.tags = pole.tags
       }
 
-      window.abwa.hypothesisClientManager.hypothesisClient.updateAnnotation(
+      window.abwa.storageManager.client.updateAnnotation(
         annotation.id,
         annotation,
         (err, annotation) => {
@@ -860,7 +860,7 @@ class TextAnnotator extends ContentAnnotator {
       let oldTagAnnotation = oldTagsAnnotations[i]
       promises.push(new Promise((resolve, reject) => {
         oldTagAnnotation.tags = newTags
-        window.abwa.hypothesisClientManager.hypothesisClient.updateAnnotation(oldTagAnnotation.id, oldTagAnnotation, (err, annotation) => {
+        window.abwa.storageManager.client.updateAnnotation(oldTagAnnotation.id, oldTagAnnotation, (err, annotation) => {
           if (err) {
             reject(new Error('Unable to update annotation ' + oldTagAnnotation.id))
           } else {
@@ -894,7 +894,7 @@ class TextAnnotator extends ContentAnnotator {
     let promises = []
     for (let i = 0; i < allAnnotations.length; i++) {
       promises.push(new Promise((resolve, reject) => {
-        window.abwa.hypothesisClientManager.hypothesisClient.deleteAnnotation(allAnnotations[i].id, (err) => {
+        window.abwa.storageManager.client.deleteAnnotation(allAnnotations[i].id, (err) => {
           if (err) {
             reject(new Error('Unable to delete annotation id: ' + allAnnotations[i].id))
           } else {

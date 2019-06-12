@@ -6,7 +6,8 @@ const ModeManager = require('./ModeManager')
 const RolesManager = require('./RolesManager')
 const GroupSelector = require('./GroupSelector')
 const AnnotationBasedInitializer = require('./AnnotationBasedInitializer')
-const HypothesisClientManager = require('../hypothesis/HypothesisClientManager')
+// const HypothesisClientManager = require('../storage/hypothesis/HypothesisClientManager')
+const LocalStorageManager = require('../storage/local/LocalStorageManager')
 const Config = require('../Config')
 
 class ContentScriptManager {
@@ -19,8 +20,12 @@ class ContentScriptManager {
     console.debug('Initializing content script manager')
     this.status = ContentScriptManager.status.initializing
     this.loadContentTypeManager(() => {
-      window.abwa.hypothesisClientManager = new HypothesisClientManager()
-      window.abwa.hypothesisClientManager.init(() => {
+      // Hypothesis
+      // window.abwa.storageManager = new HypothesisClientManager()
+      // window.abwa.storageManager.init(() => {
+      // LocalStorage
+      window.abwa.storageManager = new LocalStorageManager()
+      window.abwa.storageManager.init(() => {
         window.abwa.sidebar = new Sidebar()
         window.abwa.sidebar.init(() => {
           window.abwa.annotationBasedInitializer = new AnnotationBasedInitializer()

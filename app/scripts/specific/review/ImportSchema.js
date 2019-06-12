@@ -7,13 +7,13 @@ class ImportSchema {
     // Create highlighter annotations
     let annotations = review.toAnnotations()
     // Send create highlighter
-    window.abwa.hypothesisClientManager.hypothesisClient.createNewAnnotations(annotations, (err, annotations) => {
+    window.abwa.storageManager.client.createNewAnnotations(annotations, (err, annotations) => {
       callback(err, annotations)
     })
   }
 
   static createReviewHypothesisGroup (callback) {
-    window.abwa.hypothesisClientManager.hypothesisClient.createNewGroup({name: Config.review.groupName}, callback)
+    window.abwa.storageManager.client.createNewGroup({name: Config.review.groupName}, callback)
   }
 
   static backupReviewHypothesisGroup (callback) {
@@ -22,7 +22,7 @@ class ImportSchema {
     // Rename current group
     let date = new Date()
     let currentGroupNewName = 'ReviewAndGo-' + date.getFullYear() + '-' + date.getMonth() + '-' + date.getDay() + '-' + date.getHours()
-    window.abwa.hypothesisClientManager.hypothesisClient.updateGroup(currentGroupId, {
+    window.abwa.storageManager.client.updateGroup(currentGroupId, {
       name: currentGroupNewName}, (err, result) => {
       if (err) {
         callback(new Error('Unable to backup current hypothes.is group.'))

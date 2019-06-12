@@ -36,7 +36,8 @@
     "https://hypothes.is/",
     "storage",
     "tabs",
-    "file://*/*"
+    "file://*/*",
+    "unlimitedStorage"
   ],
   "web_accessible_resources": ["pages/*.html", "content/*", "images/*"]
 }

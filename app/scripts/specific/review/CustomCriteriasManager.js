@@ -99,7 +99,7 @@ class CustomCriteriasManager {
     }
     let annotations = criteria.toAnnotations()
     // Push annotations to hypothes.is
-    window.abwa.hypothesisClientManager.hypothesisClient.createNewAnnotations(annotations, (err, annotations) => {
+    window.abwa.storageManager.client.createNewAnnotations(annotations, (err, annotations) => {
       if (err) {
         Alerts.errorAlert({title: 'Unable to create a custom category', text: 'Error when trying to create a new custom category. Please try again.'})
         callback(err)
@@ -127,7 +127,7 @@ class CustomCriteriasManager {
     let annotationsToDelete = []
     // Get annotation of the tag group
     annotationsToDelete.push(tagGroup.config.annotation.id)
-    window.abwa.hypothesisClientManager.hypothesisClient.searchAnnotations({
+    window.abwa.storageManager.client.searchAnnotations({
       tags: Config.review.namespace + ':' + Config.review.tags.grouped.relation + ':' + tagGroup.config.name
     }, (err, annotations) => {
       if (err) {
@@ -138,7 +138,7 @@ class CustomCriteriasManager {
         let promises = []
         for (let i = 0; i < annotationsToDelete.length; i++) {
           promises.push(new Promise((resolve, reject) => {
-            window.abwa.hypothesisClientManager.hypothesisClient.deleteAnnotation(annotationsToDelete[i], (err) => {
+            window.abwa.storageManager.client.deleteAnnotation(annotationsToDelete[i], (err) => {
               if (err) {
                 reject(new Error('Unable to delete annotation id: ' + annotationsToDelete[i]))
               } else {
@@ -254,7 +254,7 @@ class CustomCriteriasManager {
         review.hypothesisGroup = window.abwa.groupSelector.currentGroup
         let criteria = new Criteria({name, description, group: tagGroup.config.options.group, review, custom: true})
         let annotation = criteria.toAnnotation()
-        window.abwa.hypothesisClientManager.hypothesisClient.updateAnnotation(oldAnnotation.id, annotation, (err, annotation) => {
+        window.abwa.storageManager.client.updateAnnotation(oldAnnotation.id, annotation, (err, annotation) => {
           if (err) {
             // TODO Show err
           } else {
@@ -282,7 +282,7 @@ class CustomCriteriasManager {
         })
       } else {
         // Update all annotations review:isCriteriaOf:
-        window.abwa.hypothesisClientManager.hypothesisClient.searchAnnotations({
+        window.abwa.storageManager.client.searchAnnotations({
           tags: Config.review.namespace + ':' + Config.review.tags.grouped.relation + ':' + tagGroup.config.name
         }, (err, annotationsToUpdateTag) => {
           if (err) {
@@ -300,7 +300,7 @@ class CustomCriteriasManager {
             let promises = []
             for (let i = 0; i < annotationsToUpdateTag.length; i++) {
               promises.push(new Promise((resolve, reject) => {
-                window.abwa.hypothesisClientManager.hypothesisClient.updateAnnotation(annotationsToUpdateTag[i].id, annotationsToUpdateTag[i], (err, annotation) => {
+                window.abwa.storageManager.client.updateAnnotation(annotationsToUpdateTag[i].id, annotationsToUpdateTag[i], (err, annotation) => {
                   if (err) {
                     reject(err)
                   } else {
@@ -318,7 +318,7 @@ class CustomCriteriasManager {
               let criteria = new Criteria({name, description, group: tagGroup.config.options.group, review})
               let annotation = criteria.toAnnotation()
               let oldAnnotation = tagGroup.config.annotation
-              window.abwa.hypothesisClientManager.hypothesisClient.updateAnnotation(oldAnnotation.id, annotation, () => {
+              window.abwa.storageManager.client.updateAnnotation(oldAnnotation.id, annotation, () => {
                 if (err) {
 
                 } else {
