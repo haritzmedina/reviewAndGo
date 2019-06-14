@@ -313,17 +313,15 @@ class CustomCriteriasManager {
             Promise.all(promises).catch(() => {
               // TODO Some annotations where unable to update
             }).then(() => {
-              debugger
               // Update tagGroup annotation
               let review = new Review({reviewId: ''})
               review.hypothesisGroup = window.abwa.groupSelector.currentGroup
               let criteria = new Criteria({name, description, group: tagGroup.config.options.group, review})
               let annotation = criteria.toAnnotation()
               let oldAnnotation = tagGroup.config.annotation
-              debugger
-              window.abwa.storageManager.client.updateAnnotation(oldAnnotation.id, annotation, () => {
+              window.abwa.storageManager.client.updateAnnotation(oldAnnotation.id, annotation, (err, annotation) => {
                 if (err) {
-
+                  Alerts.errorAlert({text: 'Unable to update criteria. Error: ' + err.message})
                 } else {
                   // Update tag manager and then update all annotations
                   setTimeout(() => {

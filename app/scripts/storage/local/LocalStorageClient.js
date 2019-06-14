@@ -200,15 +200,14 @@ class LocalStorageClient {
   }
 
   static updateAnnotationFromList ({id, annotation, annotations, currentUser}) {
-    debugger
     let annotationToUpdateIndex = _.findIndex(annotations, (annotationInDatabase) => {
       return annotationInDatabase.id === id
     })
     if (annotationToUpdateIndex > -1) {
       let annotationToUpdate = annotations[annotationToUpdateIndex]
       // Check permissions to delete
-      if (_.isArray(annotation.permissions.update)) {
-        let owner = _.find(annotation.permissions.update, (userid) => {
+      if (_.isArray(annotationToUpdate.permissions.update)) {
+        let owner = _.find(annotationToUpdate.permissions.update, (userid) => {
           return userid === currentUser.userid
         })
         if (_.isString(owner)) {
