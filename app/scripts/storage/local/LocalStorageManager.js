@@ -25,12 +25,12 @@ class LocalStorageManager extends StorageManager {
           } catch (e) {
             this.annotationsDatabase = EmptyDatabase
           } finally {
-            this.client = new LocalStorageClient(this.annotationsDatabase)
+            this.client = new LocalStorageClient(this.annotationsDatabase, this)
           }
         } else {
           // Load empty database
           this.annotationsDatabase = EmptyDatabase
-          this.client = new LocalStorageClient(this.annotationsDatabase)
+          this.client = new LocalStorageClient(this.annotationsDatabase, this)
         }
         // Callback
         callback()

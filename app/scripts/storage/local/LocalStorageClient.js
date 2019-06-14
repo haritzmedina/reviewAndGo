@@ -1,9 +1,11 @@
 const _ = require('lodash')
 const RandomUtils = require('../../utils/RandomUtils')
+const wildcard = require('wildcard')
 
 class LocalStorageClient {
-  constructor (database) {
+  constructor (database, manager) {
     this.database = database
+    this.manager = manager
   }
 
   createNewAnnotation (annotation, callback) {
@@ -11,7 +13,6 @@ class LocalStorageClient {
       let annotationToStore = LocalStorageClient.constructAnnotation({
         annotation,
         user: this.database.user,
-        group: window.abwa.groupSelector.currentGroup,
         annotations: this.database.annotations
       })
       console.debug('Create annotation')
@@ -19,7 +20,7 @@ class LocalStorageClient {
       // Store in database
       this.database.annotations.push(annotationToStore)
       // TODO Update storage
-      window.abwa.storageManager.saveDatabase(this.database)
+      this.manager.saveDatabase(this.database)
       // Callback
       callback(null, annotationToStore)
     } catch (e) {
@@ -35,7 +36,6 @@ class LocalStorageClient {
         let toStoreAnnotation = LocalStorageClient.constructAnnotation({
           annotation,
           user: this.database.user,
-          group: window.abwa.groupSelector.currentGroup,
           annotations: this.database.annotations
         })
         toStoreAnnotations.push(toStoreAnnotation)
@@ -43,14 +43,14 @@ class LocalStorageClient {
       // Store in database
       this.database.annotations = this.database.annotations.concat(toStoreAnnotations)
       // TODO Update storage
-      window.abwa.storageManager.saveDatabase(this.database)
+      this.manager.saveDatabase(this.database)
       callback(null, toStoreAnnotations)
     } catch (e) {
       callback(e)
     }
   }
 
-  static constructAnnotation ({annotation, user, group, annotations}) {
+  static constructAnnotation ({annotation, user, annotations}) {
     // Check if the required parameter uri exists
     if (annotation.uri) {
       // TODO Check if annotation follows the standard schema
@@ -60,7 +60,7 @@ class LocalStorageClient {
 
       // Append required params but not added in annotation (groupid, user, etc.)
       if (_.isEmpty(annotationToCreate.group)) {
-        annotationToCreate.group = group.id
+        annotationToCreate.group = '__world__'
       }
       // UserInfo
       if (_.isEmpty(annotationToCreate.user_info)) {
@@ -135,23 +135,57 @@ class LocalStorageClient {
     let annotations = this.database.annotations
     let filteredAnnotations = _.filter(annotations, (annotation) => {
       let result = true
+      // URL
       if (result && (data.uri || data.url)) {
         result = annotation.uri === data.url || annotation.uri === data.uri
       }
+      // User
       if (result && (data.user)) {
         result = annotation.user === data.user
       }
+      // Group
       if (result && (data.group)) {
         result = annotation.group === data.group
       }
-      if (result && (data.tag)) {
-        result = _.find(annotation.tags, (tag) => { return tag === data.tag })
+      // Tags
+      if (result && (data.tag || data.tags)) {
+        let tags = []
+        if (_.isArray(data.tags) && _.every(data.tags, _.isString)) {
+          tags = data.tags
+        }
+        if (_.isString(data.tags)) {
+          tags.push(data.tags)
+        }
+        if (_.isString(data.tag)) {
+          tags.push(data.tag)
+        }
+        // Remove duplicated tags
+        tags = _.uniq(tags)
+        // Check if annotation's tags includes all the annotations
+        result = tags.length === _.intersection(annotation.tags, tags).length
       }
-      // TODO Tags
-      // TODO Uri.parts, wildcard_uri
+      // TODO Uri.parts
+      if (result && (data['uri.parts'])) {
+        let splittedUri = annotation.uri.split(/[#+/:=?.-]/) // Chars used to split URIs for uri.parts in Hypothes.is https://hyp.is/ajJkEI3pEemPn2ukkpZWjQ/h.readthedocs.io/en/latest/api-reference/v1/
+        result = _.some(splittedUri, (str) => { return str === data['uri.parts'] })
+      }
+      // TODO wildcard_uri
+      if (result && (data.wildcard_uri)) {
+        result = wildcard(data.wildcard_uri, annotation.uri)
+      }
       // TODO Any
+      if (result && (data.any)) {
+        let anyUrl = annotation.uri.includes(data.any) // Any checks in uri
+        let anyTag = annotation.tags.includes(data.any) // Any checks in tags
+        result = anyUrl || anyTag // TODO Quote and text
+      }
       // TODO Quote
       // TODO References
+      if (result && (data.references)) {
+        if (_.isString(data.references)) {
+          result = annotation.references.includes(data.references)
+        }
+      }
       // TODO Text
       return result
     })
@@ -166,8 +200,9 @@ class LocalStorageClient {
   }
 
   static updateAnnotationFromList ({id, annotation, annotations, currentUser}) {
-    let annotationToUpdateIndex = _.findIndex(annotations, (annotation) => {
-      return annotation.id === id
+    debugger
+    let annotationToUpdateIndex = _.findIndex(annotations, (annotationInDatabase) => {
+      return annotationInDatabase.id === id
     })
     if (annotationToUpdateIndex > -1) {
       let annotationToUpdate = annotations[annotationToUpdateIndex]
@@ -226,7 +261,7 @@ class LocalStorageClient {
           currentUser: this.database.user
         })
         // TODO Update storage
-        window.abwa.storageManager.saveDatabase(this.database)
+        this.manager.saveDatabase(this.database)
         callback(null, updatedAnnotation)
       } catch (e) {
         callback(e)
@@ -277,7 +312,7 @@ class LocalStorageClient {
         currentUser: this.database.user
       })
       // TODO Update storage
-      window.abwa.storageManager.saveDatabase(this.database)
+      this.manager.saveDatabase(this.database)
       // Callback
       callback(null, {deleted: true, annotation: deletedAnnotation})
     } catch (e) {
@@ -307,7 +342,7 @@ class LocalStorageClient {
         deletedAnnotations.push(deletedAnnotation)
       }
       // TODO Update Storage
-      window.abwa.storageManager.saveDatabase(this.database)
+      this.manager.saveDatabase(this.database)
       // Callback
       callback(null, {deleted: true, annotations: deletedAnnotations})
     } catch (e) {
@@ -345,6 +380,15 @@ class LocalStorageClient {
 
   getUserProfile (callback) {
     let profile = this.database.user
+    // Retrieve groups and parse
+    profile.groups = _.map(this.database.groups, (group) => {
+      return {
+        name: group.name,
+        description: group.description,
+        id: group.id,
+        url: group.links.html
+      }
+    })
     callback(null, profile)
   }
 
@@ -361,7 +405,7 @@ class LocalStorageClient {
         // Update in-memory database
         this.database.groups[groupToUpdateIndex] = updatedGroup
         // TODO Update Storage
-        window.abwa.storageManager.saveDatabase(this.database)
+        this.manager.saveDatabase(this.database)
         // Callback
         callback(null, updatedGroup)
       } else {
@@ -377,11 +421,12 @@ class LocalStorageClient {
       let createdGroup = LocalStorageClient.constructGroup({
         name: data.name,
         description: data.description,
+        storageUrl: this.manager.storageUrl,
         groups: this.database.groups
       })
       this.database.groups.push(createdGroup)
       // TODO Update Storage
-      window.abwa.storageManager.saveDatabase(this.database)
+      this.manager.saveDatabase(this.database)
       // Callback
       callback(null, createdGroup)
     } else {
@@ -389,14 +434,14 @@ class LocalStorageClient {
     }
   }
 
-  static constructGroup ({name, description = '', groups}) {
+  static constructGroup ({name, description = '', groups, storageUrl}) {
     // Get a random id
     let arrayOfIds = _.map(groups, 'id')
-    let groupId = RandomUtils.randomUnique(arrayOfIds, 22)
+    let groupId = RandomUtils.randomUnique(arrayOfIds, 8)
     return {
       name: name,
       description: description || '',
-      links: {html: 'https://reviewandgo.com/group/' + groupId},
+      links: {html: storageUrl + '/groups/' + groupId},
       id: groupId
     }
   }

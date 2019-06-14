@@ -15,10 +15,10 @@ class HypothesisClientManager extends StorageManager {
   }
 
   init (callback) {
-    this.reloadHypothesisClient(() => {
+    this.reloadClient(() => {
       // Start reloading of client
       this.reloadInterval = setInterval(() => {
-        this.reloadHypothesisClient()
+        this.reloadClient()
       }, reloadIntervalInSeconds * 1000)
       if (_.isFunction(callback)) {
         callback()
@@ -26,7 +26,7 @@ class HypothesisClientManager extends StorageManager {
     })
   }
 
-  reloadHypothesisClient (callback) {
+  reloadClient (callback) {
     if (_.has(window.background, 'hypothesisManager')) {
       if (_.isString(window.background.hypothesisManager.token)) {
         if (this.hypothesisToken !== window.background.hypothesisManager.token) {
@@ -72,7 +72,7 @@ class HypothesisClientManager extends StorageManager {
     return !_.isEmpty(this.hypothesisToken)
   }
 
-  logInHypothesis (callback) {
+  logIn (callback) {
     // TODO Check if user grant permission to access hypothesis account
     if (!this.isLoggedIn()) {
       this.askUserToLogInHypothesis((err, token) => {
