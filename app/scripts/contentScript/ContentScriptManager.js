@@ -22,7 +22,6 @@ class ContentScriptManager {
     this.loadContentTypeManager(() => {
       // Hypothesis
       // window.abwa.storageManager = new HypothesisClientManager()
-      // window.abwa.storageManager.init(() => {
       // LocalStorage
       window.abwa.storageManager = new LocalStorageManager()
       window.abwa.storageManager.init(() => {

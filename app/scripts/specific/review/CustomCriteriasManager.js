@@ -217,6 +217,7 @@ class CustomCriteriasManager {
     let criteriaDescription
     let formCriteriaNameValue = defaultNameValue || tagGroup.config.name
     let formCriteriaDescriptionValue = defaultDescriptionValue || tagGroup.config.options.description
+    let custom = tagGroup.config.options.custom || false
     Alerts.multipleInputAlert({
       title: 'Modifying criteria name and description',
       html: '<div>' +
@@ -234,14 +235,14 @@ class CustomCriteriasManager {
         // Revise to execute only when OK button is pressed or criteria name and descriptions are not undefined
         if (!_.isUndefined(criteriaName) && !_.isUndefined(criteriaDescription)) {
           this.modifyCriteria({
-            tagGroup: tagGroup, name: criteriaName, description: criteriaDescription
+            tagGroup: tagGroup, name: criteriaName, description: criteriaDescription, custom
           })
         }
       }
     })
   }
 
-  modifyCriteria ({tagGroup, name, description, callback}) {
+  modifyCriteria ({tagGroup, name, description, custom, callback}) {
     // Check if name has changed
     if (name === tagGroup.config.name) {
       // Check if description has changed
@@ -252,7 +253,7 @@ class CustomCriteriasManager {
         // Create new annotation
         let review = new Review({reviewId: ''})
         review.hypothesisGroup = window.abwa.groupSelector.currentGroup
-        let criteria = new Criteria({name, description, group: tagGroup.config.options.group, review, custom: true})
+        let criteria = new Criteria({name, description, group: tagGroup.config.options.group, review, custom: custom})
         let annotation = criteria.toAnnotation()
         window.abwa.storageManager.client.updateAnnotation(oldAnnotation.id, annotation, (err, annotation) => {
           if (err) {
@@ -316,7 +317,7 @@ class CustomCriteriasManager {
               // Update tagGroup annotation
               let review = new Review({reviewId: ''})
               review.hypothesisGroup = window.abwa.groupSelector.currentGroup
-              let criteria = new Criteria({name, description, group: tagGroup.config.options.group, review})
+              let criteria = new Criteria({name, description, group: tagGroup.config.options.group, review, custom: custom})
               let annotation = criteria.toAnnotation()
               let oldAnnotation = tagGroup.config.annotation
               window.abwa.storageManager.client.updateAnnotation(oldAnnotation.id, annotation, (err, annotation) => {
