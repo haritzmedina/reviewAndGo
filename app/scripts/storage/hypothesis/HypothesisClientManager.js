@@ -2,20 +2,23 @@ const _ = require('lodash')
 
 const HypothesisClient = require('hypothesis-api-client')
 
+const StorageManager = require('../StorageManager')
+
 const reloadIntervalInSeconds = 10 // Reload the hypothesis client every 10 seconds
 
-class HypothesisClientManager {
+class HypothesisClientManager extends StorageManager {
   constructor () {
-    this.hypothesisClient = null
+    super()
+    this.client = null
     this.hypothesisToken = null
     this.reloadInterval = null
   }
 
   init (callback) {
-    this.reloadHypothesisClient(() => {
+    this.reloadClient(() => {
       // Start reloading of client
       this.reloadInterval = setInterval(() => {
-        this.reloadHypothesisClient()
+        this.reloadClient()
       }, reloadIntervalInSeconds * 1000)
       if (_.isFunction(callback)) {
         callback()
@@ -23,15 +26,15 @@ class HypothesisClientManager {
     })
   }
 
-  reloadHypothesisClient (callback) {
+  reloadClient (callback) {
     if (_.has(window.background, 'hypothesisManager')) {
       if (_.isString(window.background.hypothesisManager.token)) {
         if (this.hypothesisToken !== window.background.hypothesisManager.token) {
           this.hypothesisToken = window.background.hypothesisManager.token
           if (this.hypothesisToken) {
-            this.hypothesisClient = new HypothesisClient(window.background.hypothesisManager.token)
+            this.client = new HypothesisClient(window.background.hypothesisManager.token)
           } else {
-            this.hypothesisClient = new HypothesisClient()
+            this.client = new HypothesisClient()
           }
         }
         if (_.isFunction(callback)) {
@@ -40,10 +43,10 @@ class HypothesisClientManager {
       } else {
         window.background.hypothesisManager.retrieveHypothesisToken((err, token) => {
           if (err) {
-            this.hypothesisClient = new HypothesisClient()
+            this.client = new HypothesisClient()
             this.hypothesisToken = null
           } else {
-            this.hypothesisClient = new HypothesisClient(token)
+            this.client = new HypothesisClient(token)
             this.hypothesisToken = token
           }
         })
@@ -53,9 +56,9 @@ class HypothesisClientManager {
         if (this.hypothesisToken !== token) {
           this.hypothesisToken = token
           if (this.hypothesisToken) {
-            this.hypothesisClient = new HypothesisClient(token)
+            this.client = new HypothesisClient(token)
           } else {
-            this.hypothesisClient = new HypothesisClient()
+            this.client = new HypothesisClient()
           }
         }
         if (_.isFunction(callback)) {
@@ -69,7 +72,7 @@ class HypothesisClientManager {
     return !_.isEmpty(this.hypothesisToken)
   }
 
-  logInHypothesis (callback) {
+  logIn (callback) {
     // TODO Check if user grant permission to access hypothesis account
     if (!this.isLoggedIn()) {
       this.askUserToLogInHypothesis((err, token) => {

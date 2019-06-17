@@ -70,7 +70,7 @@ class GroupSelector {
     $.get(sidebarURL, (html) => {
       // Append sidebar to content
       $('#abwaSidebarContainer').append($.parseHTML(html))
-      if (!window.abwa.hypothesisClientManager.isLoggedIn()) {
+      if (!window.abwa.storageManager.isLoggedIn()) {
         // Display login/sign up form
         $('#notLoggedInGroupContainer').attr('aria-hidden', 'false')
         // Hide group container
@@ -93,7 +93,7 @@ class GroupSelector {
   }
 
   retrieveHypothesisGroups (callback) {
-    window.abwa.hypothesisClientManager.hypothesisClient.getListOfGroups({}, (err, groups) => {
+    window.abwa.storageManager.client.getListOfGroups({}, (err, groups) => {
       if (err) {
         if (_.isFunction(callback)) {
           callback(err)
@@ -108,11 +108,9 @@ class GroupSelector {
   }
 
   retrieveUserProfile (callback) {
-    window.abwa.hypothesisClientManager.hypothesisClient.getUserProfile((err, profile) => {
+    window.abwa.storageManager.client.getUserProfile((err, profile) => {
       if (err) {
-        if (_.isFunction(callback)) {
-          callback(err)
-        }
+        callback(err)
       } else {
         this.user = profile
         if (_.isFunction(callback)) {

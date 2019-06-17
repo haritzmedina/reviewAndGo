@@ -5,15 +5,16 @@ chrome.runtime.onInstalled.addListener((details) => {
   console.log('previousVersion', details.previousVersion)
 })
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+chrome.tabs.onUpdated.addListener((tabId) => {
   chrome.pageAction.show(tabId)
 })
 
-chrome.tabs.onCreated.addListener((tab) => {
+chrome.tabs.onCreated.addListener(() => {
 
 })
 
 const HypothesisManager = require('./background/HypothesisManager')
+const StorageManager = require('./background/StorageManager')
 const Popup = require('./popup/Popup')
 
 const _ = require('lodash')
@@ -28,6 +29,10 @@ class Background {
     // Initialize hypothesis manager
     this.hypothesisManager = new HypothesisManager()
     this.hypothesisManager.init()
+
+    // Initialize storage manager
+    this.storageManager = new StorageManager()
+    this.storageManager.init()
 
     // Initialize page_action event handler
     chrome.pageAction.onClicked.addListener((tab) => {

@@ -1,3 +1,6 @@
+# Settings files with private keys,...
+app/settings/*.json
+
 
 errorShots
 

@@ -1,7 +1,7 @@
 {
   "name": "review-and-go",
   "private": true,
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
   "scripts": {
     "start": "npm run dev:chrome",
@@ -55,6 +55,7 @@
     "qtip2": "^3.0.3",
     "sweetalert2": "^7.28.5",
     "unique-colors": "^1.0.1",
+    "wildcard": "^1.1.2",
     "xpath-range": "^1.1.1"
   },
   "devDependencies": {

@@ -5,17 +5,11 @@ addons:
   chrome: stable
 before_install:
   - sudo apt-get update
-  - sudo apt-get install g++ build-essential # Build essential to compile the integration-test platform
-  - sudo apt-get install oracle-java9-set-default # Java instalation for webdriverio
-  - CHROME_BIN=google-chrome # Set chrome bin path for karma tests runner
-  - export DISPLAY=:99.0 # Display size
-  - sh -e /etc/init.d/xvfb start # Start X-window to run chrome
 before_script:
   - npm install -g gulp-cli
   - npm install babel-plugin-transform-es3-member-expression-literals # Fix a bug to compile dom-seek and dom-node-iterator
 script:
   - gulp
-  - gulp test
 cache:
   directories:
     - node_modules
