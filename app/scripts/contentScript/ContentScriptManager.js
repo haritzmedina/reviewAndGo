@@ -6,7 +6,7 @@ const ModeManager = require('./ModeManager')
 const RolesManager = require('./RolesManager')
 const GroupSelector = require('./GroupSelector')
 const AnnotationBasedInitializer = require('./AnnotationBasedInitializer')
-// const HypothesisClientManager = require('../storage/hypothesis/HypothesisClientManager')
+const HypothesisClientManager = require('../storage/hypothesis/HypothesisClientManager')
 const LocalStorageManager = require('../storage/local/LocalStorageManager')
 const Config = require('../Config')
 
@@ -20,11 +20,7 @@ class ContentScriptManager {
     console.debug('Initializing content script manager')
     this.status = ContentScriptManager.status.initializing
     this.loadContentTypeManager(() => {
-      // Hypothesis
-      // window.abwa.storageManager = new HypothesisClientManager()
-      // LocalStorage
-      window.abwa.storageManager = new LocalStorageManager()
-      window.abwa.storageManager.init(() => {
+      this.loadStorage(() => {
         window.abwa.sidebar = new Sidebar()
         window.abwa.sidebar.init(() => {
           window.abwa.annotationBasedInitializer = new AnnotationBasedInitializer()
@@ -109,6 +105,26 @@ class ContentScriptManager {
         }
       })
     }
+  }
+
+  loadStorage (callback) {
+    chrome.runtime.sendMessage({scope: 'storage', cmd: 'getSelectedStorage'}, ({storage}) => {
+      // Hypothesis
+      if (storage === 'hypothesis') {
+        window.abwa.storageManager = new HypothesisClientManager()
+      } else {
+        window.abwa.storageManager = new LocalStorageManager()
+      }
+      window.abwa.storageManager.init((err) => {
+        if (_.isFunction(callback)) {
+          if (err) {
+            callback(err)
+          } else {
+            callback()
+          }
+        }
+      })
+    })
   }
 }
 

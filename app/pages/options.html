@@ -20,7 +20,7 @@
   <div id="main-container" class="container">
 
     <div class="jumbotron">
-      <img class="logo" src="../images/icon-38.png">
+      <img alt="Review and go logo" title="Review and go logo" class="logo" src="../images/icon-38.png">
       <h2 class="title">Review&Go configuration</h2>
       <div class="card">
         <div class="card-header">User manual</div>
@@ -31,11 +31,14 @@
         </div>
       </div>
       <div class="card">
-        <div class="card-header">Permissions</div>
+        <div class="card-header">Annotation storage</div>
         <div class="card-body">
           <div class="form-check">
-            <input disabled="disabled" type="checkbox" class="form-check-input" id="permissionHypothesisCheckbox">
-            <label for="permissionHypothesisCheckbox" class="form-check-label">Hypothesis</label>
+            <label for="storageDropdown">Select your annotations storage</label>
+            <select class="form-control" id="storageDropdown">
+              <option value="localStorage">Local storage</option>
+              <option value="hypothesis">Hypothes.is</option>
+            </select>
           </div>
         </div>
       </div>

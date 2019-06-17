@@ -5,7 +5,17 @@ const FileSaver = require('file-saver')
 
 class Options {
   init () {
-    // Restore
+    // Storage type
+    document.querySelector('#storageDropdown').addEventListener('change', (event) => {
+      // Get value
+      if (event.target.selectedOptions && event.target.selectedOptions[0] && event.target.selectedOptions[0].value) {
+        this.setStorage(event.target.selectedOptions[0].value)
+      }
+    })
+    chrome.runtime.sendMessage({scope: 'storage', cmd: 'getSelectedStorage'}, ({storage}) => {
+      document.querySelector('#storageDropdown').value = storage
+    })
+    // Local storage restore
     document.querySelector('#restoreDatabaseButton').addEventListener('click', () => {
       Alerts.inputTextAlert({
         title: 'Upload your database backup file',
@@ -34,11 +44,11 @@ class Options {
         }
       })
     })
-    // Backup
+    // Local storage backup
     document.querySelector('#backupDatabaseButton').addEventListener('click', () => {
       this.backupDatabase()
     })
-    // Delete
+    // Local storage delete
     document.querySelector('#deleteDatabaseButton').addEventListener('click', () => {
       Alerts.confirmAlert({
         title: 'Deleting your database',
@@ -81,6 +91,16 @@ class Options {
     window.options.localStorage = new LocalStorageManager()
     window.options.localStorage.init(() => {
       window.options.localStorage.cleanDatabase(callback)
+    })
+  }
+
+  setStorage (storage) {
+    chrome.runtime.sendMessage({
+      scope: 'storage',
+      cmd: 'setSelectedStorage',
+      data: {storage: storage}
+    }, ({storage}) => {
+      console.debug('Storage selected ' + storage)
     })
   }
 }
