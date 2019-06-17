@@ -151,7 +151,7 @@ class Alerts {
     }
   }
 
-  static inputTextAlert ({title, input = 'text', type, inputPlaceholder = '', inputValue = '', showCancelButton = true, html = '', callback}) {
+  static inputTextAlert ({title, input = 'text', type, inputPlaceholder = '', inputValue = '', cancelCallback, showCancelButton = true, html = '', callback}) {
     Alerts.tryToLoadSwal()
     if (_.isNull(swal)) {
       if (_.isFunction(callback)) {
@@ -170,6 +170,10 @@ class Alerts {
         if (result.value) {
           if (_.isFunction(callback)) {
             callback(null, result.value)
+          }
+        } else {
+          if (_.isFunction(cancelCallback)) {
+            cancelCallback()
           }
         }
       })

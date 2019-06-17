@@ -33,15 +33,15 @@
   transition: transform 0.5s;
 }
 
-.groupName:before{
-  background-image: url($chromeExtensionMainURL + 'images/pin.png');
-  background-size: 20px 20px;
-  display: inline-block;
-  width: 0;
-  height: 15px;
-  content:"";
-  padding-right: 20px;
+.addCustomCriteria {
   float:left;
+  height: 15px;
+  width: 0;
+  padding-right: 15px;
+  background-size: 15px 15px;
+  background-image: url($chromeExtensionMainURL + 'images/add.png');
+  margin-top: 1px;
+  margin-left: 1px;
 }
 
 .tagContainer[aria-hidden="true"]{

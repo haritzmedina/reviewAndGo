@@ -49,21 +49,11 @@ class CustomCriteriasManager {
 
   createAddCustomCriteriaButton (groupName) {
     // Get Other container
-    let groupContainer = document.querySelector('.groupName[title="' + groupName + '"]').parentElement.querySelector('.tagButtonContainer')
-
-    // Add separator between other criterias and creator
-    let separator = document.createElement('hr')
-    separator.className = 'separator'
-    groupContainer.prepend(separator)
+    let addCriteriaButton = document.querySelector('.groupName[title="' + groupName + '"]').previousElementSibling
+    addCriteriaButton.title = 'Add new criteria to ' + groupName
 
     // Create button for new element
-    let addCriteriaButton = document.createElement('button')
-    addCriteriaButton.innerHTML = '<img class="buttonIcon" src="' + chrome.extension.getURL('/images/add.png') + '"/> new criteria'
-    addCriteriaButton.className = 'customCriteriaButton'
     addCriteriaButton.addEventListener('click', this.createAddCustomCriteriaButtonHandler(groupName))
-
-    // Prepend create new criteria button
-    groupContainer.prepend(addCriteriaButton)
   }
 
   createAddCustomCriteriaButtonHandler (groupName) {
@@ -88,6 +78,12 @@ class CustomCriteriasManager {
                 }
               }
             })
+          }
+        },
+        cancelCallback: () => {
+          // Open sidebar again
+          if (isSidebarOpened) {
+            window.abwa.sidebar.openSidebar()
           }
         }
       })
