@@ -9,7 +9,7 @@ const Tag = require('./Tag')
 const TagGroup = require('./TagGroup')
 const Alerts = require('../utils/Alerts')
 const ImportSchema = require('../specific/review/ImportSchema')
-const DefaultCriterias = require('../specific/review/DefaultCriterias')
+const DefaultCriteria = require('../specific/review/DefaultCriteria')
 const Review = require('../model/schema/Review')
 
 class TagManager {
@@ -108,7 +108,7 @@ class TagManager {
                       }
                     })
                   } else { // Default configuration
-                    configuration = DefaultCriterias
+                    configuration = DefaultCriteria
                     resolve(configuration)
                   }
                 })
@@ -177,13 +177,13 @@ class TagManager {
       }
     }
     // Get groups names
-    let groups = _.map(_.uniqBy(DefaultCriterias.criteria, (criteria) => { return criteria.group }), 'group')
+    let groups = _.map(_.uniqBy(DefaultCriteria.criteria, (criteria) => { return criteria.group }), 'group')
     // Get a list of colors
     // The list of colors to retrieve are 1 per group + 1 per groupTags in "Other" group
     let listOfOtherTags = _.filter(_.values(tagGroupsAnnotations), (tagGroup) => { return tagGroup.config.options.group === 'Other' })
-    let colorsList = ColorUtils.getDifferentColors(groups.length - 1 + listOfOtherTags.length)
-    let colorsGroup = colorsList.slice(0, groups.length - 1)
-    let colorsOthers = colorsList.slice(groups.length - 1)
+    let colorsList = ColorUtils.getDifferentColors(groups.length + listOfOtherTags.length)
+    let colorsGroup = colorsList.slice(0, groups.length)
+    let colorsOthers = colorsList.slice(groups.length)
     // Set colors for each group
     let array = _.toArray(tagGroupsAnnotations)
     let colors = {}
@@ -277,16 +277,16 @@ class TagManager {
   }
 
   createTagsButtonsForEvidencing () {
-    let groups = _.map(_.uniqBy(DefaultCriterias.criteria, (criteria) => { return criteria.group }), 'group')
+    let groups = _.map(_.uniqBy(DefaultCriteria.criteria, (criteria) => { return criteria.group }), 'group')
     for (let i = 0; i < groups.length; i++) {
       let group = groups[i]
       this.tagsContainer.evidencing.append(TagManager.createGroupedButtons({name: group, groupHandler: this.collapseExpandGroupedButtonsHandler}))
     }
     // Create the group Other
     // Not required to create this group because "Typos" is a default code from Other category, otherwise discomment this two lines
-    /* let groupedButtons = TagManager.createGroupedButtons({name: 'Other', groupHandler: this.collapseExpandGroupedButtonsHandler})
+    let groupedButtons = TagManager.createGroupedButtons({name: 'Other', groupHandler: this.collapseExpandGroupedButtonsHandler})
     groupedButtons.id = 'tagGroupOther'
-    this.tagsContainer.evidencing.append(groupedButtons) */
+    this.tagsContainer.evidencing.append(groupedButtons)
     // Create the default groups for annotations
     // Insert buttons in each of the groups
     let arrayOfTagGroups = _.values(this.model.currentTags)

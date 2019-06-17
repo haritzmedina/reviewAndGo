@@ -17,7 +17,7 @@ const Config = require('../../Config')
 const FileSaver = require('file-saver')
 
 const Events = require('../../contentScript/Events')
-const DefaultCriterias = require('./DefaultCriterias')
+const DefaultCriteria = require('./DefaultCriteria')
 
 
 let swal = require('sweetalert2')

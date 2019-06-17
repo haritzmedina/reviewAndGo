@@ -1,0 +1,85 @@
+{
+  "criteria": [
+    {
+      "name": "Significance",
+      "group": "Relevance",
+      "description": "Significance of the problem for the practice at hand",
+      "levels": [
+        {
+          "name": "Strength",
+          "description": ""
+        },
+        {
+          "name": "Minor weakness",
+          "description": ""
+        },
+        {
+          "name": "Major weakness",
+          "description": ""
+        }
+      ],
+      "custom": true
+    },
+    {
+      "name": "Research methods",
+      "group": "Rigor",
+      "description": "Rigorous use of the research methods",
+      "levels": [
+        {
+          "name": "Strength",
+          "description": ""
+        },
+        {
+          "name": "Minor weakness",
+          "description": ""
+        },
+        {
+          "name": "Major weakness",
+          "description": ""
+        }
+      ],
+      "custom": true
+    },
+    {
+      "name": "Evaluation",
+      "group": "Design",
+      "description": "Evaluation of the artefact",
+      "levels": [
+        {
+          "name": "Strength",
+          "description": ""
+        },
+        {
+          "name": "Minor weakness",
+          "description": ""
+        },
+        {
+          "name": "Major weakness",
+          "description": ""
+        }
+      ],
+      "custom": true
+    },
+    {
+      "name": "Typos",
+      "group": "Presentation",
+      "description": "Typos in the dissemination",
+      "levels": [],
+      "custom": true
+    }
+  ],
+  "defaultLevels": [
+    {
+      "name": "Strength",
+      "description": ""
+    },
+    {
+      "name": "Minor weakness",
+      "description": ""
+    },
+    {
+      "name": "Major weakness",
+      "description": ""
+    }
+  ]
+}

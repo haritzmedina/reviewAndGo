@@ -102,10 +102,8 @@
   background-color: $containerHeaderBackgroundColor;
   color: $containerHeaderFontColor;
   padding: 0.2rem;
-  border-top-left-radius: 0.2rem;
-  border-top-right-radius: 0.2rem;
   min-width: calc( #{$sideBarWidth} - 0.5rem - 0.2rem);
-  font-size: 18px;
+  font-size: 14px;
   font-weight: bold;
   text-align: center;
 }

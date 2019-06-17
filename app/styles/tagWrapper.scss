@@ -13,11 +13,11 @@
 .groupName{
   background: $subContainerHeaderBackgroundColor;
   color:white;
-  font-size: 1.5rem;
+  font-size: 14px;
   text-align: center;
-  padding-top: 3px;
-  padding-bottom: 3px;
-  margin-bottom: 3px;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  margin-bottom: 1px;
   cursor: pointer;
 }
 
@@ -62,7 +62,6 @@
 }
 
 .tagButtonContainer{
-  padding: 5px 0 0;
   transition: height 0.5s;
 }
 
@@ -89,10 +88,6 @@
 }
 
 .tagButton[role="annotation"] {
-  padding: 10px;
-}
-
-.tagButton[role="marking"] {
   padding: 5px;
 }
 

@@ -11,8 +11,8 @@
 }
 
 hr.separator {
-  margin-top: 10px;
-  margin-bottom: 10px;
+  margin-top: 2px;
+  margin-bottom: 1px;
 }
 
 .customCriteriaButton {
@@ -31,11 +31,11 @@ hr.separator {
   max-width: calc( #{$sideBarWidth} - 0.6rem - 10px);
   min-width: calc( #{$sideBarWidth} - 0.6rem - 10px);
   text-overflow: ellipsis;
-  padding: 10px;
+  padding: 5px;
 }
 
 .customCriteriaButton:hover {
-  background-color: rgba(175, 175, 175, 0.7);
+  background-color: rgba(150, 150, 150, 0.7);
 }
 
 input.customizeInput {

@@ -2,7 +2,7 @@ const AnnotationGuide = require('./AnnotationGuide')
 const Criteria = require('./Criteria')
 const Level = require('./Level')
 const LanguageUtils = require('../../utils/LanguageUtils')
-const DefaultCriterias = require('../../specific/review/DefaultCriterias')
+const DefaultCriteria = require('../../specific/review/DefaultCriteria')
 
 class Review extends AnnotationGuide {
   constructor ({reviewId = '', hypothesisGroup = ''}) {
@@ -36,7 +36,7 @@ class Review extends AnnotationGuide {
   toObject () {
     let object = {
       criteria: [],
-      defaultLevels: DefaultCriterias.defaultLevels
+      defaultLevels: DefaultCriteria.defaultLevels
     }
     // For each criteria create the object
     for (let i = 0; i < this.criterias.length; i++) {

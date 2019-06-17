@@ -39,5 +39,10 @@
     "file://*/*",
     "unlimitedStorage"
   ],
+  "applications": {
+    "gecko": {
+      "id": "haritz@ehu.eus"
+    }
+  },
   "web_accessible_resources": ["pages/*.html", "content/*", "images/*"]
 }
