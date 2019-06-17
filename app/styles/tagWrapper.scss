@@ -13,7 +13,7 @@
 .groupName{
   background: $subContainerHeaderBackgroundColor;
   color:white;
-  font-size: 14px;
+  font-size: 16px;
   text-align: center;
   padding-top: 1px;
   padding-bottom: 1px;
@@ -40,8 +40,15 @@
   padding-right: 15px;
   background-size: 15px 15px;
   background-image: url($chromeExtensionMainURL + 'images/add.png');
-  margin-top: 1px;
+  margin-top: 2px;
   margin-left: 1px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 1s;
+}
+
+.addCustomCriteria:hover {
+  background-color: rgba(200,200,200,0.7);
 }
 
 .tagContainer[aria-hidden="true"]{
