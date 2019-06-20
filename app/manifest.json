@@ -26,7 +26,6 @@
     "default_icon": "images/icon-38-bw.png",
     "default_title": "__MSG_browserActionTitle__"
   },
-  "options_page": "pages/options.html",
   "options_ui": {
     "page": "pages/options.html",
     "chrome_style": false,
@@ -37,12 +36,14 @@
     "storage",
     "tabs",
     "file://*/*",
-    "unlimitedStorage"
+    "unlimitedStorage",
+    "activeTab",
+    "<all_urls>"
   ],
   "applications": {
     "gecko": {
       "id": "haritz@ehu.eus"
     }
   },
-  "web_accessible_resources": ["pages/*.html", "content/*", "images/*"]
+  "web_accessible_resources": ["pages/*.html", "content/*", "images/*", "scripts/*.js"]
 }

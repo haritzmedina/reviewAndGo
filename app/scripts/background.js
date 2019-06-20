@@ -1,6 +1,13 @@
 // Enable chromereload by uncommenting this line:
 import 'chromereload/devonly'
 
+// Browser compatibility for chrome.extension.onMessage (in firefox it is used browser.runtime.onMessage: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage)
+const BrowserUtils = require('./utils/BrowserUtils')
+if (BrowserUtils.getCurrentBrowser() === BrowserUtils.browserList.firefox) {
+  console.debug('This is firefox')
+  chrome.extension.onMessage = window.browser.runtime.onMessage
+}
+
 chrome.runtime.onInstalled.addListener((details) => {
   console.log('previousVersion', details.previousVersion)
 })
@@ -40,9 +47,18 @@ class Background {
       if (tab.url.startsWith('file://')) {
         // Check if permission to access file URL is enabled
         chrome.extension.isAllowedFileSchemeAccess((isAllowedAccess) => {
-          if (isAllowedAccess === false) {
+          if (isAllowedAccess === false && BrowserUtils.getCurrentBrowser() !== BrowserUtils.browserList.firefox) {
             chrome.tabs.create({url: chrome.runtime.getURL('pages/filePermission.html')})
-          } else {
+          } /* else if (BrowserUtils.getCurrentBrowser() === BrowserUtils.browserList.firefox) {
+              chrome.tabs.executeScript(null, {
+              file: chrome.extension.getURL('./contentScript.js')
+            })
+            browser.tabs.create({url: chrome.runtime.getURL('content/pdfjs/web/viewer.html')}).then(() => {
+              browser.tabs.executeScript({
+                code: `console.log('location:', window.location.href);`
+              })
+            })
+          } */ else {
             if (this.tabs[tab.id]) {
               if (this.tabs[tab.id].activated) {
                 this.tabs[tab.id].deactivate()

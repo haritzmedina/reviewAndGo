@@ -3,6 +3,13 @@ const AnnotationBasedInitializer = require('./contentScript/AnnotationBasedIniti
 
 const _ = require('lodash')
 
+// Browser compatibility for chrome.extension.onMessage (in firefox it is used browser.runtime.onMessage: https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/onMessage)
+const BrowserUtils = require('./utils/BrowserUtils')
+if (BrowserUtils.getCurrentBrowser() === BrowserUtils.browserList.firefox) {
+  console.debug('This is firefox')
+  chrome.extension.onMessage = window.browser.runtime.onMessage
+}
+
 console.debug('Loaded abwa content script')
 if (_.isEmpty(window.abwa)) {
   window.abwa = {} // Global namespace for variables

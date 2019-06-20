@@ -8,4 +8,25 @@ $subContainerHeaderBackgroundColor: rgba(100,100,100,0.7);
 $containerHeaderFontColor: white;
 $switchSize: 48px;
 
-$chromeExtensionMainURL: 'chrome-extension://__MSG_@@extension_id__/'
+$extensionMainURL: 'chrome-extension://__MSG_@@extension_id__/';
+
+@-moz-document url-prefix() {
+  :root {
+    --url-arrow: url('moz-extension://__MSG_@@extension_id__/images/arrowUp.svg');
+    --url-add: url('moz-extension://__MSG_@@extension_id__/images/add.png');
+  }
+}
+
+@supports (-webkit-appearance:none) and (not (overflow:-webkit-marquee))
+and (not (-ms-ime-align:auto)) and (not (-moz-appearance:none)) {
+  :root {
+    --url-arrow: url('chrome-extension://__MSG_@@extension_id__/images/arrowUp.svg');
+    --url-add: url('chrome-extension://__MSG_@@extension_id__/images/add.png');
+  }
+}
+
+@mixin styling($base-url, $route) {
+  #Contents {
+    background-image: url($base-url + $route);
+  }
+}

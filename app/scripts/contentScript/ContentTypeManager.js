@@ -18,6 +18,7 @@ class ContentTypeManager {
   }
 
   init (callback) {
+    console.debug('Initializing content type manager')
     if (document.querySelector('embed[type="application/pdf"][name="plugin"]')) {
       window.location = chrome.extension.getURL('content/pdfjs/web/viewer.html') + '?file=' + encodeURIComponent(window.location.href)
     } else {

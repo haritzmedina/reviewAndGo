@@ -22,6 +22,7 @@ class StorageManager {
               }
             }
           })
+          return true
         } else if (request.cmd === 'setSelectedStorage') {
           let selectedStorage = request.data.storage
           ChromeStorage.setData('storage.selected', {data: JSON.stringify(selectedStorage)}, ChromeStorage.sync, (err) => {
@@ -31,6 +32,7 @@ class StorageManager {
               sendResponse({storage: selectedStorage})
             }
           })
+          return true
         }
       }
     })
