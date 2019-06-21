@@ -226,6 +226,76 @@ class CustomCriteriasManager {
   }
 
   initContextMenu () {
+    this.initContextMenuForCriteria()
+    this.initContextMenuForCriteriaGroups()
+  }
+
+  initContextMenuForCriteriaGroups () {
+    let items = {}
+    // Modify menu element
+    items['modify'] = { name: 'Modify criteria group' }
+    // If custom criteria, it is also possible to delete it
+    items['delete'] = { name: 'Delete criteria group' }
+    $.contextMenu({
+      selector: '.tagGroup[data-group-name]',
+      build: () => {
+        return {
+          callback: (key, ev) => {
+            let criteriaGroupName = ev.$trigger.attr('data-group-name')
+            if (key === 'delete') {
+              // TODO
+              this.deleteCriteriaGroup(criteriaGroupName)
+            } else if (key === 'modify') {
+              // TODO
+              this.modifyCriteriaGroup(criteriaGroupName)
+            }
+          },
+          items: items
+        }
+      }
+    })
+  }
+
+  deleteCriteriaGroup (criteriaGroupName, callback) {
+    // Get all criteria with criteria group name
+    let arrayOfTagGroups = _.filter(_.values(window.abwa.tagManager.model.currentTags), tag => tag.config.options.group === criteriaGroupName)
+    // Ask user if they are sure to delete the current tag
+    Alerts.confirmAlert({
+      alertType: Alerts.alertType.warning,
+      title: chrome.i18n.getMessage('DeleteCriteriaGroupConfirmationTitle'),
+      text: chrome.i18n.getMessage('DeleteCriteriaGroupConfirmationMessage'),
+      callback: (err, toDelete) => {
+        // It is run only when the user confirms the dialog, so delete all the annotations
+        if (err) {
+          // Nothing to do
+        } else {
+          let promises = []
+          for (let i = 0; i < arrayOfTagGroups.length; i++) {
+            promises.push(new Promise((resolve, reject) => {
+              // TODO There is an error when deleting the last tag group in the console, check why!!!
+              this.deleteTag(arrayOfTagGroups[i], () => {
+                if (err) {
+                  reject(err)
+                } else {
+                  resolve()
+                }
+              })
+            }))
+          }
+          Promise.all(promises).catch((err) => {
+            Alerts.errorAlert({text: 'Error when deleting criteria group. Error:<br/>' + err})
+          }).then(() => {
+            window.abwa.sidebar.openSidebar()
+            if (_.isFunction(callback)) {
+              callback()
+            }
+          })
+        }
+      }
+    })
+  }
+
+  initContextMenuForCriteria () {
     // Define context menu items
     let arrayOfTagGroups = _.values(window.abwa.tagManager.model.currentTags)
     for (let i = 0; i < arrayOfTagGroups.length; i++) {
