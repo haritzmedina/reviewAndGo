@@ -28,9 +28,9 @@ class Criteria extends GuideElement {
   toAnnotation () {
     let review = this.getAncestor()
     return {
-      group: review.hypothesisGroup.id,
+      group: review.storageGroup.id,
       permissions: {
-        read: ['group:' + review.hypothesisGroup.id]
+        read: ['group:' + review.storageGroup.id]
       },
       references: [],
       tags: ['review:criteria:' + LanguageUtils.normalizeString(this.name)],
@@ -40,7 +40,7 @@ class Criteria extends GuideElement {
         group: this.group,
         custom: this.custom
       }),
-      uri: review.hypothesisGroup.links ? review.hypothesisGroup.links.html : review.hypothesisGroup.url // Compatibility with both group representations getGroups and userProfile
+      uri: review.storageGroup.links ? review.storageGroup.links.html : review.storageGroup.url // Compatibility with both group representations getGroups and userProfile
     }
   }
 

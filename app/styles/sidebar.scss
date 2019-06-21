@@ -111,7 +111,6 @@
 .bodyContainer {
   background-color: $sidebarBackgroundColor;
   min-width: calc( #{$sideBarWidth} - 0.5rem - 0.2rem);
-  padding: 0.4rem 0.2rem 0.4rem;
 }
 
 .bodyContainer[aria-hidden="true"]{

@@ -77,7 +77,8 @@ class Alerts {
       swal({
         type: Alerts.alertType.error,
         title: title,
-        html: text
+        html: text,
+        onClose: onClose
       }).then(() => {
         if (_.isFunction(callback)) {
           callback(null)
@@ -151,7 +152,7 @@ class Alerts {
     }
   }
 
-  static inputTextAlert ({title, input = 'text', type, inputPlaceholder = '', inputValue = '', cancelCallback, showCancelButton = true, html = '', callback}) {
+  static inputTextAlert ({title, input = 'text', type, inputPlaceholder = '', inputValue = '', preConfirm, cancelCallback, showCancelButton = true, html = '', callback}) {
     Alerts.tryToLoadSwal()
     if (_.isNull(swal)) {
       if (_.isFunction(callback)) {
@@ -165,6 +166,7 @@ class Alerts {
         inputValue: inputValue,
         html: html,
         type: type,
+        preConfirm: preConfirm,
         showCancelButton: showCancelButton
       }).then((result) => {
         if (result.value) {

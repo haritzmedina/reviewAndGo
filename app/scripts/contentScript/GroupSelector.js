@@ -17,11 +17,11 @@ class GroupSelector {
     console.debug('Initializing group selector')
     this.checkIsLoggedIn((err) => {
       if (err) {
-        // Stop propagating the rest of the functions, because it is not logged in hypothesis
-        // Show that user need to log in hypothes.is to continue
+        // Stop propagating the rest of the functions, because it is not logged in storage
+        // Show that user need to log in remote storage to continue
         Alerts.errorAlert({
-          title: 'Log in Hypothes.is required',
-          text: chrome.i18n.getMessage('HypothesisLoginRequired')
+          title: 'Log in selected storage required',
+          text: chrome.i18n.getMessage('StorageLoginRequired')
         })
       } else {
         // Retrieve user profile (for further uses in other functionalities of the tool)
@@ -40,7 +40,7 @@ class GroupSelector {
 
   defineCurrentGroup (callback) {
     // Load all the groups belonged to current user
-    this.retrieveHypothesisGroups((err, groups) => {
+    this.retrieveGroups((err, groups) => {
       if (err) {
 
       } else {
@@ -52,9 +52,9 @@ class GroupSelector {
             callback(null)
           }
         } else {
-          ImportSchema.createReviewHypothesisGroup((err, group) => {
+          ImportSchema.createReviewGroup((err, group) => {
             if (err) {
-              Alerts.errorAlert({text: 'We are unable to create Hypothes.is group for Review&Go. Please check if you are logged in Hypothes.is.'})
+              Alerts.errorAlert({text: 'We are unable to create the annotation group for Review&Go. Please check if you are logged in the selected remote annotation storage (e.g.: Hypothes.is).'})
             } else {
               this.currentGroup = group
               callback(null)
@@ -92,7 +92,7 @@ class GroupSelector {
     })
   }
 
-  retrieveHypothesisGroups (callback) {
+  retrieveGroups (callback) {
     window.abwa.storageManager.client.getListOfGroups({}, (err, groups) => {
       if (err) {
         if (_.isFunction(callback)) {
@@ -126,7 +126,5 @@ class GroupSelector {
     }
   }
 }
-
-GroupSelector.eventGroupChange = 'hypothesisGroupChanged'
 
 module.exports = GroupSelector

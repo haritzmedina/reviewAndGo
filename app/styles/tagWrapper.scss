@@ -1,11 +1,18 @@
 @import "./variables";
 
+.tagHeaderName {
+  color:white;
+  font-size: 16px;
+  text-align: center;
+  padding-top: 1px;
+  padding-bottom: 1px;
+  margin-bottom: 1px;
+}
+
 .tagGroup{
   border: 1px solid grey;
-  width: calc( #{$sideBarWidth} - 0.4rem - 10px );
-  margin-left: 5px;
-  margin-right: 5px;
-  margin-bottom: 10px;
+  width: 95%;
+  margin: 5px auto;
   border-radius: 5px;
   padding: 0;
 }
@@ -65,10 +72,11 @@
 
   .groupName:after {
     transform: rotate(180deg);
+    padding-top: 3px;
   }
 }
 
-.tagButtonContainer{
+.tagButtonContainer {
   transition: height 0.5s;
 }
 

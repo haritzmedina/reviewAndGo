@@ -43,8 +43,8 @@
     "message": "Criteria",
     "description": "Sidebar dimensions header"
   },
-  "errorDeletingHypothesisAnnotation": {
-    "message": "Error deleting hypothesis annotation, please try it again",
+  "errorDeletingAnnotation": {
+    "message": "Error deleting annotation, please try it again",
     "description": "Message when fails deleting annotation comment"
   },
   "errorUpdatingAnnotationComment": {
@@ -77,7 +77,7 @@
     "message": "There was a problem when retrieving task information from moodle. Make sure that you are in the main page of the assignment."
   },
   "ErrorConfiguringHighlighter": {
-    "message": "There was a problem while creating the hypothes.is group. Please reload the page and try it again."
+    "message": "There was a problem while creating the highlighter group. Please reload the page and try it again."
   },
   "ErrorRelatingMoodleAndTool": {
     "message": "There was a problem while relating the tool with moodle. Please reload the page and try it again."

@@ -167,7 +167,7 @@ class ContentTypeManager {
     }
   }
 
-  getDocumentURIToSearchInHypothesis () {
+  getDocumentURIToSearchInStorage () {
     if (this.documentType === ContentTypeManager.documentTypes.pdf) {
       return 'urn:x-pdf:' + this.pdfFingerprint
     } else {
@@ -175,7 +175,7 @@ class ContentTypeManager {
     }
   }
 
-  getDocumentURIToSaveInHypothesis () {
+  getDocumentURIToSaveInStorage () {
     if (this.localFile) {
       return 'urn:x-pdf:' + this.pdfFingerprint
     } else {

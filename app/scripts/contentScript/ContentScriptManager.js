@@ -76,7 +76,7 @@ class ContentScriptManager {
       // TODO Destroy groupSelector, roleManager,
       window.abwa.groupSelector.destroy(() => {
         window.abwa.sidebar.destroy(() => {
-          window.abwa.hypothesisClientManager.destroy(() => {
+          window.abwa.storageManager.destroy(() => {
             this.status = ContentScriptManager.status.notInitialized
             console.debug('Correctly destroyed content script manager')
             if (_.isFunction(callback)) {
@@ -109,10 +109,11 @@ class ContentScriptManager {
 
   loadStorage (callback) {
     chrome.runtime.sendMessage({scope: 'storage', cmd: 'getSelectedStorage'}, ({storage}) => {
-      // Hypothesis
       if (storage === 'hypothesis') {
+        // Hypothesis
         window.abwa.storageManager = new HypothesisClientManager()
       } else {
+        // Local storage
         window.abwa.storageManager = new LocalStorageManager()
       }
       window.abwa.storageManager.init((err) => {

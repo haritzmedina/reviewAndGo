@@ -1,7 +1,7 @@
 class AnnotationGuide {
-  constructor ({name, hypothesisGroup, guideElements = []}) {
+  constructor ({name, storageGroup, guideElements = []}) {
     this.name = name.substr(0, 25)
-    this.hypothesisGroup = hypothesisGroup
+    this.storageGroup = storageGroup
     this.guideElements = guideElements
   }
 

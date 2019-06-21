@@ -1,5 +1,7 @@
 const Alerts = require('../../utils/Alerts')
+const LanguageUtils = require('../../utils/LanguageUtils')
 const Events = require('../../contentScript/Events')
+const TagManager = require('../../contentScript/TagManager')
 const Criteria = require('../../model/schema/Criteria')
 const Level = require('../../model/schema/Level')
 const Review = require('../../model/schema/Review')
@@ -21,6 +23,9 @@ class CustomCriteriasManager {
       this.initEventHandler()
       // Init context menu for buttons
       this.initContextMenu()
+      if (_.isFunction(callback)) {
+        callback()
+      }
     })
   }
 
@@ -28,7 +33,7 @@ class CustomCriteriasManager {
     this.events.tagsUpdated = {
       element: document,
       event: Events.tagsUpdated,
-      handler: (event) => {
+      handler: () => {
         this.createAddCustomCriteriaButtons()
         this.initContextMenu()
       }
@@ -37,8 +42,10 @@ class CustomCriteriasManager {
   }
 
   createAddCustomCriteriaButtons (callback) {
-    let groups = _.map(_.uniqBy(DefaultCriteria.criteria, (criteria) => { return criteria.group }), 'group')
-    groups.push('Other')
+    this.createAddCustomThemeButton()
+    let groups = _.map(document.querySelectorAll('.tagGroup'), (tagGroupElement) => {
+      return tagGroupElement.dataset.groupName
+    })
     for (let i = 0; i < groups.length; i++) {
       this.createAddCustomCriteriaButton(groups[i])
     }
@@ -47,8 +54,50 @@ class CustomCriteriasManager {
     }
   }
 
+  createAddCustomThemeButton () {
+    let addCustomThemeButton = document.querySelector('#addCustomThemeElement')
+    if (!_.isElement(addCustomThemeButton)) {
+      let criteriaHeader = document.querySelector('#tagHeader')
+      let addCustomThemeElement = document.createElement('span')
+      addCustomThemeElement.id = 'addCustomThemeElement'
+      addCustomThemeElement.classList.add('addCustomCriteria')
+      criteriaHeader.insertAdjacentElement('afterbegin', addCustomThemeElement)
+      addCustomThemeElement.addEventListener('click', this.createCustomTheme())
+    }
+  }
+
+  createCustomTheme () {
+    return () => {
+      Alerts.inputTextAlert({
+        title: 'Creating new criteria group',
+        input: 'text',
+        preConfirm: (themeName) => {
+          let themeElement = document.querySelector('.tagGroup[data-group-name="' + themeName + '"')
+          if (_.isElement(themeElement)) {
+            const swal = require('sweetalert2')
+            swal.showValidationMessage('A criteria group with that name already exists.')
+            window.abwa.sidebar.openSidebar()
+          } else {
+            return themeName
+          }
+        },
+        callback: (err, result) => {
+          if (err) {
+            window.alert('Unable to show form to add custom criteria group. Contact developer.')
+          } else {
+            let tagName = LanguageUtils.normalizeStringToValidID(result)
+            let tagGroupElement = TagManager.createGroupedButtons({name: tagName, groupHandler: window.abwa.tagManager.collapseExpandGroupedButtonsHandler})
+            window.abwa.tagManager.tagsContainer.evidencing.append(tagGroupElement)
+            this.createAddCustomCriteriaButton(tagName)
+            window.abwa.sidebar.openSidebar()
+          }
+        }
+      })
+    }
+  }
+
   createAddCustomCriteriaButton (groupName) {
-    // Get Other container
+    // Get container
     let addCriteriaButton = document.querySelector('.groupName[title="' + groupName + '"]').previousElementSibling
     addCriteriaButton.title = 'Add new criteria to ' + groupName
 
@@ -57,12 +106,23 @@ class CustomCriteriasManager {
   }
 
   createAddCustomCriteriaButtonHandler (groupName) {
-    return (event) => {
-      let isSidebarOpened = window.abwa.sidebar.isOpened()
-      window.abwa.sidebar.closeSidebar()
+    return () => {
       Alerts.inputTextAlert({
         input: 'text',
+        title: 'Creating a new criteria for ' + groupName,
         inputPlaceholder: 'Insert the name for the new criteria...',
+        preConfirm: (criteriaName) => {
+          // Find if criteria name already exists
+          let currentTags = _.map(window.abwa.tagManager.currentTags, tag => tag.config.name)
+          let criteriaExists = _.find(currentTags, tag => tag === criteriaName)
+          if (_.isString(criteriaExists)) {
+            const swal = require('sweetalert2')
+            swal.showValidationMessage('A criteria with that name already exists.')
+            window.abwa.sidebar.openSidebar()
+          } else {
+            return criteriaName
+          }
+        },
         callback: (err, name) => {
           if (err) {
             Alerts.errorAlert({text: 'Unable to create this custom criteria, try it again.'})
@@ -72,19 +132,13 @@ class CustomCriteriasManager {
               name: name,
               group: groupName,
               callback: () => {
-                // Open sidebar again
-                if (isSidebarOpened) {
-                  window.abwa.sidebar.openSidebar()
-                }
+                window.abwa.sidebar.openSidebar()
               }
             })
           }
         },
         cancelCallback: () => {
-          // Open sidebar again
-          if (isSidebarOpened) {
-            window.abwa.sidebar.openSidebar()
-          }
+          window.abwa.sidebar.openSidebar()
         }
       })
     }
@@ -92,7 +146,7 @@ class CustomCriteriasManager {
 
   createNewCustomCriteria ({name, description = 'Custom criteria', group, callback}) {
     let review = new Review({reviewId: ''})
-    review.hypothesisGroup = window.abwa.groupSelector.currentGroup
+    review.storageGroup = window.abwa.groupSelector.currentGroup
     let criteria = new Criteria({name, description, review, group: group, custom: true})
     // Create levels for the criteria
     let levels = DefaultCriteria.defaultLevels
@@ -102,8 +156,8 @@ class CustomCriteriasManager {
       criteria.levels.push(level)
     }
     let annotations = criteria.toAnnotations()
-    // Push annotations to hypothes.is
-    window.abwa.storageManager.client.createNewAnnotations(annotations, (err, annotations) => {
+    // Push annotations to storage
+    window.abwa.storageManager.client.createNewAnnotations(annotations, (err) => {
       if (err) {
         Alerts.errorAlert({title: 'Unable to create a custom category', text: 'Error when trying to create a new custom category. Please try again.'})
         callback(err)
@@ -127,7 +181,7 @@ class CustomCriteriasManager {
   }
 
   deleteTag (tagGroup, callback) {
-    // Get tags used in hypothes.is to store this tag or annotations with this tag
+    // Get tags used in storage to store this tag or annotations with this tag
     let annotationsToDelete = []
     // Get annotation of the tag group
     annotationsToDelete.push(tagGroup.config.annotation.id)
@@ -187,7 +241,7 @@ class CustomCriteriasManager {
         selector: '[data-mark="' + tagGroup.config.name + '"]',
         build: () => {
           return {
-            callback: (key, opt) => {
+            callback: (key) => {
               if (key === 'delete') {
                 this.deleteCriteriaHandler(tagGroup)
               } else if (key === 'modify') {
@@ -261,7 +315,7 @@ class CustomCriteriasManager {
         tagGroup.config.options.description = description
         // Create new annotation
         let review = new Review({reviewId: ''})
-        review.hypothesisGroup = window.abwa.groupSelector.currentGroup
+        review.storageGroup = window.abwa.groupSelector.currentGroup
         let criteria = new Criteria({name, description, group: tagGroup.config.options.group, review, custom: custom})
         let annotation = criteria.toAnnotation()
         window.abwa.storageManager.client.updateAnnotation(oldAnnotation.id, annotation, (err, annotation) => {
@@ -325,7 +379,7 @@ class CustomCriteriasManager {
             }).then(() => {
               // Update tagGroup annotation
               let review = new Review({reviewId: ''})
-              review.hypothesisGroup = window.abwa.groupSelector.currentGroup
+              review.storageGroup = window.abwa.groupSelector.currentGroup
               let criteria = new Criteria({name, description, group: tagGroup.config.options.group, review, custom: custom})
               let annotation = criteria.toAnnotation()
               let oldAnnotation = tagGroup.config.annotation

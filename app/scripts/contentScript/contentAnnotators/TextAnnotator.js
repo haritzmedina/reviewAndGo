@@ -90,14 +90,14 @@ class TextAnnotator extends ContentAnnotator {
   }
 
   initTagsUpdatedEvent (callback) {
-    this.events.tagsUpdated = {element: document, event: Events.tagsUpdated, handler: this.createtagsUpdatedEventHandler()}
+    this.events.tagsUpdated = {element: document, event: Events.tagsUpdated, handler: this.createTagsUpdatedEventHandler()}
     this.events.tagsUpdated.element.addEventListener(this.events.tagsUpdated.event, this.events.tagsUpdated.handler, false)
     if (_.isFunction(callback)) {
       callback()
     }
   }
 
-  createtagsUpdatedEventHandler (callback) {
+  createTagsUpdatedEventHandler (callback) {
     return () => {
       this.updateAllAnnotations(() => {
         console.debug('Updated all the annotations after Tags Updated event')
@@ -194,7 +194,7 @@ class TextAnnotator extends ContentAnnotator {
           selectors.push(textQuoteSelector)
         }
       }
-      // Construct the annotation to send to hypothesis
+      // Construct the annotation to send to storage
       let annotation = TextAnnotator.constructAnnotation(selectors, event.detail.tags)
       window.abwa.storageManager.client.createNewAnnotation(annotation, (err, annotation) => {
         if (err) {
@@ -231,7 +231,7 @@ class TextAnnotator extends ContentAnnotator {
       tags: tags,
       target: target,
       text: '',
-      uri: window.abwa.contentTypeManager.getDocumentURIToSaveInHypothesis()
+      uri: window.abwa.contentTypeManager.getDocumentURIToSaveInStorage()
     }
     // For pdf files it is also send the relationship between pdf fingerprint and web url
     if (window.abwa.contentTypeManager.documentType === ContentTypeManager.documentTypes.pdf) {
@@ -241,7 +241,7 @@ class TextAnnotator extends ContentAnnotator {
         link: [{
           href: 'urn:x-pdf:' + pdfFingerprint
         }, {
-          href: window.abwa.contentTypeManager.getDocumentURIToSaveInHypothesis()
+          href: window.abwa.contentTypeManager.getDocumentURIToSaveInStorage()
         }]
       }
     }
@@ -354,8 +354,8 @@ class TextAnnotator extends ContentAnnotator {
   updateAllAnnotations (callback) {
     // Retrieve annotations for current url and group
     window.abwa.storageManager.client.searchAnnotations({
-      url: window.abwa.contentTypeManager.getDocumentURIToSearchInHypothesis(),
-      uri: window.abwa.contentTypeManager.getDocumentURIToSaveInHypothesis(),
+      url: window.abwa.contentTypeManager.getDocumentURIToSearchInStorage(),
+      uri: window.abwa.contentTypeManager.getDocumentURIToSaveInStorage(),
       group: window.abwa.groupSelector.currentGroup.id,
       order: 'asc'
     }, (err, annotations) => {
@@ -477,7 +477,7 @@ class TextAnnotator extends ContentAnnotator {
           // items['reply'] = {name: 'Reply'}
         }
         return {
-          callback: (key, opt) => {
+          callback: (key) => {
             if (key === 'delete') {
               this.deleteAnnotationHandler(annotation)
             } else if (key === 'comment') {
@@ -505,7 +505,7 @@ class TextAnnotator extends ContentAnnotator {
           } else {
             if (!result.deleted) {
               // Alert user error happened
-              Alerts.errorAlert({text: chrome.i18n.getMessage('errorDeletingHypothesisAnnotation')})
+              Alerts.errorAlert({text: chrome.i18n.getMessage('errorDeletingAnnotation')})
             } else {
               _.remove(this.allAnnotations, (currentAnnotation) => {
                 return currentAnnotation.id === annotation.id
@@ -574,7 +574,9 @@ class TextAnnotator extends ContentAnnotator {
       let suggestedLiteratureHtml = (lit) => {
         let html = ''
         for (let i in lit) {
-          html += '<li><a class="removeReference"></a><span title="' + lit[i] + '">' + lit[i] + '</span></li>'
+          if (lit.hasOwnProperty(i)) {
+            html += '<li><a class="removeReference"></a><span title="' + lit[i] + '">' + lit[i] + '</span></li>'
+          }
         }
         return html
       }
@@ -593,13 +595,13 @@ class TextAnnotator extends ContentAnnotator {
         poleChoiceRadio += '>'
         switch (e) {
           case 'Strength':
-            poleChoiceRadio += '<img class="poleImage" width="20" src="' + chrome.extension.getURL('images/strength.png') + '"/>'
+            poleChoiceRadio += '<img class="poleImage" alt="Strength" title="Mark as a strength" width="20" src="' + chrome.extension.getURL('images/strength.png') + '"/>'
             break
           case 'Major weakness':
-            poleChoiceRadio += '<img class="poleImage" width="20" src="' + chrome.extension.getURL('images/majorConcern.png') + '"/>'
+            poleChoiceRadio += '<img class="poleImage" alt="Major concern" title="Mark as a major concern" width="20" src="' + chrome.extension.getURL('images/majorConcern.png') + '"/>'
             break
           case 'Minor weakness':
-            poleChoiceRadio += '<img class="poleImage" width="20" src="' + chrome.extension.getURL('images/minorConcern.png') + '"/>'
+            poleChoiceRadio += '<img class="poleImage" alt="Minor concern" title="Mark as a minor concern" width="20" src="' + chrome.extension.getURL('images/minorConcern.png') + '"/>'
             break
         }
         poleChoiceRadio += ' <span class="swal2-label" style="margin-right:5%;" title="\'+e+\'">' + e + '</span>'

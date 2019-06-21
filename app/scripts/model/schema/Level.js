@@ -20,15 +20,15 @@ class Level extends GuideElement {
   toAnnotation () {
     let rubric = this.getAncestor()
     return {
-      group: rubric.hypothesisGroup.id,
+      group: rubric.storageGroup.id,
       permissions: {
-        read: ['group:' + rubric.hypothesisGroup.id]
+        read: ['group:' + rubric.storageGroup.id]
       },
       references: [],
       tags: ['review:isCriteriaOf:' + LanguageUtils.normalizeString(this.criteria.name), 'review:level:' + this.name],
       target: [],
       text: jsYaml.dump({description: this.description}),
-      uri: rubric.hypothesisGroup.links ? rubric.hypothesisGroup.links.html : rubric.hypothesisGroup.url // Compatibility with both group representations getGroups and userProfile
+      uri: rubric.storageGroup.links ? rubric.storageGroup.links.html : rubric.storageGroup.url // Compatibility with both group representations getGroups and userProfile
     }
   }
 
@@ -55,8 +55,7 @@ class Level extends GuideElement {
     level.parentElement = criteria
     level.criteria = level.parentElement
     // Instance level object
-    let instancedLevel = Object.assign(new Level({}), level)
-    return instancedLevel
+    return Object.assign(new Level({}), level)
   }
 
   toObject () {

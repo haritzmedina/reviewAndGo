@@ -86,56 +86,23 @@ class TagManager {
       let promise = Promise.resolve(annotations) // TODO Check if it is okay
       if (annotations.length === 0) {
         promise = new Promise((resolve) => {
-          Alerts.chooseAlert({
-            title: 'First time reviewing?',
-            alertType: Alerts.alertType.question,
-            text: 'It seems that it is your first time using Review&Go. Do you want to import your own schema configuration or use the default one?',
-            confirmButtonText: 'My own configuration',
-            cancelButtonText: 'Default configuration',
-            callback: (err, result) => {
+          if (!Alerts.isVisible()) {
+            Alerts.loadingAlert({title: 'Configuration in progress', text: 'We are configuring everything to start reviewing.', position: Alerts.position.center})
+          }
+          // Create configuration into group
+          // Create review schema from default criterias
+          let review = Review.fromCriterias(DefaultCriteria.criteria)
+          review.storageGroup = window.abwa.groupSelector.currentGroup
+          Alerts.loadingAlert({title: 'Configuration in progress', text: 'We are configuring everything to start reviewing.', position: Alerts.position.center})
+          ImportSchema.createConfigurationAnnotationsFromReview({
+            review,
+            callback: (err, annotations) => {
               if (err) {
-                window.alert('Error loading swal')
+                Alerts.errorAlert({ text: 'There was an error when configuring Review&Go highlighter' })
               } else {
-                let configuration
-                let promiseParseConfiguration = new Promise((resolve, reject) => {
-                  if (result) { // Own configuration
-                    ImportSchema.askUserForConfigurationSchema((err, userConfiguration) => {
-                      if (err) {
-                        reject(new Error('Bad json file'))
-                      } else {
-                        configuration = userConfiguration
-                        resolve(configuration)
-                      }
-                    })
-                  } else { // Default configuration
-                    configuration = DefaultCriteria
-                    resolve(configuration)
-                  }
-                })
-                promiseParseConfiguration.catch((message) => {
-                  Alerts.errorAlert({text: 'Error configuring the highlighter: ' + message})
-                }).then(() => {
-                  if (!Alerts.isVisible()) {
-                    Alerts.loadingAlert({title: 'Configuration in progress', text: 'We are configuring everything to start reviewing.', position: Alerts.position.center})
-                  }
-                  // Create configuration in to group
-                  // Create review schema from default criterias
-                  let review = Review.fromCriterias(configuration.criteria)
-                  review.hypothesisGroup = window.abwa.groupSelector.currentGroup
-                  Alerts.loadingAlert({title: 'Configuration in progress', text: 'We are configuring everything to start reviewing.', position: Alerts.position.center})
-                  ImportSchema.createConfigurationAnnotationsFromReview({
-                    review,
-                    callback: (err, annotations) => {
-                      if (err) {
-                        Alerts.errorAlert({ text: 'There was an error when configuring Review&Go highlighter' })
-                      } else {
-                        Alerts.closeAlert()
-                        window.abwa.sidebar.openSidebar() // Open sidebar to notify the user that the highlighter is created and ready to use
-                        resolve(annotations)
-                      }
-                    }
-                  })
-                })
+                Alerts.closeAlert()
+                window.abwa.sidebar.openSidebar() // Open sidebar to notify the user that the highlighter is created and ready to use
+                resolve(annotations)
               }
             }
           })
@@ -177,7 +144,7 @@ class TagManager {
       }
     }
     // Get groups names
-    let groups = _.map(_.uniqBy(DefaultCriteria.criteria, (criteria) => { return criteria.group }), 'group')
+    let groups = _.map(_.uniqBy(_.values(tagGroupsAnnotations), (criteria) => { return criteria.config.options.group }), 'config.options.group')
     // Get a list of colors
     // The list of colors to retrieve are 1 per group + 1 per groupTags in "Other" group
     let listOfOtherTags = _.filter(_.values(tagGroupsAnnotations), (tagGroup) => { return tagGroup.config.options.group === 'Other' })
@@ -277,17 +244,11 @@ class TagManager {
   }
 
   createTagsButtonsForEvidencing () {
-    let groups = _.map(_.uniqBy(DefaultCriteria.criteria, (criteria) => { return criteria.group }), 'group')
+    let groups = _.map(_.uniqBy(_.values(this.currentTags), (criteria) => { return criteria.config.options.group }), 'config.options.group')
     for (let i = 0; i < groups.length; i++) {
       let group = groups[i]
       this.tagsContainer.evidencing.append(TagManager.createGroupedButtons({name: group, groupHandler: this.collapseExpandGroupedButtonsHandler}))
     }
-    // Create the group Other
-    // Not required to create this group because "Typos" is a default code from Other category, otherwise discomment this two lines
-    let groupedButtons = TagManager.createGroupedButtons({name: 'Other', groupHandler: this.collapseExpandGroupedButtonsHandler})
-    groupedButtons.id = 'tagGroupOther'
-    this.tagsContainer.evidencing.append(groupedButtons)
-    // Create the default groups for annotations
     // Insert buttons in each of the groups
     let arrayOfTagGroups = _.values(this.model.currentTags)
     for (let i = 0; i < arrayOfTagGroups.length; i++) {
@@ -346,6 +307,7 @@ class TagManager {
     let tagGroup = $(tagGroupTemplate.content.firstElementChild).clone().get(0)
     let tagButtonContainer = $(tagGroup).find('.tagButtonContainer')
     let groupNameSpan = tagGroup.querySelector('.groupName')
+    tagGroup.dataset.groupName = name
     groupNameSpan.innerText = name
     groupNameSpan.title = name
     // Create event handler for tag group

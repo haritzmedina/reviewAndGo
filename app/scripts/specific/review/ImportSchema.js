@@ -12,11 +12,11 @@ class ImportSchema {
     })
   }
 
-  static createReviewHypothesisGroup (callback) {
+  static createReviewGroup (callback) {
     window.abwa.storageManager.client.createNewGroup({name: Config.review.groupName}, callback)
   }
 
-  static backupReviewHypothesisGroup (callback) {
+  static backupReviewGroup (callback) {
     // Get current group id
     let currentGroupId = window.abwa.groupSelector.currentGroup.id
     // Rename current group
@@ -25,7 +25,7 @@ class ImportSchema {
     window.abwa.storageManager.client.updateGroup(currentGroupId, {
       name: currentGroupNewName}, (err, result) => {
       if (err) {
-        callback(new Error('Unable to backup current hypothes.is group.'))
+        callback(new Error('Unable to backup current annotation group.'))
       } else {
         callback(null, result)
       }

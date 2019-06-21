@@ -5,18 +5,33 @@ const LanguageUtils = require('../../utils/LanguageUtils')
 const DefaultCriteria = require('../../specific/review/DefaultCriteria')
 
 class Review extends AnnotationGuide {
-  constructor ({reviewId = '', hypothesisGroup = ''}) {
-    super({name: reviewId, hypothesisGroup})
+  constructor ({reviewId = '', storageGroup = ''}) {
+    super({name: reviewId, storageGroup})
     this.criterias = this.guideElements
   }
 
   toAnnotations () {
     let annotations = []
+    annotations.push(this.toAnnotation())
     // Create annotations for all criterias
     for (let i = 0; i < this.criterias.length; i++) {
       annotations = annotations.concat(this.criterias[i].toAnnotations())
     }
     return annotations
+  }
+
+  toAnnotation () {
+    return {
+      group: this.storageGroup.id,
+      permissions: {
+        read: ['group:' + this.storageGroup.id]
+      },
+      references: [],
+      tags: ['review:default'],
+      target: [],
+      text: '',
+      uri: this.storageGroup.links ? this.storageGroup.links.html : this.storageGroup.url // Compatibility with both group representations getGroups and userProfile
+    }
   }
 
   static fromCriterias (criterias) {

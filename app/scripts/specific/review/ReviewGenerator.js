@@ -158,41 +158,45 @@ class ReviewGenerator {
   }
 
   importCriteriaConfiguration () {
-    let currentGroupUrl = window.abwa.groupSelector.currentGroup.links.html || 'https://hypothes.is'
+    let currentGroupUrl = window.abwa.groupSelector.currentGroup.links.html || 'https://reviewandgo.com'
     ImportSchema.askUserForConfigurationSchema((err, jsonObject) => {
-      Alerts.confirmAlert({
-        alertType: Alerts.alertType.warning,
-        title: 'Your configuration will be imported',
-        text: 'When the configuration is imported, a new highlighter and group is created. All your configuration and annotations are backed up, but they will be only accessible using Hypothes.is: <a href="' + currentGroupUrl + '" target="_blank">' + currentGroupUrl + '</a>',
-        callback: () => {
-          ImportSchema.backupReviewHypothesisGroup((err, result) => {
-            if (err) {
-              Alerts.errorAlert({text: 'Unable to backup current hypothes.is group. Error: ' + err.message})
-            } else {
-              ImportSchema.createReviewHypothesisGroup((err, newGroup) => {
-                if (err) {
-                  Alerts.errorAlert({text: 'Unable to create new Hypothes.is group. Error: ' + err.message})
-                } else {
-                  let review = ReviewSchema.fromCriterias(jsonObject.criteria)
-                  review.hypothesisGroup = newGroup
-                  Alerts.loadingAlert({title: 'Configuration in progress', text: 'We are configuring everything to start reviewing.', position: Alerts.position.center})
-                  ImportSchema.createConfigurationAnnotationsFromReview({
-                    review,
-                    callback: (err, annotations) => {
-                      if (err) {
-                        Alerts.errorAlert({ text: 'There was an error when configuring Review&Go highlighter' })
-                      } else {
-                        Alerts.closeAlert()
-                        window.location.reload() // TODO Temporal solution, it is better to reload the content on group change
+      if (err) {
+        Alerts.errorAlert({text: 'Unable to parse json file. Error:<br/>' + err.message})
+      } else {
+        Alerts.confirmAlert({
+          alertType: Alerts.alertType.warning,
+          title: 'Your configuration will be imported',
+          text: 'When the configuration is imported, a new highlighter and annotation group is created. All your configuration and annotations are backed up, but they will be only accessible using Hypothes.is or your local storage.',
+          callback: () => {
+            ImportSchema.backupReviewGroup((err) => {
+              if (err) {
+                Alerts.errorAlert({text: 'Unable to backup current annotation group. Error: ' + err.message})
+              } else {
+                ImportSchema.createReviewGroup((err, newGroup) => {
+                  if (err) {
+                    Alerts.errorAlert({text: 'Unable to create a new annotation group. Error: ' + err.message})
+                  } else {
+                    let review = ReviewSchema.fromCriterias(jsonObject.criteria)
+                    review.storageGroup = newGroup
+                    Alerts.loadingAlert({title: 'Configuration in progress', text: 'We are configuring everything to start reviewing.', position: Alerts.position.center})
+                    ImportSchema.createConfigurationAnnotationsFromReview({
+                      review,
+                      callback: (err, annotations) => {
+                        if (err) {
+                          Alerts.errorAlert({ text: 'There was an error when configuring Review&Go highlighter' })
+                        } else {
+                          Alerts.closeAlert()
+                          window.location.reload() // TODO Temporal solution, it is better to reload the content on group change
+                        }
                       }
-                    }
-                  })
-                }
-              })
-            }
-          })
-        }
-      })
+                    })
+                  }
+                })
+              }
+            })
+          }
+        })
+      }
     })
   }
 
