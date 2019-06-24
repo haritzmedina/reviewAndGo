@@ -210,16 +210,9 @@ class CustomCriteriasManager {
         Promise.all(promises).catch(() => {
           Alerts.errorAlert({text: 'There was an error when trying to delete all the annotations for this tag, please reload and try it again.'})
         }).then(() => {
-          // Update tag manager and then update all annotations
-          setTimeout(() => {
-            window.abwa.tagManager.reloadTags(() => {
-              window.abwa.contentAnnotator.updateAllAnnotations(() => {
-                if (_.isFunction(callback)) {
-                  callback()
-                }
-              })
-            })
-          }, 1000)
+          if (_.isFunction(callback)) {
+            callback()
+          }
         })
       }
     })
@@ -258,11 +251,11 @@ class CustomCriteriasManager {
 
   deleteCriteriaGroup (criteriaGroupName, callback) {
     // Get all criteria with criteria group name
-    let arrayOfTagGroups = _.filter(_.values(window.abwa.tagManager.model.currentTags), tag => tag.config.options.group === criteriaGroupName)
+    let arrayOfTagGroups = _.filter(_.values(window.abwa.tagManager.currentTags), tag => tag.config.options.group === criteriaGroupName)
     // Ask user if they are sure to delete the current tag
     Alerts.confirmAlert({
       alertType: Alerts.alertType.warning,
-      title: chrome.i18n.getMessage('DeleteCriteriaGroupConfirmationTitle'),
+      title: chrome.i18n.getMessage('DeleteCriteriaGroupConfirmationTitle', criteriaGroupName),
       text: chrome.i18n.getMessage('DeleteCriteriaGroupConfirmationMessage'),
       callback: (err, toDelete) => {
         // It is run only when the user confirms the dialog, so delete all the annotations
@@ -280,15 +273,20 @@ class CustomCriteriasManager {
                   resolve()
                 }
               })
+              return true
             }))
           }
           Promise.all(promises).catch((err) => {
             Alerts.errorAlert({text: 'Error when deleting criteria group. Error:<br/>' + err})
           }).then(() => {
-            window.abwa.sidebar.openSidebar()
-            if (_.isFunction(callback)) {
-              callback()
-            }
+            window.abwa.tagManager.reloadTags(() => {
+              window.abwa.contentAnnotator.updateAllAnnotations(() => {
+                window.abwa.sidebar.openSidebar()
+                if (_.isFunction(callback)) {
+                  callback()
+                }
+              })
+            })
           })
         }
       }
@@ -297,7 +295,7 @@ class CustomCriteriasManager {
 
   initContextMenuForCriteria () {
     // Define context menu items
-    let arrayOfTagGroups = _.values(window.abwa.tagManager.model.currentTags)
+    let arrayOfTagGroups = _.values(window.abwa.tagManager.currentTags)
     for (let i = 0; i < arrayOfTagGroups.length; i++) {
       let tagGroup = arrayOfTagGroups[i]
       let items = {}
@@ -338,7 +336,11 @@ class CustomCriteriasManager {
           // Nothing to do
         } else {
           this.deleteTag(tagGroup, () => {
-            window.abwa.sidebar.openSidebar()
+            window.abwa.tagManager.reloadTags(() => {
+              window.abwa.contentAnnotator.updateAllAnnotations(() => {
+                window.abwa.sidebar.openSidebar()
+              })
+            })
           })
         }
       }

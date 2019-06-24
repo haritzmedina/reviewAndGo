@@ -184,7 +184,6 @@ class TagManager {
               this.model.namespace + ':' + this.model.config.grouped.relation + ':' + groupBelongedTo,
               this.model.namespace + ':' + this.model.config.grouped.subgroup + ':' + tagName]
           }, tagGroupsAnnotations[groupBelongedTo]))
-          this.model.currentTags = tagGroupsAnnotations
         }
       }
     }
@@ -250,7 +249,7 @@ class TagManager {
       this.tagsContainer.evidencing.append(TagManager.createGroupedButtons({name: group, groupHandler: this.collapseExpandGroupedButtonsHandler}))
     }
     // Insert buttons in each of the groups
-    let arrayOfTagGroups = _.values(this.model.currentTags)
+    let arrayOfTagGroups = _.values(this.currentTags)
     for (let i = 0; i < arrayOfTagGroups.length; i++) {
       let tagGroup = arrayOfTagGroups[i]
       let button = TagManager.createButton({
