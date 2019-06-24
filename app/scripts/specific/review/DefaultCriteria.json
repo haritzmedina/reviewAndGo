@@ -41,9 +41,9 @@
       "custom": true
     },
     {
-      "name": "Evaluation",
+      "name": "Artefact",
       "group": "Design",
-      "description": "Evaluation of the artefact",
+      "description": "Existance of an artefact",
       "levels": [
         {
           "name": "Strength",

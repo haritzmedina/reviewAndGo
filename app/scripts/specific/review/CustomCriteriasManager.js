@@ -134,15 +134,17 @@ class CustomCriteriasManager {
           if (err) {
             Alerts.errorAlert({text: 'Unable to create this custom criteria, try it again.'})
           } else {
-            // TODO Check if there is not other criteria with the same value
-            this.createNewCustomCriteria({
-              name: criteriaName,
-              description: criteriaDescription,
-              group: groupName,
-              callback: () => {
-                window.abwa.sidebar.openSidebar()
-              }
-            })
+            // Check if not selected cancel or esc
+            if (criteriaName) {
+              this.createNewCustomCriteria({
+                name: criteriaName,
+                description: criteriaDescription,
+                group: groupName,
+                callback: () => {
+                  window.abwa.sidebar.openSidebar()
+                }
+              })
+            }
           }
         }
       })
