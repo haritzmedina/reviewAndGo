@@ -211,7 +211,7 @@ class TagManager {
       return tagGroup
     })
     // Hash to array
-    return _.sortBy(tagGroupsAnnotations, 'config.name')
+    return _.sortBy(tagGroupsAnnotations, (tagGroupAnnotation) => { return _.get(tagGroupAnnotation, 'config.options.group').toLowerCase() })
   }
 
   destroy () {

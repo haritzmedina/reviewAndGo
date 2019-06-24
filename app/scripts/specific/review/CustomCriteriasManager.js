@@ -87,7 +87,7 @@ class CustomCriteriasManager {
           } else {
             let tagName = LanguageUtils.normalizeStringToValidID(result)
             let tagGroupElement = TagManager.createGroupedButtons({name: tagName, groupHandler: window.abwa.tagManager.collapseExpandGroupedButtonsHandler})
-            window.abwa.tagManager.tagsContainer.evidencing.append(tagGroupElement)
+            window.abwa.tagManager.tagsContainer.evidencing.prepend(tagGroupElement)
             this.createAddCustomCriteriaButton(tagName)
             window.abwa.sidebar.openSidebar()
           }
@@ -107,11 +107,20 @@ class CustomCriteriasManager {
 
   createAddCustomCriteriaButtonHandler (groupName) {
     return () => {
-      Alerts.inputTextAlert({
-        input: 'text',
+      let criteriaName
+      let criteriaDescription
+      Alerts.multipleInputAlert({
         title: 'Creating a new criteria for ' + groupName,
-        inputPlaceholder: 'Insert the name for the new criteria...',
-        preConfirm: (criteriaName) => {
+        html: '<div>' +
+          '<input id="criteriaName" class="swal2-input customizeInput" placeholder="Type your criteria name..."/>' +
+          '</div>' +
+          '<div>' +
+          '<textarea id="criteriaDescription" class="swal2-input customizeInput" placeholder="Type your criteria description..."></textarea>' +
+          '</div>',
+        preConfirm: () => {
+          // Retrieve values from inputs
+          criteriaName = document.getElementById('criteriaName').value
+          criteriaDescription = document.getElementById('criteriaDescription').value
           // Find if criteria name already exists
           let currentTags = _.map(window.abwa.tagManager.currentTags, tag => tag.config.name)
           let criteriaExists = _.find(currentTags, tag => tag === criteriaName)
@@ -119,26 +128,22 @@ class CustomCriteriasManager {
             const swal = require('sweetalert2')
             swal.showValidationMessage('A criteria with that name already exists.')
             window.abwa.sidebar.openSidebar()
-          } else {
-            return criteriaName
           }
         },
-        callback: (err, name) => {
+        callback: (err) => {
           if (err) {
             Alerts.errorAlert({text: 'Unable to create this custom criteria, try it again.'})
           } else {
             // TODO Check if there is not other criteria with the same value
             this.createNewCustomCriteria({
-              name: name,
+              name: criteriaName,
+              description: criteriaDescription,
               group: groupName,
               callback: () => {
                 window.abwa.sidebar.openSidebar()
               }
             })
           }
-        },
-        cancelCallback: () => {
-          window.abwa.sidebar.openSidebar()
         }
       })
     }
@@ -249,6 +254,71 @@ class CustomCriteriasManager {
     })
   }
 
+  modifyCriteriaGroup (criteriaGroupName, callback) {
+    // Get all criteria with criteria group name
+    let arrayOfTagGroups = _.filter(_.values(window.abwa.tagManager.currentTags), tag => tag.config.options.group === criteriaGroupName)
+    Alerts.inputTextAlert({
+      title: 'Rename criteria group ' + criteriaGroupName,
+      inputValue: criteriaGroupName,
+      inputPlaceholder: 'Write the group name here...',
+      input: 'text',
+      preConfirm: (themeName) => {
+        if (_.isEmpty(themeName)) {
+          const swal = require('sweetalert2')
+          swal.showValidationMessage('The criteria group name cannot be empty.')
+        } else if (themeName === criteriaGroupName) {
+          return null
+        } else {
+          let themeElement = document.querySelector('.tagGroup[data-group-name="' + themeName + '"')
+          if (_.isElement(themeElement)) {
+            const swal = require('sweetalert2')
+            swal.showValidationMessage('A criteria group with that name already exists.')
+            window.abwa.sidebar.openSidebar()
+          } else {
+            return themeName
+          }
+        }
+      },
+      callback: (err, groupName) => {
+        if (err) {
+          window.alert('Unable to show form to modify custom criteria group. Contact developer.')
+        } else {
+          if (_.isNull(groupName)) {
+            window.abwa.sidebar.openSidebar()
+          } else {
+            // Modify group in all criteria and update tag manager
+            let promises = []
+            for (let i = 0; i < arrayOfTagGroups.length; i++) {
+              let tagGroup = arrayOfTagGroups[i]
+              promises.push(new Promise((resolve, reject) => {
+                this.modifyCriteria({
+                  tagGroup,
+                  group: groupName,
+                  callback: (err) => {
+                    if (err) {
+                      reject(err)
+                    } else {
+                      resolve()
+                    }
+                  }
+                })
+              }))
+            }
+            Promise.all(promises).catch(() => {
+              Alerts.errorAlert({text: 'Unable to modify criteria group name.'})
+            }).then(() => {
+              window.abwa.tagManager.reloadTags(() => {
+                window.abwa.contentAnnotator.updateAllAnnotations(() => {
+                  window.abwa.sidebar.openSidebar()
+                })
+              })
+            })
+          }
+        }
+      }
+    })
+  }
+
   deleteCriteriaGroup (criteriaGroupName, callback) {
     // Get all criteria with criteria group name
     let arrayOfTagGroups = _.filter(_.values(window.abwa.tagManager.currentTags), tag => tag.config.options.group === criteriaGroupName)
@@ -265,7 +335,6 @@ class CustomCriteriasManager {
           let promises = []
           for (let i = 0; i < arrayOfTagGroups.length; i++) {
             promises.push(new Promise((resolve, reject) => {
-              // TODO There is an error when deleting the last tag group in the console, check why!!!
               this.deleteTag(arrayOfTagGroups[i], () => {
                 if (err) {
                   reject(err)
@@ -370,39 +439,52 @@ class CustomCriteriasManager {
         // Revise to execute only when OK button is pressed or criteria name and descriptions are not undefined
         if (!_.isUndefined(criteriaName) && !_.isUndefined(criteriaDescription)) {
           this.modifyCriteria({
-            tagGroup: tagGroup, name: criteriaName, description: criteriaDescription, custom
+            tagGroup: tagGroup,
+            name: criteriaName,
+            description: criteriaDescription,
+            custom,
+            callback: (err) => {
+              if (err) {
+                Alerts.errorAlert({text: 'Unable to update criteria. Error:<br/>' + err.message})
+              } else {
+                window.abwa.tagManager.reloadTags(() => {
+                  window.abwa.contentAnnotator.updateAllAnnotations(() => {
+                    window.abwa.sidebar.openSidebar()
+                  })
+                })
+              }
+            }
           })
         }
       }
     })
   }
 
-  modifyCriteria ({tagGroup, name, description, custom, callback}) {
+  modifyCriteria ({tagGroup, name, description, custom = true, group, callback}) {
     // Check if name has changed
-    if (name === tagGroup.config.name) {
+    if (name === tagGroup.config.name || _.isUndefined(name)) {
       // Check if description has changed
-      if (description !== tagGroup.config.options.description) {
+      if (description !== tagGroup.config.options.description || _.isUndefined(description)) {
+        name = name || tagGroup.config.name
+        description = description || tagGroup.config.options.description
         // Update annotation description
         let oldAnnotation = tagGroup.config.annotation
-        tagGroup.config.options.description = description
         // Create new annotation
         let review = new Review({reviewId: ''})
         review.storageGroup = window.abwa.groupSelector.currentGroup
-        let criteria = new Criteria({name, description, group: tagGroup.config.options.group, review, custom: custom})
+        let criteria = new Criteria({name, description, group: group || tagGroup.config.options.group, review, custom: custom})
         let annotation = criteria.toAnnotation()
         window.abwa.storageManager.client.updateAnnotation(oldAnnotation.id, annotation, (err, annotation) => {
           if (err) {
             // TODO Show err
             console.error(err)
+            if (_.isFunction(callback)) {
+              callback(err)
+            }
           } else {
-            // Update tag manager and then update all annotations
-            setTimeout(() => {
-              window.abwa.tagManager.reloadTags(() => {
-                window.abwa.contentAnnotator.updateAllAnnotations(() => {
-                  window.abwa.sidebar.openSidebar()
-                })
-              })
-            }, 1000)
+            if (_.isFunction(callback)) {
+              callback()
+            }
           }
         })
       }
@@ -459,14 +541,9 @@ class CustomCriteriasManager {
                 if (err) {
                   Alerts.errorAlert({text: 'Unable to update criteria. Error: ' + err.message})
                 } else {
-                  // Update tag manager and then update all annotations
-                  setTimeout(() => {
-                    window.abwa.tagManager.reloadTags(() => {
-                      window.abwa.contentAnnotator.updateAllAnnotations(() => {
-                        window.abwa.sidebar.openSidebar()
-                      })
-                    })
-                  }, 1000)
+                  if (_.isFunction(callback)) {
+                    callback()
+                  }
                 }
               })
             })
