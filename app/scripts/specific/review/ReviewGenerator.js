@@ -332,10 +332,14 @@ class ReviewGenerator {
             else currentColumn.querySelector('.clusterColumn').style.width = parseFloat(100.0/Math.ceil(canvasClusters[key].length/2)).toString()+'%'*/
             else{
               let columnWidth
-              if(canvasClusters[key].length == 2) columnWidth = getColumnWidth([canvasClusters[key][i]],key)
-              else if(i < canvasClusters[key].length-1) columnWidth = getColumnWidth([canvasClusters[key][i],canvasClusters[key][i+1]],key)
-              else columnWidth = getColumnWidth([canvasClusters[key][i]],key)
-              currentColumn.querySelector('.clusterColumn').style.width = columnWidth+'%'
+              if (canvasClusters[key].length === 2) {
+                columnWidth = getColumnWidth([canvasClusters[key][i]], key)
+                if (getColumnAnnotationCount(canvasClusters[key]) === 0) {
+                  currentColumn.querySelector('.clusterColumn').style.height = 50 + '%'
+                }
+              } else if (i < canvasClusters[key].length - 1) columnWidth = getColumnWidth([canvasClusters[key][i], canvasClusters[key][i + 1]], key)
+              else columnWidth = getColumnWidth([canvasClusters[key][i]], key)
+              currentColumn.querySelector('.clusterColumn').style.width = columnWidth + '%'
             }
           }
           let clusterProperty = propertyTemplate.content.cloneNode(true)
