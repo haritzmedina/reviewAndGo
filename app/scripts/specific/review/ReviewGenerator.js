@@ -248,7 +248,7 @@ class ReviewGenerator {
       let canvasClusters = {}
       let criteriaList = []
       abwa.tagManager.currentTags.forEach((e) => {
-        if(e.config.name=="Typos") return
+        //if(e.config.name=="Typos") return
         criteriaList.push(e.config.name)
         if(canvasClusters[e.config.options.group]==null) canvasClusters[e.config.options.group] = [e.config.name]
         else canvasClusters[e.config.options.group].push(e.config.name)
