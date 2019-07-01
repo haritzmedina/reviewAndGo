@@ -72,19 +72,22 @@ class ReviewGenerator {
   parseAnnotations (annotations){
     const criterionTag = Config.review.namespace + ':' + Config.review.tags.grouped.relation + ':'
     const levelTag = Config.review.namespace + ':' + Config.review.tags.grouped.subgroup + ':'
-    const majorConcernLevel = 'Major weakness'
-    const minorConcernLevel = 'Minor weakness'
-    const strengthLevel = 'Strength'
+
+
     let r = new Review()
 
     for (let a in annotations) {
       let criterion = null
       let level = null
+      let group = null
       for (let t in annotations[a].tags) {
         if (annotations[a].tags[t].indexOf(criterionTag) != -1) criterion = annotations[a].tags[t].replace(criterionTag, '').trim()
         if (annotations[a].tags[t].indexOf(levelTag) != -1) level = annotations[a].tags[t].replace(levelTag, '').trim()
       }
-      //if (criterion == null || level == null) continue
+      if(criterion!=null){
+        let g = window.abwa.tagManager.currentTags.find((el) => {return el.config.name === criterion})
+        if (g!=null) group = g.config.options.group
+      }
       let textQuoteSelector = null
       let highlightText = '';
       let pageNumber = null
@@ -100,7 +103,7 @@ class ReviewGenerator {
       let annotationText = annotations[a].text!==null&&annotations[a].text!=='' ? JSON.parse(annotations[a].text) : {comment:'',suggestedLiterature:[]}
       let comment = annotationText.comment !== null ? annotationText.comment : null
       let suggestedLiterature = annotationText.suggestedLiterature !== null ? annotationText.suggestedLiterature : []
-      r.insertAnnotation(new Annotation(annotations[a].id,criterion,level,highlightText,pageNumber,comment,suggestedLiterature))
+      r.insertAnnotation(new Annotation(annotations[a].id,criterion,level,group,highlightText,pageNumber,comment,suggestedLiterature))
     }
     return r
   }
