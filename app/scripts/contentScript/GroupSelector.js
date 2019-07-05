@@ -28,6 +28,7 @@ class GroupSelector {
         this.retrieveUserProfile(() => {
           // Define current group
           this.defineCurrentGroup(() => {
+            this.reloadGroupsContainer()
             console.debug('Initialized group selector')
             if (_.isFunction(callback)) {
               callback(null)
@@ -118,6 +119,31 @@ class GroupSelector {
         }
       }
     })
+  }
+
+  reloadGroupsContainer (callback) {
+    this.renderGroupsContainer()
+  }
+
+  renderGroupsContainer () {
+    document.querySelector('#groupSelectorName').innerText = this.currentGroup.name
+    document.querySelector('#groupSelectorName').addEventListener('click', this.createGroupSelectorToggleEvent())
+    document.querySelector('#groupSelectorToggle').addEventListener('click', this.createGroupSelectorToggleEvent())
+  }
+
+  createGroupSelectorToggleEvent () {
+    return (e) => {
+      this.toggleGroupSelectorContainer()
+    }
+  }
+
+  toggleGroupSelectorContainer () {
+    let groupSelector = document.querySelector('#groupSelector')
+    if (groupSelector.getAttribute('aria-expanded') === 'true') {
+      groupSelector.setAttribute('aria-expanded', 'false')
+    } else {
+      groupSelector.setAttribute('aria-expanded', 'true')
+    }
   }
 
   destroy (callback) {

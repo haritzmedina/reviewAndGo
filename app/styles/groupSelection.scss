@@ -1,19 +1,52 @@
-$themeColor: #7952b3;
-$themeLightColor: #9972d3;
-$sideBarWidth: 150px;
+@import "./variables";
 
 #groupSelector {
   margin-left: auto;
   margin-right: auto;
-  border: 1px solid $themeColor;
-  max-width: $sideBarWidth - 10px;
-  height: 30px;
-  font-size: 16px;
+  max-width: 130px;
+  font-size: 14px;
   cursor: pointer;
   transition: background-color 0.5s ease;
 }
 
-#groupSelector:hover {
-  background-color: $themeColor;
-  color: white;
+#groupSelector[aria-expanded="false"]:after {
+  transform: rotate(180deg);
+  padding-top: 3px;
+}
+
+#groupSelectorName {
+  width: 100px;
+  display: inline-block;
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+}
+
+#groupSelectorToggle {
+  background-image: url($chromeExtensionMainURL + 'images/arrowUp.svg');
+  background-size: 20px 20px;
+  filter: brightness(10.2) sepia(1) hue-rotate(180deg) saturate(5);
+  display: inline-block;
+  width: 0;
+  height: 15px;
+  content:"";
+  padding-right: 20px;
+  float:right;
+  transition: transform 0.5s;
+}
+
+#groupSelectorContainerSelector {
+  height: 100px;
+}
+
+#groupSelector[aria-expanded="false"] {
+  #groupSelectorToggle {
+    transform: rotate(180deg);
+    padding-top: 3px;
+  }
+
+  #groupSelectorContainerSelector {
+    height: 0;
+    overflow: hidden;
+  }
 }

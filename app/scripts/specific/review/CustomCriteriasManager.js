@@ -57,10 +57,10 @@ class CustomCriteriasManager {
   createAddCustomThemeButton () {
     let addCustomThemeButton = document.querySelector('#addCustomThemeElement')
     if (!_.isElement(addCustomThemeButton)) {
-      let criteriaHeader = document.querySelector('#tagHeader')
+      let criteriaHeader = document.querySelector('#groupSelectorContainerHeader')
       let addCustomThemeElement = document.createElement('span')
       addCustomThemeElement.id = 'addCustomThemeElement'
-      addCustomThemeElement.classList.add('addCustomCriteria')
+      addCustomThemeElement.classList.add('addCustomCriteriaWhite')
       criteriaHeader.insertAdjacentElement('afterbegin', addCustomThemeElement)
       addCustomThemeElement.addEventListener('click', this.createCustomTheme())
     }
