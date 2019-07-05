@@ -3,6 +3,7 @@ const Events = require('./Events')
 const URLUtils = require('../utils/URLUtils')
 const LanguageUtils = require('../utils/LanguageUtils')
 const Alerts = require('../utils/Alerts')
+const axios = require('axios')
 
 const URL_CHANGE_INTERVAL_IN_SECONDS = 1
 
@@ -31,6 +32,8 @@ class ContentTypeManager {
         this.waitUntilPDFViewerLoad(() => {
           // Save document type as pdf
           this.documentType = ContentTypeManager.documentTypes.pdf
+          // Try to load title
+          this.tryToLoadTitle()
           // Save pdf fingerprint
           this.pdfFingerprint = window.PDFViewerApplication.pdfDocument.pdfInfo.fingerprint
           // Get document URL
@@ -43,6 +46,7 @@ class ContentTypeManager {
             // Is a local file
             if (window.PDFViewerApplication.url.startsWith('file:///')) {
               this.localFile = true
+              this.localFilePath = window.PDFViewerApplication.url
               if (_.isFunction(callback)) {
                 callback()
               }
@@ -58,11 +62,14 @@ class ContentTypeManager {
         })
       } else {
         this.documentType = ContentTypeManager.documentTypes.html
+        // Try to load title
+        this.tryToLoadTitle()
         if (this.urlParam) {
           this.documentURL = this.urlParam
         } else {
           if (window.location.href.startsWith('file:///')) {
             this.localFile = true
+            this.localFilePath = window.location.href
             // Check in moodle download manager if the file exists
             chrome.runtime.sendMessage({scope: 'annotationFile', cmd: 'fileMetadata', data: {filepath: URLUtils.retrieveMainUrl(window.location.href)}}, (fileMetadata) => {
               if (_.isEmpty(fileMetadata)) {
@@ -193,6 +200,74 @@ class ContentTypeManager {
         LanguageUtils.dispatchCustomEvent(Events.updatedDocumentURL, {url: this.documentURL})
       }
     }, URL_CHANGE_INTERVAL_IN_SECONDS * 1000)
+  }
+
+  tryToLoadTitle () {
+    // Try to load by doi
+    let promise = new Promise((resolve, reject) => {
+      if (this.doi) {
+        let settings = {
+          'async': true,
+          'crossDomain': true,
+          'url': 'https://doi.org/' + this.doi,
+          'method': 'GET',
+          'headers': {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache'
+          }
+        }
+        // Call using axios
+        axios(settings).then((response) => {
+          if (response.data && response.data.title) {
+            this.documentTitle = response.data.title
+          }
+          resolve()
+        })
+      } else {
+        resolve()
+      }
+    })
+    promise.then(() => {
+      // Try to load title from page metadata
+      if (_.isEmpty(this.documentTitle)) {
+        try {
+          let documentTitleElement = document.querySelector('meta[name="citation_title"]')
+          if (!_.isNull(documentTitleElement)) {
+            this.documentTitle = documentTitleElement.content
+          }
+          if (!this.documentTitle) {
+            let documentTitleElement = document.querySelector('meta[property="og:title"]')
+            if (!_.isNull(documentTitleElement)) {
+              this.documentTitle = documentTitleElement.content
+            }
+            if (!this.documentTitle) {
+              let promise = new Promise((resolve, reject) => {
+                // Try to load title from pdf metadata
+                if (this.documentType === ContentTypeManager.documentTypes.pdf) {
+                  this.waitUntilPDFViewerLoad(() => {
+                    if (window.PDFViewerApplication.documentInfo.Title) {
+                      this.documentTitle = window.PDFViewerApplication.documentInfo.Title
+                    }
+                    resolve()
+                  })
+                } else {
+                  resolve()
+                }
+              })
+              promise.then(() => {
+                // Try to load title from document title
+                if (!this.documentTitle) {
+                  this.documentTitle = document.title || 'Unknown document'
+                }
+              })
+            }
+          }
+        } catch (e) {
+          console.debug('Title not found for this document')
+        }
+      }
+    })
   }
 }
 

@@ -164,23 +164,23 @@ class LocalStorageClient {
         // Check if annotation's tags includes all the annotations
         result = tags.length === _.intersection(annotation.tags, tags).length
       }
-      // TODO Uri.parts
+      // Uri.parts
       if (result && (data['uri.parts'])) {
         let splittedUri = annotation.uri.split(/[#+/:=?.-]/) // Chars used to split URIs for uri.parts in Hypothes.is https://hyp.is/ajJkEI3pEemPn2ukkpZWjQ/h.readthedocs.io/en/latest/api-reference/v1/
         result = _.some(splittedUri, (str) => { return str === data['uri.parts'] })
       }
-      // TODO wildcard_uri
+      // wildcard_uri
       if (result && (data.wildcard_uri)) {
         result = wildcard(data.wildcard_uri, annotation.uri)
       }
-      // TODO Any
+      // Any
       if (result && (data.any)) {
         let anyUrl = annotation.uri.includes(data.any) // Any checks in uri
         let anyTag = annotation.tags.includes(data.any) // Any checks in tags
         result = anyUrl || anyTag // TODO Quote and text
       }
       // TODO Quote
-      // TODO References
+      // References
       if (result && (data.references)) {
         if (_.isString(data.references)) {
           result = annotation.references.includes(data.references)

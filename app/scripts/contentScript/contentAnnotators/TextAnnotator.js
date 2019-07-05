@@ -233,17 +233,28 @@ class TextAnnotator extends ContentAnnotator {
       text: '',
       uri: window.abwa.contentTypeManager.getDocumentURIToSaveInStorage()
     }
+    // Get link for all files
+    data.document = {
+      link: [{
+        href: window.abwa.contentTypeManager.getDocumentURIToSaveInStorage()
+      }]
+    }
     // For pdf files it is also send the relationship between pdf fingerprint and web url
     if (window.abwa.contentTypeManager.documentType === ContentTypeManager.documentTypes.pdf) {
       let pdfFingerprint = window.abwa.contentTypeManager.pdfFingerprint
-      data.document = {
-        documentFingerprint: pdfFingerprint,
-        link: [{
-          href: 'urn:x-pdf:' + pdfFingerprint
-        }, {
-          href: window.abwa.contentTypeManager.getDocumentURIToSaveInStorage()
-        }]
-      }
+      data.document.documentFingerprint = pdfFingerprint
+      data.document.link = data.document.link || []
+      data.document.link.push({
+        href: 'urn:x-pdf:' + pdfFingerprint
+      })
+    }
+    // For local files
+    if (window.abwa.contentTypeManager.localFile) {
+      data.document.link = data.document.link || []
+      data.document.link.push({
+        type: 'localfile',
+        href: window.abwa.contentTypeManager.localFilePath
+      })
     }
     // If doi is available, add it to the annotation
     if (!_.isEmpty(window.abwa.contentTypeManager.doi)) {
@@ -260,6 +271,11 @@ class TextAnnotator extends ContentAnnotator {
       data.document.link = data.document.link || []
       data.document.link.push({href: pdfUrl, type: 'application/pdf'})
     }
+    // If document title is retrieved
+    if (_.isString(window.abwa.contentTypeManager.documentTitle)) {
+      data.document.title = window.abwa.contentTypeManager.documentTitle
+    }
+    data.documentMetadata = data.document // Copy to metadata field because hypothes.is doesn't return from its API all the data that it is placed in document
     return data
   }
 
