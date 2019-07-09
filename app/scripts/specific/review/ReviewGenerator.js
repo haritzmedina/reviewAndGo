@@ -6,8 +6,6 @@ const Alerts = require('../../utils/Alerts')
 const LanguageUtils = require('../../utils/LanguageUtils')
 const Screenshots = require('./Screenshots')
 const ExportSchema = require('./ExportSchema')
-const ImportSchema = require('./ImportSchema')
-const ReviewSchema = require('../../model/schema/Review')
 const $ = require('jquery')
 require('jquery-contextmenu/dist/jquery.contextMenu')
 
@@ -63,6 +61,13 @@ class ReviewGenerator {
       this.importExportImage.src = importExportImageURL
       this.importExportImage.addEventListener('click', () => {
         this.importExportButtonHandler()
+      })
+      // Set configuration button
+      let configurationImageURL = chrome.extension.getURL('/images/configuration.png')
+      this.configurationImage = this.container.querySelector('#configurationButton')
+      this.configurationImage.src = configurationImageURL
+      this.configurationImage.addEventListener('click', () => {
+
       })
       if (_.isFunction(callback)) {
         callback()
@@ -152,53 +157,6 @@ class ReviewGenerator {
           },
           items: items
         }
-      }
-    })
-  }
-
-  exportCriteriaConfiguration () {
-    ExportSchema.exportConfigurationSchemaToJSON(window.abwa.tagManager.model.groupAnnotations)
-  }
-
-  importCriteriaConfiguration () {
-    let currentGroupUrl = window.abwa.groupSelector.currentGroup.links.html || 'https://reviewandgo.com'
-    ImportSchema.askUserForConfigurationSchema((err, jsonObject) => {
-      if (err) {
-        Alerts.errorAlert({text: 'Unable to parse json file. Error:<br/>' + err.message})
-      } else {
-        Alerts.confirmAlert({
-          alertType: Alerts.alertType.warning,
-          title: 'Your configuration will be imported',
-          text: 'When the configuration is imported, a new highlighter and annotation group is created. All your configuration and annotations are backed up, but they will be only accessible using Hypothes.is or your local storage.',
-          callback: () => {
-            ImportSchema.backupReviewGroup((err) => {
-              if (err) {
-                Alerts.errorAlert({text: 'Unable to backup current annotation group. Error: ' + err.message})
-              } else {
-                ImportSchema.createReviewGroup((err, newGroup) => {
-                  if (err) {
-                    Alerts.errorAlert({text: 'Unable to create a new annotation group. Error: ' + err.message})
-                  } else {
-                    let review = ReviewSchema.fromCriterias(jsonObject.criteria)
-                    review.storageGroup = newGroup
-                    Alerts.loadingAlert({title: 'Configuration in progress', text: 'We are configuring everything to start reviewing.', position: Alerts.position.center})
-                    ImportSchema.createConfigurationAnnotationsFromReview({
-                      review,
-                      callback: (err, annotations) => {
-                        if (err) {
-                          Alerts.errorAlert({ text: 'There was an error when configuring Review&Go highlighter' })
-                        } else {
-                          Alerts.closeAlert()
-                          window.location.reload() // TODO Temporal solution, it is better to reload the content on group change
-                        }
-                      }
-                    })
-                  }
-                })
-              }
-            })
-          }
-        })
       }
     })
   }
@@ -404,8 +362,15 @@ class ReviewGenerator {
   resume (){
     if(window.abwa.contentAnnotator.allAnnotations.length>0) window.abwa.contentAnnotator.goToAnnotation(window.abwa.contentAnnotator.allAnnotations.reduce((max,a) => new Date(a.updated) > new Date(max.updated) ? a : max))
   }
-  destroy () {
 
+  destroy (callback) {
+    // Remove toolbar
+    this.container.remove()
+
+    // Callback
+    if (_.isFunction(callback)) {
+      callback()
+    }
   }
 }
 

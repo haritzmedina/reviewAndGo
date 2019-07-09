@@ -33,6 +33,18 @@ class AnnotationUtils {
       return false
     }
   }
+
+  static hasANamespace (annotation, namespace) {
+    return _.findIndex(annotation.tags, (annotationTag) => {
+      return _.startsWith(annotationTag.toLowerCase(), (namespace + ':').toLowerCase())
+    }) !== -1
+  }
+
+  static hasATag (annotation, tag) {
+    return _.findIndex(annotation.tags, (annotationTag) => {
+      return _.startsWith(annotationTag.toLowerCase(), tag.toLowerCase())
+    }) !== -1
+  }
 }
 
 module.exports = AnnotationUtils

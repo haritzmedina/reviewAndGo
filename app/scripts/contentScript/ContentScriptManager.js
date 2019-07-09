@@ -2,6 +2,7 @@ const _ = require('lodash')
 const ContentTypeManager = require('./ContentTypeManager')
 const Sidebar = require('./Sidebar')
 const TagManager = require('./TagManager')
+const Events = require('./Events')
 const ModeManager = require('./ModeManager')
 const RolesManager = require('./RolesManager')
 const GroupSelector = require('./GroupSelector')
@@ -27,26 +28,12 @@ class ContentScriptManager {
           window.abwa.annotationBasedInitializer.init(() => {
             window.abwa.groupSelector = new GroupSelector()
             window.abwa.groupSelector.init(() => {
-              window.abwa.rolesManager = new RolesManager()
-              window.abwa.rolesManager.init(() => {
-                window.abwa.modeManager = new ModeManager()
-                window.abwa.modeManager.init(() => {
-                  // Load tag manager
-                  window.abwa.tagManager = new TagManager(Config.review.namespace, Config.review.tags)
-                  window.abwa.tagManager.init(() => {
-                    // Load content annotator
-                    const TextAnnotator = require('./contentAnnotators/TextAnnotator')
-                    window.abwa.contentAnnotator = new TextAnnotator(Config.review)
-                    window.abwa.contentAnnotator.init(() => {
-                      const ReviewContentScript = require('../specific/review/ReviewContentScript')
-                      window.abwa.specificContentManager = new ReviewContentScript(Config.review)
-                      window.abwa.specificContentManager.init(() => {
-                        this.status = ContentScriptManager.status.initialized
-                        console.debug('Initialized content script manager')
-                      })
-                    })
-                  })
-                })
+              this.reloadContentByGroup(() => {
+                // Initialize listener for group change to reload the content
+                this.initListenerForGroupChange()
+                // Set status as initialized
+                this.status = ContentScriptManager.status.initialized
+                console.debug('Initialized content script manager')
               })
             })
           })
@@ -75,6 +62,8 @@ class ContentScriptManager {
       this.destroyContentAnnotator()
       // TODO Destroy groupSelector, roleManager,
       window.abwa.groupSelector.destroy(() => {
+        // Remove group change event listener
+        document.removeEventListener(Events.groupChanged, this.events.groupChangedEvent)
         window.abwa.sidebar.destroy(() => {
           window.abwa.storageManager.destroy(() => {
             this.status = ContentScriptManager.status.notInitialized
@@ -85,6 +74,96 @@ class ContentScriptManager {
           })
         })
       })
+    })
+  }
+
+  initListenerForGroupChange () {
+    this.events.groupChangedEvent = this.groupChangedEventHandlerCreator()
+    document.addEventListener(Events.groupChanged, this.events.groupChangedEvent, false)
+  }
+
+  groupChangedEventHandlerCreator () {
+    return (event) => {
+      this.reloadContentByGroup()
+    }
+  }
+
+  reloadContentByGroup (callback) {
+    this.reloadRolesManager(() => {
+      // Load tag manager
+      this.reloadTagManager(() => {
+        // Load content annotator
+        this.reloadContentAnnotator(() => {
+          // Reload specific content script
+          this.reloadSpecificContentScript(() => {
+            if (_.isFunction(callback)) {
+              callback()
+            }
+          })
+        })
+      })
+    })
+  }
+
+  reloadRolesManager (callback) {
+    if (window.abwa.rolesManager) {
+      window.abwa.rolesManager.destroy()
+    }
+    window.abwa.rolesManager = new RolesManager()
+    window.abwa.rolesManager.init(() => {
+      if (_.isFunction(callback)) {
+        callback()
+      }
+    })
+  }
+
+  reloadModeManager (callback) {
+    if (window.abwa.modeManager) {
+      window.abwa.modeManager.destroy()
+    }
+    window.abwa.modeManager = new ModeManager()
+    window.abwa.modeManager.init(() => {
+      if (_.isFunction(callback)) {
+        callback()
+      }
+    })
+  }
+
+  reloadTagManager (callback) {
+    if (window.abwa.tagManager) {
+      window.abwa.tagManager.destroy()
+    }
+    window.abwa.tagManager = new TagManager(Config.review.namespace, Config.review.tags)
+    window.abwa.tagManager.init(() => {
+      if (_.isFunction(callback)) {
+        callback()
+      }
+    })
+  }
+
+  reloadContentAnnotator (callback) {
+    if (window.abwa.contentAnnotator) {
+      window.abwa.contentAnnotator.destroy()
+    }
+    const TextAnnotator = require('./contentAnnotators/TextAnnotator')
+    window.abwa.contentAnnotator = new TextAnnotator(Config.review)
+    window.abwa.contentAnnotator.init(() => {
+      if (_.isFunction(callback)) {
+        callback()
+      }
+    })
+  }
+
+  reloadSpecificContentScript (callback) {
+    if (window.abwa.specificContentManager) {
+      window.abwa.specificContentManager.destroy()
+    }
+    const ReviewContentScript = require('../specific/review/ReviewContentScript')
+    window.abwa.specificContentManager = new ReviewContentScript(Config.review)
+    window.abwa.specificContentManager.init(() => {
+      if (_.isFunction(callback)) {
+        callback()
+      }
     })
   }
 

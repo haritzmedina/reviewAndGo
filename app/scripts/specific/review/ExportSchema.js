@@ -73,7 +73,7 @@ class ExportSchema {
     let blob = new window.Blob([stringifyObject], {
       type: 'text/plain;charset=utf-8'
     })
-    FileSaver.saveAs(blob, 'criteriaConfiguration.json')
+    FileSaver.saveAs(blob, 'reviewModel.json')
   }
 }
 

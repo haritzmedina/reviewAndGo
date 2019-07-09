@@ -1,11 +1,11 @@
 @import "./variables";
 
+$elementHoverBackgroundColor: rgba(100,100,100,0.8);
+
 #groupSelector {
   margin-left: auto;
   margin-right: auto;
-  max-width: 130px;
   font-size: 14px;
-  cursor: pointer;
   transition: background-color 0.5s ease;
 }
 
@@ -15,11 +15,12 @@
 }
 
 #groupSelectorName {
-  width: 100px;
+  width: 120px;
   display: inline-block;
   overflow: hidden;
   font-size: 14px;
   text-overflow: ellipsis;
+  cursor: pointer;
 }
 
 #groupSelectorToggle {
@@ -33,10 +34,25 @@
   padding-right: 20px;
   float:right;
   transition: transform 0.5s;
+  cursor: pointer;
+}
+
+#groupSelectorToggle:hover {
+
 }
 
 #groupSelectorContainerSelector {
-  height: 100px;
+
+}
+
+.groupSelectorButton {
+  padding: 5px 0;
+  margin: 5px 0;
+  cursor: pointer;
+}
+
+.groupSelectorButton:hover {
+  background-color: $elementHoverBackgroundColor;
 }
 
 #groupSelector[aria-expanded="false"] {
@@ -49,4 +65,63 @@
     height: 0;
     overflow: hidden;
   }
+}
+
+.groupSelectorItemOption {
+  display: block;
+  cursor: pointer;
+}
+
+.groupSelectorItemOption:hover {
+  background-color: $elementHoverBackgroundColor;
+}
+
+.groupSelectorItemContainer {
+  margin: 3px 0;
+}
+
+.groupSelectorItemContainer[aria-expanded="false"] {
+  .groupSelectorItemToggle {
+    transform: rotate(180deg);
+    margin-top: 3px;
+  }
+  .groupSelectorItemOptionsContainer {
+    height: 0;
+    overflow: hidden;
+  }
+}
+
+.groupSelectorItemName {
+  display: inline-block;
+  width: 80%;
+  text-overflow: ellipsis;
+  height: 16px;
+  overflow-y: hidden;
+  padding: 2px;
+  cursor: pointer;
+}
+
+.groupSelectorItemName:hover {
+  background-color: $elementHoverBackgroundColor;
+}
+
+.groupSelectorItemToggle {
+  margin-top: 0;
+  background-image: url($chromeExtensionMainURL + 'images/arrowUp.svg');
+  background-size: 20px 20px;
+  filter: brightness(10.2) sepia(1) hue-rotate(180deg) saturate(5);
+  display: inline-block;
+  width: 0;
+  height: 15px;
+  content:"";
+  padding-right: 20px;
+  float:right;
+  transition: transform 0.5s;
+  border-radius: 1px;
+  cursor: pointer;
+}
+
+.groupSelectorItemToggle:hover {
+  filter: none;
+  background-color: rgba(200,200,200,0.8);
 }
