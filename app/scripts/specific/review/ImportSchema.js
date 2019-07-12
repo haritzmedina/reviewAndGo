@@ -11,10 +11,6 @@ class ImportSchema {
     })
   }
 
-  static createReviewGroup (data, callback) {
-    window.abwa.storageManager.client.createNewGroup(data, callback)
-  }
-
   static backupReviewGroup (callback) {
     // Get current group id
     let currentGroupId = window.abwa.groupSelector.currentGroup.id

@@ -5,7 +5,10 @@ const _ = require('lodash')
 const Alerts = require('../../utils/Alerts')
 const LanguageUtils = require('../../utils/LanguageUtils')
 const Screenshots = require('./Screenshots')
-const ExportSchema = require('./ExportSchema')
+const AnnotationExporter = require('./AnnotationExporter')
+const AnnotationImporter = require('./AnnotationImporter')
+const ReviewSchema = require('../../model/schema/Review')
+const ImportSchema = require('./ImportSchema')
 const $ = require('jquery')
 require('jquery-contextmenu/dist/jquery.contextMenu')
 
@@ -145,20 +148,92 @@ class ReviewGenerator {
       build: () => {
         // Create items for context menu
         let items = {}
-        items['import'] = {name: 'Import criteria configuration'}
-        items['export'] = {name: 'Export criteria configuration'}
+        items['import'] = {name: 'Import review annotations'}
+        items['export'] = {name: 'Export review annotations'}
         return {
           callback: (key, opt) => {
             if (key === 'import') {
-              this.importCriteriaConfiguration()
+              this.importReviewAnnotations()
             } else if (key === 'export') {
-              this.exportCriteriaConfiguration()
+              this.exportReviewAnnotations()
             }
           },
           items: items
         }
       }
     })
+  }
+
+  importReviewAnnotations () {
+    AnnotationImporter.askUserToImportDocumentAnnotations((err, jsonObject) => {
+      if (err) {
+        Alerts.errorAlert({text: 'Unable to parse json file. Error:<br/>' + err.message})
+      } else {
+        Alerts.inputTextAlert({
+          alertType: Alerts.alertType.warning,
+          title: 'Give a name to your imported review model',
+          text: 'When the configuration is imported a new highlighter is created. You can return to your other review models using the sidebar.',
+          inputPlaceholder: 'Type here the name of your review model...',
+          preConfirm: (groupName) => {
+            if (_.isString(groupName)) {
+              if (groupName.length <= 0) {
+                const swal = require('sweetalert2')
+                swal.showValidationMessage('Name cannot be empty.')
+              } else if (groupName.length > 25) {
+                const swal = require('sweetalert2')
+                swal.showValidationMessage('The review model name cannot be higher than 25 characters.')
+              } else {
+                return groupName
+              }
+            }
+          },
+          callback: (err, reviewName) => {
+            if (err) {
+              window.alert('Unable to load alert. Unexpected error, please contact developer.')
+            } else {
+              window.abwa.storageManager.client.createNewGroup({name: reviewName}, (err, newGroup) => {
+                if (err) {
+                  Alerts.errorAlert({text: 'Unable to create a new annotation group. Error: ' + err.message})
+                } else {
+                  let review = ReviewSchema.fromCriterias(jsonObject.model.criteria)
+                  review.storageGroup = newGroup
+                  Alerts.loadingAlert({title: 'Configuration in progress', text: 'We are configuring everything to start reviewing.', position: Alerts.position.center})
+                  ImportSchema.createConfigurationAnnotationsFromReview({
+                    review,
+                    callback: (err, annotations) => {
+                      if (err) {
+                        Alerts.errorAlert({ text: 'There was an error when configuring Review&Go highlighter. Error: ' + err.message })
+                      } else {
+                        Alerts.closeAlert()
+                        // Set created group to document annotations
+                        let toCreateDocumentAnnotations = _.map(jsonObject.documentAnnotations, (annotation) => {
+                          annotation.group = review.storageGroup.id
+                          return annotation
+                        })
+                        window.abwa.storageManager.client.createNewAnnotations(toCreateDocumentAnnotations, (err) => {
+                          if (err) {
+                            Alerts.errorAlert({text: 'Unable to import correctly document annotations. Error: ' + err.message})
+                          } else {
+                            // Update groups from storage
+                            window.abwa.groupSelector.retrieveGroups(() => {
+                              window.abwa.groupSelector.setCurrentGroup(review.storageGroup.id)
+                            })
+                          }
+                        })
+                      }
+                    }
+                  })
+                }
+              })
+            }
+          }
+        })
+      }
+    })
+  }
+
+  exportReviewAnnotations () {
+    AnnotationExporter.exportCurrentDocumentAnnotations()
   }
 
   generateScreenshot () {

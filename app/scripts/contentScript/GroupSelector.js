@@ -67,9 +67,12 @@ class GroupSelector {
             }
           }
           // If group cannot be retrieved from saved in extension storage
+          // Try to load a group with name DefaultReviewModel
+          this.currentGroup = _.find(window.abwa.groupSelector.groups, (group) => { return group.name === 'DefaultReviewModel' })
+          // If group does not exist, create a new one
           if (!this.currentGroup) {
             window.abwa.storageManager.client.createNewGroup({
-              name: 'ReviewAndGo',
+              name: 'DefaultReviewModel',
               description: 'A Review&Go group to conduct a review'
             }, (err, group) => {
               this.currentGroup = group
@@ -184,22 +187,7 @@ class GroupSelector {
     // Groups container
     let groupsContainer = document.querySelector('#groupSelectorContainerSelector')
     groupsContainer.innerText = ''
-    // New group button
-    let newGroupButton = document.createElement('div')
-    newGroupButton.innerText = 'Create review model'
-    newGroupButton.id = 'createNewModelButton'
-    newGroupButton.className = 'groupSelectorButton'
-    newGroupButton.title = 'Create a new review model'
-    newGroupButton.addEventListener('click', this.createNewReviewModelEventHandler())
-    groupsContainer.appendChild(newGroupButton)
-    // TODO Import button
-    let importGroupButton = document.createElement('div')
-    importGroupButton.className = 'groupSelectorButton'
-    importGroupButton.innerText = 'Import review model'
-    importGroupButton.id = 'importReviewModelButton'
-    importGroupButton.addEventListener('click', this.createImportGroupButtonEventHandler())
-    groupsContainer.appendChild(importGroupButton)
-    // TODO For each group
+    // For each group
     let groupSelectorItemTemplate = document.querySelector('#groupSelectorItem')
     for (let i = 0; i < this.groups.length; i++) {
       let group = this.groups[i]
@@ -219,6 +207,21 @@ class GroupSelector {
       groupSelectorItem.querySelector('.exportGroup').addEventListener('click', this.createGroupSelectorExportOptionEventHandler(group))
       groupSelectorItem.querySelector('.deleteGroup').addEventListener('click', this.createGroupSelectorDeleteOptionEventHandler(group))
     }
+    // New group button
+    let newGroupButton = document.createElement('div')
+    newGroupButton.innerText = 'Create review model'
+    newGroupButton.id = 'createNewModelButton'
+    newGroupButton.className = 'groupSelectorButton'
+    newGroupButton.title = 'Create a new review model'
+    newGroupButton.addEventListener('click', this.createNewReviewModelEventHandler())
+    groupsContainer.appendChild(newGroupButton)
+    // Import button
+    let importGroupButton = document.createElement('div')
+    importGroupButton.className = 'groupSelectorButton'
+    importGroupButton.innerText = 'Import review model'
+    importGroupButton.id = 'importReviewModelButton'
+    importGroupButton.addEventListener('click', this.createImportGroupButtonEventHandler())
+    groupsContainer.appendChild(importGroupButton)
   }
 
   createGroupSelectorRenameOptionEventHandler (group) {
@@ -253,25 +256,14 @@ class GroupSelector {
           Alerts.errorAlert({text: 'Error when deleting the group: ' + err.message})
         } else {
           // Move to first other group if exists
-          let firstGroup = _.first(this.groups)
-          if (_.isUndefined(firstGroup)) {
-            this.defineCurrentGroup(() => {
-              this.reloadGroupsContainer(() => {
-                // Expand groups container
-                this.container.setAttribute('aria-expanded', 'false')
-                // Reopen sidebar if closed
-                window.abwa.sidebar.openSidebar()
-              })
-            })
-          } else {
-            this.setCurrentGroup(firstGroup.id)
+          this.defineCurrentGroup(() => {
             this.reloadGroupsContainer(() => {
               // Expand groups container
               this.container.setAttribute('aria-expanded', 'false')
               // Reopen sidebar if closed
               window.abwa.sidebar.openSidebar()
             })
-          }
+          })
         }
       })
     }
@@ -283,12 +275,15 @@ class GroupSelector {
         if (err) {
           Alerts.errorAlert({text: 'Unable to create a new group. Please try again or contact developers if the error continues happening.'})
         } else {
-          // Move group to new created one
-          this.setCurrentGroup(result.id, () => {
-            // Expand groups container
-            this.container.setAttribute('aria-expanded', 'false')
-            // Reopen sidebar if closed
-            window.abwa.sidebar.openSidebar()
+          // Update list of groups from storage
+          this.retrieveGroups(() => {
+            // Move group to new created one
+            this.setCurrentGroup(result.id, () => {
+              // Expand groups container
+              this.container.setAttribute('aria-expanded', 'false')
+              // Reopen sidebar if closed
+              window.abwa.sidebar.openSidebar()
+            })
           })
         }
       })
@@ -379,7 +374,7 @@ class GroupSelector {
 
   setCurrentGroup (groupId, callback) {
     // Set current group
-    let newCurrentGroup = _.find(this.user.groups, (group) => { return group.id === groupId })
+    let newCurrentGroup = _.find(this.groups, (group) => { return group.id === groupId })
     if (newCurrentGroup) {
       this.currentGroup = newCurrentGroup
     }
@@ -402,15 +397,18 @@ class GroupSelector {
   }
 
   updateCurrentGroupHandler (groupId) {
-    this.currentGroup = _.find(this.user.groups, (group) => { return groupId === group.id })
-    ChromeStorage.setData(this.selectedGroupNamespace, {data: JSON.stringify(this.currentGroup)}, ChromeStorage.local, () => {
-      console.debug('Group updated. Name: %s id: %s', this.currentGroup.name, this.currentGroup.id)
-      // Dispatch event
-      LanguageUtils.dispatchCustomEvent(Events.groupChanged, {
-        group: this.currentGroup,
-        time: new Date()
+    let currentGroup = _.find(this.groups, (group) => { return groupId === group.id })
+    if (_.isObject(currentGroup)) {
+      this.currentGroup = currentGroup
+      ChromeStorage.setData(this.selectedGroupNamespace, {data: JSON.stringify(this.currentGroup)}, ChromeStorage.local, () => {
+        console.debug('Group updated. Name: %s id: %s', this.currentGroup.name, this.currentGroup.id)
+        // Dispatch event
+        LanguageUtils.dispatchCustomEvent(Events.groupChanged, {
+          group: this.currentGroup,
+          time: new Date()
+        })
       })
-    })
+    }
   }
 
   createImportGroupButtonEventHandler () {
@@ -460,7 +458,10 @@ class GroupSelector {
                         Alerts.errorAlert({ text: 'There was an error when configuring Review&Go highlighter' })
                       } else {
                         Alerts.closeAlert()
-                        this.setCurrentGroup(review.storageGroup.id)
+                        // Update groups from storage
+                        this.retrieveGroups(() => {
+                          this.setCurrentGroup(review.storageGroup.id)
+                        })
                       }
                     }
                   })
@@ -480,7 +481,7 @@ class GroupSelector {
 
       } else {
         // Export scheme
-        ExportSchema.exportConfigurationSchemaToJSON(groupAnnotations)
+        ExportSchema.exportConfigurationSchemaToJSONFile(groupAnnotations)
       }
     })
   }

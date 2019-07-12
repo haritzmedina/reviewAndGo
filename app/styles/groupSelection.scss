@@ -42,7 +42,7 @@ $elementHoverBackgroundColor: rgba(100,100,100,0.8);
 }
 
 #groupSelectorContainerSelector {
-
+  padding-top: 15px;
 }
 
 .groupSelectorButton {
@@ -64,12 +64,15 @@ $elementHoverBackgroundColor: rgba(100,100,100,0.8);
   #groupSelectorContainerSelector {
     height: 0;
     overflow: hidden;
+    padding: 0;
   }
 }
 
 .groupSelectorItemOption {
   display: block;
   cursor: pointer;
+  height: 15px;
+  padding: 2px 0;
 }
 
 .groupSelectorItemOption:hover {
@@ -91,12 +94,18 @@ $elementHoverBackgroundColor: rgba(100,100,100,0.8);
   }
 }
 
+.groupSelectorItemContainer[aria-expanded="true"] {
+  background-color: rgba(75, 75, 75, 1);
+}
+
 .groupSelectorItemName {
   display: inline-block;
   width: 80%;
   text-overflow: ellipsis;
   height: 16px;
+  max-height: 32px;
   overflow-y: hidden;
+  overflow-x: hidden;
   padding: 2px;
   cursor: pointer;
 }
