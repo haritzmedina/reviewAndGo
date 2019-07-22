@@ -2,6 +2,7 @@ const Config = {
   review: {
     groupName: 'ReviewAndGo',
     namespace: 'review',
+    urlParamName: 'rag',
     tags: { // Defined tags for the domain
       grouped: { // Grouped annotations
         group: 'criteria',
