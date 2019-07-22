@@ -252,7 +252,7 @@ class ReviewGenerator {
       let importAnnotations = () => {
         insertMetaReviewCriteria().then(() => {
           insertAnnotations(transformAnnotations(reviewerAnnotations)).then(() => {
-            location.reload()
+            window.abwa.contentScriptManager.reloadContentByGroup()
           })
         })
       }
