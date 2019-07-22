@@ -142,7 +142,12 @@ class ReviewGenerator {
     })
   }
 
-  importAnnotationsMetaReview (reviewerAnnotations,reviewerName) {
+  importAnnotationsMetaReview (importedReview,reviewerName) {
+    let reviewerAnnotations = importedReview.documentAnnotations || []
+    if (reviewerAnnotations.length === 0) {
+      Alerts.errorAlert({text:"Invalid json file."})
+      return
+    }
     let selectedGroup = window.abwa.groupSelector.currentGroup.id
     let metaReviewFactors = ["Strength","Minor weakness","Major weakness"/*,"Other comments"*/]
 
