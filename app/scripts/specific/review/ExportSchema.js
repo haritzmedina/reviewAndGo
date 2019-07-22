@@ -3,11 +3,12 @@ const Level = require('../../model/schema/Level')
 const Review = require('../../model/schema/Review')
 const _ = require('lodash')
 const FileSaver = require('file-saver')
+const Alerts = require('../../utils/Alerts')
 
 const jsYaml = require('js-yaml')
 
 class ExportSchema {
-  static exportConfigurationSchemaToJSON (schemeAnnotations) {
+  static exportConfigurationSchemeToJSObject (schemeAnnotations) {
     // Get criteria annotations
     let criteriaAnnotations = _.filter(schemeAnnotations, (annotation) => {
       return _.find(annotation.tags, (tag) => { return tag.includes('review:criteria:') })
@@ -66,14 +67,22 @@ class ExportSchema {
     let review = new Review({})
     review.criterias = review.criterias.concat(criterias)
     // Create a JS object with the review configuration
-    let object = review.toObject()
-    // Stringify JS object
-    let stringifyObject = JSON.stringify(object, null, 2)
-    // Download the file
-    let blob = new window.Blob([stringifyObject], {
-      type: 'text/plain;charset=utf-8'
-    })
-    FileSaver.saveAs(blob, 'criteriaConfiguration.json')
+    return review.toObject()
+  }
+
+  static exportConfigurationSchemaToJSONFile (schemeAnnotations) {
+    let object = ExportSchema.exportConfigurationSchemeToJSObject(schemeAnnotations)
+    if (_.isObject(object)) {
+      // Stringify JS object
+      let stringifyObject = JSON.stringify(object, null, 2)
+      // Download the file
+      let blob = new window.Blob([stringifyObject], {
+        type: 'text/plain;charset=utf-8'
+      })
+      FileSaver.saveAs(blob, 'reviewModel.json')
+    } else {
+      Alerts.errorAlert({text: 'An unexpected error happened when trying to retrieve review model configuration. Reload webpage and try again.'})
+    }
   }
 }
 

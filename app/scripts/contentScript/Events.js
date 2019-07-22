@@ -3,6 +3,7 @@ const Events = {
   annotationCreated: 'annotationCreated',
   annotationDeleted: 'annotationDeleted',
   annotationValidated: 'annotationValidated',
+  groupChanged: 'groupChanged',
   mark: 'mark',
   modeChanged: 'modeChanged',
   userFilterChange: 'userFilterChange',

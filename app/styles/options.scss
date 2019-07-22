@@ -1,1 +1,5 @@
 @import '../../node_modules/bootstrap/scss/bootstrap';
+
+.storageConfiguration[aria-hidden="true"] {
+  display: none;
+}

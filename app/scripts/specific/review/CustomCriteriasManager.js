@@ -57,10 +57,10 @@ class CustomCriteriasManager {
   createAddCustomThemeButton () {
     let addCustomThemeButton = document.querySelector('#addCustomThemeElement')
     if (!_.isElement(addCustomThemeButton)) {
-      let criteriaHeader = document.querySelector('#tagHeader')
+      let criteriaHeader = document.querySelector('#groupSelectorContainerHeader')
       let addCustomThemeElement = document.createElement('span')
       addCustomThemeElement.id = 'addCustomThemeElement'
-      addCustomThemeElement.classList.add('addCustomCriteria')
+      addCustomThemeElement.classList.add('addCustomCriteriaWhite')
       criteriaHeader.insertAdjacentElement('afterbegin', addCustomThemeElement)
       addCustomThemeElement.addEventListener('click', this.createCustomTheme())
     }
@@ -69,7 +69,8 @@ class CustomCriteriasManager {
   createCustomTheme () {
     return () => {
       Alerts.inputTextAlert({
-        title: 'Creating new criteria group',
+        title: 'Creating new factor',
+        text: 'You can give a name to the factor that you want to review.',
         input: 'text',
         preConfirm: (themeName) => {
           let themeElement = document.querySelector('.tagGroup[data-group-name="' + themeName + '"')
@@ -83,7 +84,7 @@ class CustomCriteriasManager {
         },
         callback: (err, result) => {
           if (err) {
-            window.alert('Unable to show form to add custom criteria group. Contact developer.')
+            window.alert('Unable to show form to add custom factor. Contact developer.')
           } else {
             let tagName = LanguageUtils.normalizeStringToValidID(result)
             let tagGroupElement = TagManager.createGroupedButtons({name: tagName, groupHandler: window.abwa.tagManager.collapseExpandGroupedButtonsHandler})
@@ -110,7 +111,7 @@ class CustomCriteriasManager {
       let criteriaName
       let criteriaDescription
       Alerts.multipleInputAlert({
-        title: 'Creating a new criteria for ' + groupName,
+        title: 'Creating a new criterion for factor ' + groupName,
         html: '<div>' +
           '<input id="criteriaName" class="swal2-input customizeInput" placeholder="Type your criteria name..."/>' +
           '</div>' +
@@ -371,10 +372,10 @@ class CustomCriteriasManager {
       let tagGroup = arrayOfTagGroups[i]
       let items = {}
       // Modify menu element
-      items['modify'] = { name: 'Modify criteria' }
+      items['modify'] = { name: 'Modify criterion' }
       // If custom criteria, it is also possible to delete it
       if (tagGroup.config.options.custom) {
-        items['delete'] = { name: 'Delete criteria' }
+        items['delete'] = { name: 'Delete criterion' }
       }
       $.contextMenu({
         selector: '[data-mark="' + tagGroup.config.name + '"]',
@@ -425,7 +426,7 @@ class CustomCriteriasManager {
     let formCriteriaDescriptionValue = defaultDescriptionValue || tagGroup.config.options.description
     let custom = tagGroup.config.options.custom || false
     Alerts.multipleInputAlert({
-      title: 'Modifying criteria name and description',
+      title: 'Modifying name and description for criterion ' + formCriteriaNameValue,
       html: '<div>' +
         '<input id="criteriaName" class="swal2-input customizeInput" value="' + formCriteriaNameValue + '"/>' +
         '</div>' +

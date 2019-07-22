@@ -5,9 +5,11 @@ const ModeManager = require('./ModeManager')
 const LanguageUtils = require('../utils/LanguageUtils')
 const ColorUtils = require('../utils/ColorUtils')
 const Events = require('./Events')
+const Config = require('../Config')
 const Tag = require('./Tag')
 const TagGroup = require('./TagGroup')
 const Alerts = require('../utils/Alerts')
+const AnnotationUtils = require('../utils/AnnotationUtils')
 const ImportSchema = require('../specific/review/ImportSchema')
 const DefaultCriteria = require('../specific/review/DefaultCriteria')
 const Review = require('../model/schema/Review')
@@ -50,20 +52,23 @@ class TagManager {
     })
   }
 
-  getGroupAnnotations (callback) {
+  static getGroupAnnotations (group, callback) {
+    let groupUrl = group.links ? group.links.html : group.url
     window.abwa.storageManager.client.searchAnnotations({
-      url: window.abwa.groupSelector.currentGroup.links.html,
+      url: groupUrl,
       order: 'asc'
     }, (err, annotations) => {
       if (err) {
-        Alerts.errorAlert({text: 'Unable to construct the highlighter. Please reload webpage and try it again.'})
+        if (_.isFunction(callback)) {
+          callback(err)
+        }
       } else {
         // Retrieve tags which has the namespace
         annotations = _.filter(annotations, (annotation) => {
-          return this.hasANamespace(annotation, this.model.namespace)
+          return AnnotationUtils.hasANamespace(annotation, Config.review.namespace)
         })
         if (_.isFunction(callback)) {
-          callback(annotations)
+          callback(null, annotations)
         }
       }
     })
@@ -81,57 +86,49 @@ class TagManager {
   }
 
   initAllTags (callback) {
-    this.getGroupAnnotations((annotations) => {
-      // Check if there are tags in the group or it is needed to create the default ones
-      let promise = Promise.resolve(annotations) // TODO Check if it is okay
-      if (annotations.length === 0) {
-        promise = new Promise((resolve) => {
-          if (!Alerts.isVisible()) {
-            Alerts.loadingAlert({title: 'Configuration in progress', text: 'We are configuring everything to start reviewing.', position: Alerts.position.center})
-          }
-          // Create configuration into group
-          // Create review schema from default criterias
-          let review = Review.fromCriterias(DefaultCriteria.criteria)
-          review.storageGroup = window.abwa.groupSelector.currentGroup
-          Alerts.loadingAlert({title: 'Configuration in progress', text: 'We are configuring everything to start reviewing.', position: Alerts.position.center})
-          ImportSchema.createConfigurationAnnotationsFromReview({
-            review,
-            callback: (err, annotations) => {
-              if (err) {
-                Alerts.errorAlert({ text: 'There was an error when configuring Review&Go highlighter' })
-              } else {
-                Alerts.closeAlert()
-                window.abwa.sidebar.openSidebar() // Open sidebar to notify the user that the highlighter is created and ready to use
-                resolve(annotations)
-              }
+    TagManager.getGroupAnnotations(window.abwa.groupSelector.currentGroup, (err, annotations) => {
+      if (err) {
+        Alerts.errorAlert({text: 'Unable to construct the highlighter. Please reload webpage and try it again.'})
+      } else {
+        // Check if there are tags in the group or it is needed to create the default ones
+        let promise = Promise.resolve(annotations) // TODO Check if it is okay
+        if (annotations.length === 0) {
+          promise = new Promise((resolve) => {
+            if (!Alerts.isVisible()) {
+              Alerts.loadingAlert({title: 'Configuration in progress', text: 'We are configuring everything to start reviewing.', position: Alerts.position.center})
             }
+            // Create configuration into group
+            // Create review schema from default criterias
+            let review = Review.fromCriterias(DefaultCriteria.criteria)
+            review.storageGroup = window.abwa.groupSelector.currentGroup
+            Alerts.loadingAlert({title: 'Configuration in progress', text: 'We are configuring everything to start reviewing.', position: Alerts.position.center})
+            ImportSchema.createConfigurationAnnotationsFromReview({
+              review,
+              callback: (err, annotations) => {
+                if (err) {
+                  Alerts.errorAlert({ text: 'There was an error when configuring Review&Go highlighter' })
+                } else {
+                  Alerts.closeAlert()
+                  window.abwa.sidebar.openSidebar() // Open sidebar to notify the user that the highlighter is created and ready to use
+                  resolve(annotations)
+                }
+              }
+            })
           })
+        }
+        promise.then((annotations) => {
+          // Add to model
+          this.model.groupAnnotations = annotations
+          // Create tags based on annotations
+          this.currentTags = this.createTagsBasedOnAnnotations()
+          // Populate tags containers for the modes
+          this.createTagsButtonsForEvidencing()
+          if (_.isFunction(callback)) {
+            callback()
+          }
         })
       }
-      promise.then((annotations) => {
-        // Add to model
-        this.model.groupAnnotations = annotations
-        // Create tags based on annotations
-        this.currentTags = this.createTagsBasedOnAnnotations()
-        // Populate tags containers for the modes
-        this.createTagsButtonsForEvidencing()
-        if (_.isFunction(callback)) {
-          callback()
-        }
-      })
     })
-  }
-
-  hasANamespace (annotation, namespace) {
-    return _.findIndex(annotation.tags, (annotationTag) => {
-      return _.startsWith(annotationTag.toLowerCase(), (namespace + ':').toLowerCase())
-    }) !== -1
-  }
-
-  hasATag (annotation, tag) {
-    return _.findIndex(annotation.tags, (annotationTag) => {
-      return _.startsWith(annotationTag.toLowerCase(), tag.toLowerCase())
-    }) !== -1
   }
 
   createTagsBasedOnAnnotations () {

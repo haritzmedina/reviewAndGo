@@ -23,7 +23,8 @@ class ReviewContentScript {
   }
 
   destroy () {
-
+    window.abwa.specific.reviewGenerator.destroy()
+    window.abwa.specific.customCriteriasManager.destroy()
   }
 }
 

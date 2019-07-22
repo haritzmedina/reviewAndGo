@@ -1,6 +1,5 @@
 const Alerts = require('../../utils/Alerts')
 const FileUtils = require('../../utils/FileUtils')
-const Config = require('../../Config')
 
 class ImportSchema {
   static createConfigurationAnnotationsFromReview ({review, callback}) {
@@ -10,10 +9,6 @@ class ImportSchema {
     window.abwa.storageManager.client.createNewAnnotations(annotations, (err, annotations) => {
       callback(err, annotations)
     })
-  }
-
-  static createReviewGroup (callback) {
-    window.abwa.storageManager.client.createNewGroup({name: Config.review.groupName}, callback)
   }
 
   static backupReviewGroup (callback) {

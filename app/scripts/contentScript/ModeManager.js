@@ -13,7 +13,7 @@ class ModeManager {
   }
 
   init (callback) {
-    if (window.abwa.rolesManager.role === RolesManager.roles.teacher) {
+    if (window.abwa.rolesManager.role === RolesManager.roles.author) {
       if (window.abwa.annotationBasedInitializer.initAnnotation) {
         this.mode = ModeManager.modes.mark
         // Open sidebar
@@ -104,6 +104,10 @@ class ModeManager {
     if (_.isFunction(callback)) {
       callback()
     }
+  }
+
+  destroy () {
+
   }
 }
 

@@ -2,7 +2,7 @@
 
 .tagHeaderName {
   color:white;
-  font-size: 16px;
+  font-size: 14px;
   text-align: center;
   padding-top: 1px;
   padding-bottom: 1px;
@@ -20,7 +20,7 @@
 .groupName{
   background: $subContainerHeaderBackgroundColor;
   color:white;
-  font-size: 16px;
+  font-size: 14px;
   text-align: center;
   padding-top: 1px;
   padding-bottom: 1px;
@@ -57,6 +57,27 @@
 .addCustomCriteria:hover {
   background-color: rgba(200,200,200,0.7);
 }
+
+
+.addCustomCriteriaWhite {
+  float:left;
+  height: 15px;
+  width: 0;
+  padding-right: 15px;
+  background-size: 15px 15px;
+  background-image: url($chromeExtensionMainURL + 'images/addWhite.png');
+  margin-top: 2px;
+  margin-left: 1px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 1s;
+}
+
+
+.addCustomCriteriaWhite:hover {
+  background-color: rgba(200,200,200,0.6);
+}
+
 
 .tagContainer[aria-hidden="true"]{
   display: none;

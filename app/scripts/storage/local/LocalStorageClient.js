@@ -433,6 +433,25 @@ class LocalStorageClient {
     }
   }
 
+  removeAMemberFromAGroup ({id, user = null}, callback) {
+    if (_.isString(id)) {
+      // Remove group from group list
+      let removedGroup = _.remove(this.database.groups, (group) => {
+        return group.id === id
+      })
+      // Remove annotations that pertain to the group
+      _.remove(this.database.annotations, (annotation) => {
+        return annotation.group === id
+      })
+      if (removedGroup) {
+        this.manager.saveDatabase(this.database)
+        callback(null, removedGroup)
+      } else {
+        callback(new Error('The group trying to leave does not exist.'))
+      }
+    }
+  }
+
   static constructGroup ({name, description = '', groups, storageUrl}) {
     // Get a random id
     let arrayOfIds = _.map(groups, 'id')
