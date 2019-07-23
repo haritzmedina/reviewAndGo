@@ -15,7 +15,8 @@ class ChromeStorage {
     // Create to be saved object
     let obj = {}
     obj[namespace] = data
-    storageArea.set(obj, () => {
+    storageArea.set(obj, (result) => {
+      console.log(result)
       // Execute callback and return error if happened
       if (_.isFunction(callback)) {
         callback(chrome.runtime.lastError)

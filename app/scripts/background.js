@@ -20,9 +20,6 @@ const Popup = require('./popup/Popup')
 const _ = require('lodash')
 
 const RecentActivity = require('./background/RecentActivity')
-const ChromeStorage = require('./utils/ChromeStorage')
-const HypothesisClientManager = require('./storage/hypothesis/HypothesisClientManager')
-const LocalStorageManager = require('./storage/local/LocalStorageManager')
 
 class Background {
   constructor () {
@@ -130,10 +127,10 @@ class Background {
     })
 
     // Initialize sidebar when opening a file from the "Recent Activity" tab
-    chrome.runtime.onMessage.addListener((request,sender) => {
-      if(request.scope === 'RecentActivity' && request.cmd === 'initSidebar'){
+    chrome.runtime.onMessage.addListener((request, sender) => {
+      if (request.scope === 'RecentActivity' && request.cmd === 'initSidebar') {
         if (this.tabs[sender.tab.id]) {
-          if (!this.tabs[sender.tab.id].activated){
+          if (!this.tabs[sender.tab.id].activated) {
             this.tabs[sender.tab.id].activate()
           }
         } else {

@@ -335,7 +335,6 @@ class ReviewGenerator {
               this.importReviewAnnotations()
             } else if (key === 'export') {
               this.exportReviewAnnotations()
-              this.exportCriteriaConfiguration()
             } else if (key === 'importMetaReview') {
               this.importAnnotationsMetaReviewButtonHandler()
             }

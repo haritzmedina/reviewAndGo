@@ -1,8 +1,7 @@
-
+/* eslint-disable */
 const ChromeStorage = require('./utils/ChromeStorage')
 const HypothesisClientManager = require('./storage/hypothesis/HypothesisClientManager')
 const LocalStorageManager = require('./storage/local/LocalStorageManager')
-
 
 
 let storageManager
