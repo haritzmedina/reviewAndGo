@@ -13,7 +13,7 @@ class Options {
       }
     })
     chrome.runtime.sendMessage({scope: 'storage', cmd: 'getSelectedStorage'}, ({storage}) => {
-      document.querySelector('#storageDropdown').value = storage
+      document.querySelector('#storageDropdown').value = storage || 'localStorage'
     })
     // Local storage restore
     document.querySelector('#restoreDatabaseButton').addEventListener('click', () => {
