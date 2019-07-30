@@ -15,7 +15,8 @@
     "dev:firefox": "gulp --watch --vendor=firefox",
     "dev:opera": "gulp --watch --vendor=opera",
     "dev:edge": "gulp --watch --vendor=edge",
-    "lint": "standard"
+    "lint": "standard",
+    "postinstall": "npm install node-sass"
   },
   "standard": {
     "globals": [
@@ -49,7 +50,7 @@
     "jspdf": "^1.4.1",
     "lodash": "^4.17.11",
     "natives": "^1.1.6",
-    "node-sass": "^4.9.4",
+    "node-sass": "^4.12.0",
     "pdfjs-dist": "^2.0.489",
     "popper.js": "^1.14.3",
     "qtip2": "^3.0.3",

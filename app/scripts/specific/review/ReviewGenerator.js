@@ -261,7 +261,7 @@ class ReviewGenerator {
         insertMetaReviewCriteria().then(() => {
           transformAnnotations(reviewerAnnotations).then((transformedAnnotations) => {
             insertAnnotations(transformedAnnotations).then(() => {
-              location.reload()
+              window.abwa.contentScriptManager.reloadContentByGroup()
             })
           })
         })
@@ -344,7 +344,6 @@ class ReviewGenerator {
               this.importReviewAnnotations()
             } else if (key === 'export') {
               this.exportReviewAnnotations()
-              this.exportCriteriaConfiguration()
             } else if (key === 'importMetaReview') {
               this.importAnnotationsMetaReviewButtonHandler()
             }

@@ -1,7 +1,6 @@
 const Alerts = require('../../utils/Alerts')
 const LanguageUtils = require('../../utils/LanguageUtils')
 const Events = require('../../contentScript/Events')
-const TagManager = require('../../contentScript/TagManager')
 const Criteria = require('../../model/schema/Criteria')
 const Level = require('../../model/schema/Level')
 const Review = require('../../model/schema/Review')
@@ -87,10 +86,14 @@ class CustomCriteriasManager {
             window.alert('Unable to show form to add custom factor. Contact developer.')
           } else {
             let tagName = LanguageUtils.normalizeStringToValidID(result)
-            let tagGroupElement = TagManager.createGroupedButtons({name: tagName, groupHandler: window.abwa.tagManager.collapseExpandGroupedButtonsHandler})
-            window.abwa.tagManager.tagsContainer.evidencing.prepend(tagGroupElement)
-            this.createAddCustomCriteriaButton(tagName)
-            window.abwa.sidebar.openSidebar()
+            this.createNewCustomCriteria({
+              name: tagName,
+              description: '',
+              group: tagName,
+              callback: () => {
+                window.abwa.sidebar.openSidebar()
+              }
+            })
           }
         }
       })
