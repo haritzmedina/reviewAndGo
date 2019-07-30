@@ -72,7 +72,7 @@ class ReviewGenerator {
       this.configurationImage = this.container.querySelector('#configurationButton')
       this.configurationImage.src = configurationImageURL
       this.configurationImage.addEventListener('click', () => {
-
+        this.configurationButtonHandler()
       })
       if (_.isFunction(callback)) {
         callback()
@@ -177,67 +177,75 @@ class ReviewGenerator {
     let insertMetaReviewCriteria = () => {
       return new Promise((resolve,reject) => {
         let storageUri = window.abwa.storageManager.storageUrl + '/groups/'+selectedGroup
-        let userId = window.abwa.storageManager.client.database.user.userid // TODO get using getuserprofile
-        let annotationPermissions = {
-          admin: [userId],
-          delete: [userId],
-          read: ['group:'+selectedGroup],
-          update: [userId]
-        }
-        let annotationsToCreate = metaReviewFactors.map((factor) => {
-          let yamlText = jsYaml.dump({description:factor+'s of '+reviewerName,group:factor,custom:false})
-          /*annotationsToCreate.push({
-            uri: storageUri,
-            tags: [Config.review.namespace+':'+Config.review.tags.grouped.group+':'+getCriterion(factor,reviewerName)],
-            text: yamlText,
-            permissions: annotationPermissions
-          })*/
-          return {
-            uri: storageUri,
-            tags: [Config.review.namespace+':'+Config.review.tags.grouped.group+':'+getCriterion(factor,reviewerName)],
-            text: yamlText,
-            permissions: annotationPermissions,
-            group: selectedGroup
+        window.abwa.storageManager.client.getUserProfile((err,user) => {
+          if (user == null || user.userid == null){
+            resolve()
+            return
           }
-        })
-        window.abwa.storageManager.client.createNewAnnotations(annotationsToCreate,() => {
-          resolve()
+          let userId = user.userid
+          let annotationPermissions = {
+            admin: [userId],
+            delete: [userId],
+            read: ['group:'+selectedGroup],
+            update: [userId]
+          }
+          let annotationsToCreate = metaReviewFactors.map((factor) => {
+            let yamlText = jsYaml.dump({description:factor+'s of '+reviewerName,group:factor,custom:false})
+            return {
+              uri: storageUri,
+              tags: [Config.review.namespace+':'+Config.review.tags.grouped.group+':'+getCriterion(factor,reviewerName)],
+              text: yamlText,
+              permissions: annotationPermissions,
+              group: selectedGroup
+            }
+          })
+          window.abwa.storageManager.client.createNewAnnotations(annotationsToCreate,() => {
+            resolve()
+          })
         })
       })
     }
     let transformAnnotations = (annotationsToImport) => {
-      let newAnnotations = []
-      let userId = window.abwa.storageManager.client.database.user.userid // TODO get using getuserprofile
-      let annotationPermissions = {
-        admin: [userId],
-        delete: [userId],
-        read: ['group:'+selectedGroup],
-        update: [userId]
-      }
-      annotationsToImport.forEach((annotation) => {
-        let ann = {}
-        let annotationLevel = annotation.tags.find((tag) => {return tag.indexOf(Config.review.namespace+':'+Config.review.tags.grouped.subgroup+':')!=-1})
-        let level
-        if(annotationLevel == null) level = 'Other comments'
-        else level = annotationLevel.replace(Config.review.namespace+':'+Config.review.tags.grouped.subgroup+':','')
-        let annotationCriterion = annotation.tags.find((tag) => {return tag.indexOf(Config.review.namespace+':'+Config.review.tags.grouped.relation+':')!=-1})
-        if(annotationCriterion == null) return
-        let criterion = annotationCriterion.replace(Config.review.namespace+':'+Config.review.tags.grouped.relation+':','')
-        if(metaReviewFactors.indexOf(level)==-1) return
-        ann["tags"] = [Config.review.namespace+':'+Config.review.tags.grouped.relation+':'+getCriterion(level,reviewerName)]
-        if(annotation['document']) ann['document'] = annotation['document']
-        if(annotation['documentMetadata'] != null) ann['documentMetadata'] = annotation['documentMetadata']
-        ann['group'] = selectedGroup
-        ann['permissions'] = annotationPermissions
-        if(annotation['target']) ann['target'] = annotation['target']
-        if(annotation['uri']) ann['uri'] = annotation['uri']
-        let text = JSON.parse(annotation.text) == null ? {} : JSON.parse(annotation.text)
-        if(text.comment!=null) text.comment = criterion + '. ' +  text.comment
-        else text.comment = criterion
-        ann['text'] = JSON.stringify(text)
-        newAnnotations.push(ann)
+      return new Promise((resolve,reject) => {
+        window.abwa.storageManager.client.getUserProfile((err,user) => {
+          if (user == null || user.userid == null) {
+            resolve()
+            return
+          }
+          let newAnnotations = []
+          let userId = user.userid
+          let annotationPermissions = {
+            admin: [userId],
+            delete: [userId],
+            read: ['group:' + selectedGroup],
+            update: [userId]
+          }
+          annotationsToImport.forEach((annotation) => {
+            let ann = {}
+            let annotationLevel = annotation.tags.find((tag) => {return tag.indexOf(Config.review.namespace + ':' + Config.review.tags.grouped.subgroup + ':') != -1})
+            let level
+            if (annotationLevel == null) level = 'Other comments'
+            else level = annotationLevel.replace(Config.review.namespace + ':' + Config.review.tags.grouped.subgroup + ':', '')
+            let annotationCriterion = annotation.tags.find((tag) => {return tag.indexOf(Config.review.namespace + ':' + Config.review.tags.grouped.relation + ':') != -1})
+            if (annotationCriterion == null) return
+            let criterion = annotationCriterion.replace(Config.review.namespace + ':' + Config.review.tags.grouped.relation + ':', '')
+            if (metaReviewFactors.indexOf(level) == -1) return
+            ann["tags"] = [Config.review.namespace + ':' + Config.review.tags.grouped.relation + ':' + getCriterion(level, reviewerName)]
+            if (annotation['document']) ann['document'] = annotation['document']
+            if (annotation['documentMetadata'] != null) ann['documentMetadata'] = annotation['documentMetadata']
+            ann['group'] = selectedGroup
+            ann['permissions'] = annotationPermissions
+            if (annotation['target']) ann['target'] = annotation['target']
+            if (annotation['uri']) ann['uri'] = annotation['uri']
+            let text = JSON.parse(annotation.text) == null ? {} : JSON.parse(annotation.text)
+            if (text.comment != null) text.comment = criterion + '. ' + text.comment
+            else text.comment = criterion
+            ann['text'] = JSON.stringify(text)
+            newAnnotations.push(ann)
+          })
+          resolve(newAnnotations)
+        })
       })
-      return newAnnotations
     }
     let insertAnnotations = (newAnnotations) => {
       return new Promise((resolve,reject) => {
@@ -251,8 +259,10 @@ class ReviewGenerator {
 
       let importAnnotations = () => {
         insertMetaReviewCriteria().then(() => {
-          insertAnnotations(transformAnnotations(reviewerAnnotations)).then(() => {
-            location.reload()
+          transformAnnotations(reviewerAnnotations).then((transformedAnnotations) => {
+            insertAnnotations(transformedAnnotations).then(() => {
+              location.reload()
+            })
           })
         })
       }
@@ -281,7 +291,6 @@ class ReviewGenerator {
   }
 
   importAnnotationsMetaReviewButtonHandler (){
-    let reviewerName = "Reviewer 1"
 
     let selectedGroup = window.abwa.groupSelector.currentGroup.id
     window.abwa.storageManager.client.searchAnnotations({group:selectedGroup},(err,annotations) => {
@@ -295,7 +304,7 @@ class ReviewGenerator {
         return true
       })
       let reviewerNumber = strengthFactorCriteria.length + 1
-      reviewerName = "Reviewer "+reviewerNumber
+      let reviewerName = "Reviewer "+reviewerNumber
 
       let html = 'Annotations: <input id="annotationsFile" class="swal2-input" type="file">' + '<br/>' +
         'Reviewer: <input id="reviewerName" class="swal2-input" type="text" value="'+reviewerName+'">'
@@ -338,6 +347,36 @@ class ReviewGenerator {
               this.exportCriteriaConfiguration()
             } else if (key === 'importMetaReview') {
               this.importAnnotationsMetaReviewButtonHandler()
+            }
+          },
+          items: items
+        }
+      }
+    })
+  }
+
+  configurationButtonHandler () {
+    // Create context menu
+    $.contextMenu({
+      selector: '#configurationButton',
+      trigger: 'left',
+      build: () => {
+        // Create items for context menu
+        let items = {}
+        items['manual'] = {name: 'User manual'}
+        items['questionnaire'] = {name: 'Feedback'}
+        items['recentActivity'] = {name: 'Recent activity'}
+        items['config'] = {name: 'Configuration'}
+        return {
+          callback: (key, opt) => {
+            if (key === 'manual') {
+              window.open("https://github.com/haritzmedina/reviewAndGo/wiki/Review&Go-FAQ","_blank")
+            } else if (key === 'questionnaire') {
+              window.open("https://forms.gle/5u8wsh2xUW8KcdtC9","_blank")
+            } else if (key === 'recentActivity') {
+              window.open(chrome.extension.getURL('/pages/specific/review/recentActivity.html'),"_blank")
+            } else if (key === 'config') {
+              window.open(chrome.extension.getURL('/pages/options.html'),"_blank")
             }
           },
           items: items
