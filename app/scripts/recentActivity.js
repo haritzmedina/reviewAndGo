@@ -30,7 +30,7 @@ let insertActivity = (docs) => {
   }
 }
 let callback = () => {
-  storageManager.client.searchAnnotations({sort: "desc"}, (err, ann) => {
+  storageManager.client.searchAnnotations({sort: "updated", order: "desc"}, (err, ann) => {
     storageManager.client.getListOfGroups({},(err,groups) => {
       let activities = []
       ann.forEach((annotation) => {
