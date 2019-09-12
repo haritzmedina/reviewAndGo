@@ -25,7 +25,7 @@ let insertActivity = (docs) => {
     div.appendChild(lastAnnotation)
     cont.appendChild(div)
     div.addEventListener("click",(e) => {
-      window.location.href = docs[i].path+'#rag:f'
+      window.location.href = docs[i].path+'#rag:'+docs[i].id
     })
   }
 }
@@ -52,7 +52,7 @@ let callback = () => {
           return true
         })
         if(act == null) {
-          activities.push({title:title,model:reviewModel,path:path,lastAnnotation:new Date(annotation.updated)})
+          activities.push({title:title,model:reviewModel,path:path,lastAnnotation:new Date(annotation.updated),id:annotation.id})
         }
         else if(annotation.updated!=null && new Date(annotation.updated) > act.lastAnnotation) {
           annotation.lastAnnotation = new Date(annotation.updated)

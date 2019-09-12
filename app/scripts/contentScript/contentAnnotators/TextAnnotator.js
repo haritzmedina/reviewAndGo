@@ -280,18 +280,12 @@ class TextAnnotator extends ContentAnnotator {
   }
 
   initSelectionEvents (callback) {
-    if (_.isEmpty(window.abwa.annotationBasedInitializer.initAnnotation)) {
-      // Create selection event
-      this.activateSelectionEvent(() => {
-        if (_.isFunction(callback)) {
-          callback()
-        }
-      })
-    } else {
+    // Create selection event
+    this.activateSelectionEvent(() => {
       if (_.isFunction(callback)) {
         callback()
       }
-    }
+    })
   }
 
   activateSelectionEvent (callback) {

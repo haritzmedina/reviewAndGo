@@ -46,7 +46,7 @@ class ContentTypeManager {
             // Is a local file
             if (window.PDFViewerApplication.url.startsWith('file:///')) {
               this.localFile = true
-              this.localFilePath = window.PDFViewerApplication.url
+              this.localFilePath = URLUtils.retrieveMainUrl(window.PDFViewerApplication.url)
               if (_.isFunction(callback)) {
                 callback()
               }
@@ -69,7 +69,7 @@ class ContentTypeManager {
         } else {
           if (window.location.href.startsWith('file:///')) {
             this.localFile = true
-            this.localFilePath = window.location.href
+            this.localFilePath = URLUtils.retrieveMainUrl(window.location.href)
             // Check in moodle download manager if the file exists
             chrome.runtime.sendMessage({scope: 'annotationFile', cmd: 'fileMetadata', data: {filepath: URLUtils.retrieveMainUrl(window.location.href)}}, (fileMetadata) => {
               if (_.isEmpty(fileMetadata)) {
