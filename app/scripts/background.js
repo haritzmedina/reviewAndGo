@@ -45,7 +45,7 @@ class Background {
       if (tab.url.startsWith('chrome://newtab') || (tab.url.startsWith('chrome-extension://') && tab.url.endsWith('pages/specific/review/recentActivity.html'))) {
         if (this.recentActivityTabs[tab.id]) {
           if (this.recentActivityTabs[tab.id].activated) {
-            chrome.tabs.update(tab.id, {url: chrome.extension.getURL('chrome://newtab')}, () => {
+            chrome.tabs.update(tab.id, {url: 'chrome://newtab'}, () => {
               this.recentActivityTabs[tab.id].deactivate()
             })
           } else {

@@ -122,19 +122,21 @@ window.onload = () => {
       var xhttp = new XMLHttpRequest()
       let parseResponseText = (text) => {
         let files = []
-        let entryRegExp = /<script>addRow.+<\/script>/gi
-        let entryNameRegExp = /"[^"]+"/gi
+        //let entryRegExp = /<script>addRow.+\n?.+<\/script>/gi
+        let entryRegExp = /<script>addRow((?:.|\r?\n)*?)<\/script>/gi
+        let entryNameRegExp = /"[^"]*"/gi
         let entries = text.match(entryRegExp)
         if(entries==null) return null
         for(let i=0;i<entries.length;i++){
-          let entry = entries[i].replace("<script>","").replace("addRow(","").replace("</script>","").replace(/\\"/g,"%22")
+          let entry = entries[i].replace("<script>","").replace("addRow(","").replace("</script>","").replace(/\\"/g,"%22").replace(/\n/g,"")
           let stringParams = entry.match(entryNameRegExp)
+          if(stringParams==null||stringParams.length<4) continue
           let entryName = stringParams[0].replace(/\%22/gi,"\"")
           let dateModified = stringParams[3].replace(/\%22/gi,"\"")
           let entryType = entry.replace(entryNameRegExp,"").split(",")[2]
           let file = {
             name:entryName.substring(1,entryName.length-1),
-            dateModified:dateModified.substring(1,entryName.length-1)
+            dateModified:dateModified.substring(1,dateModified.length-1)
           }
           if(entryType === "1") file["folder"] = true
           files.push(file)
