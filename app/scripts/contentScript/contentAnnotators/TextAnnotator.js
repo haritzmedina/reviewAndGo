@@ -148,7 +148,7 @@ class TextAnnotator extends ContentAnnotator {
         // If tag element is not checked, no navigation allowed
         if (event.detail.chosen === 'true') {
           // Navigate to the first annotation for this tag
-          this.goToFirstAnnotationOfTag(event.detail.tags[0])
+          this.goToNextAnnotationOfTag(event.detail.tags[0])
         } else {
           Alerts.infoAlert({text: chrome.i18n.getMessage('CurrentSelectionEmpty')})
         }
@@ -747,14 +747,17 @@ class TextAnnotator extends ContentAnnotator {
     }
   }
 
-  goToFirstAnnotationOfTag (tag) {
-    // TODO Retrieve first annotation for tag
-    let annotation = _.find(this.allAnnotations, (annotation) => {
-      return annotation.tags.includes(tag)
-    })
-    if (annotation) {
-      this.goToAnnotation(annotation)
+  goToNextAnnotationOfTag (tag) {
+    // Get all the annotations with that tag
+    let annotations = window.abwa.contentAnnotator.allAnnotations.filter(annotation => annotation.tags.includes(tag))
+    let index = _.indexOf(annotations, this.lastAnnotation)
+    if (index === -1 || index === annotations.length - 1) {
+      this.lastAnnotation = annotations[0]
+    } else {
+      this.lastAnnotation = annotations[index + 1]
     }
+    window.abwa.contentAnnotator.goToAnnotation(this.lastAnnotation)
+    window.abwa.sidebar.openSidebar()
   }
 
   goToAnnotation (annotation) {
@@ -768,19 +771,16 @@ class TextAnnotator extends ContentAnnotator {
           // Check if annotation was found by 'find' command, otherwise go to page
           if (window.PDFViewerApplication.page !== fragmentSelector.page) {
             window.PDFViewerApplication.page = fragmentSelector.page
+            this.redrawAnnotations()
           }
         }
         window.PDFViewerApplication.findController.executeCommand('find', {query: queryTextSelector.exact, phraseSearch: true})
         // Timeout to remove highlight used by PDF.js
-        setTimeout(() => {
-          let pdfjsHighlights = document.querySelectorAll('.highlight')
-          for (let i = 0; pdfjsHighlights.length; i++) {
-            pdfjsHighlights[i].classList.remove('highlight')
-          }
-        }, 1000)
+        this.removeFindTagsInPDFs()
       }
     } else { // Else, try to find the annotation by data-annotation-id element attribute
       let firstElementToScroll = document.querySelector('[data-annotation-id="' + annotation.id + '"]')
+      // TODO What is this?? Is it correct
       if (!_.isElement(firstElementToScroll) && !_.isNumber(this.initializationTimeout)) {
         this.initializationTimeout = setTimeout(() => {
           console.debug('Trying to scroll to init annotation in 2 seconds')
@@ -926,6 +926,24 @@ class TextAnnotator extends ContentAnnotator {
       LanguageUtils.dispatchCustomEvent(Events.updatedAllAnnotations, {annotations: this.allAnnotations})
       this.redrawAnnotations()
     })
+  }
+
+  removeFindTagsInPDFs () {
+    setTimeout(() => {
+      // Remove class for middle selected elements in find function of PDF.js
+      document.querySelectorAll('.highlight.selected.middle').forEach(elem => {
+        $(elem).removeClass('highlight selected middle')
+      })
+      // Remove wrap for begin and end selected elements in find function of PDF.js
+      document.querySelectorAll('.highlight.selected').forEach(elem => {
+        if (elem.children.length === 1) {
+          $(elem.children[0]).unwrap()
+        } else {
+          $(document.createTextNode(elem.innerText)).insertAfter(elem)
+          $(elem).remove()
+        }
+      })
+    }, 1000)
   }
 }
 
