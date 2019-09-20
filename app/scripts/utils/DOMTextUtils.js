@@ -130,52 +130,76 @@ class DOMTextUtils {
     let rangeSelector = _.find(selectors, (selector) => { return selector.type === 'RangeSelector' })
     let textQuoteSelector = _.find(selectors, (selector) => { return selector.type === 'TextQuoteSelector' })
     let textPositionSelector = _.find(selectors, (selector) => { return selector.type === 'TextPositionSelector' })
-    let range = null
-    if (_.isObject(fragmentSelector) || _.isObject(rangeSelector)) { // It is an element of DOM
-      let fragmentElement = null
-      if (_.has(fragmentSelector, 'value')) {
-        fragmentElement = document.querySelector('#' + fragmentSelector.value)
+    // Check whether the document is PDF or HTML
+    if (_.has(fragmentSelector, 'page')) {
+      // Is PDF
+      return DOMTextUtils.retrieveRangeForPDFDocument({fragmentSelector, textPositionSelector, textQuoteSelector, exhaustive})
+    } else {
+      // Is HTML
+      return DOMTextUtils.retrieveRangeForHTMLDocument({fragmentSelector, textPositionSelector, textQuoteSelector, rangeSelector, exhaustive})
+    }
+  }
+
+  static retrieveRangeForHTMLDocument ({fragmentSelector, textPositionSelector, textQuoteSelector, rangeSelector, exhaustive}) {
+    let range
+    let fragmentElement = null
+    if (_.has(fragmentSelector, 'value')) {
+      fragmentElement = document.querySelector('#' + fragmentSelector.value)
+    }
+    if (_.isElement(fragmentElement)) {
+      range = DOMTextUtils.tryRetrieveRangeTextSelector(fragmentElement, textQuoteSelector)
+    } else {
+      let startRangeElement = null
+      if (_.has(rangeSelector, 'startContainer')) {
+        startRangeElement = document.evaluate('.' + rangeSelector.startContainer, document, null, window.XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
       }
-      if (_.isElement(fragmentElement)) {
+      let endRangeElement = null
+      if (_.has(rangeSelector, 'endContainer')) {
+        endRangeElement = document.evaluate('.' + rangeSelector.endContainer, document, null, window.XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
+      }
+      if (_.isElement(startRangeElement) && _.isElement(endRangeElement)) {
         range = DOMTextUtils.tryRetrieveRangeTextSelector(fragmentElement, textQuoteSelector)
       } else {
-        let startRangeElement = null
-        if (_.has(rangeSelector, 'startContainer')) {
-          startRangeElement = document.evaluate('.' + rangeSelector.startContainer, document, null, window.XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
-        }
-        let endRangeElement = null
-        if (_.has(rangeSelector, 'endContainer')) {
-          endRangeElement = document.evaluate('.' + rangeSelector.endContainer, document, null, window.XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
-        }
-        if (_.isElement(startRangeElement) && _.isElement(endRangeElement)) {
-          range = DOMTextUtils.tryRetrieveRangeTextSelector(fragmentElement, textQuoteSelector)
-        } else {
-          range = DOMTextUtils.tryRetrieveRangeTextPositionSelector(textPositionSelector, textQuoteSelector.exact)
-          if (!range) {
-            if (exhaustive) { // Try by hard exhaustive
-              range = DOMTextUtils.tryRetrieveRangeTextSelector(document.body, textQuoteSelector)
-              if (!range) {
-                range = DOMTextUtils.retrieveRangeTextSelectorUsingNativeFind(textQuoteSelector.exact, textPositionSelector)
-              }
-            } else {
+        range = DOMTextUtils.tryRetrieveRangeTextPositionSelector(textPositionSelector, textQuoteSelector.exact)
+        if (!range) {
+          if (exhaustive) { // Try by hard exhaustive
+            range = DOMTextUtils.tryRetrieveRangeTextSelector(document.body, textQuoteSelector)
+            if (!range) {
               range = DOMTextUtils.retrieveRangeTextSelectorUsingNativeFind(textQuoteSelector.exact, textPositionSelector)
             }
+          } else {
+            range = DOMTextUtils.retrieveRangeTextSelectorUsingNativeFind(textQuoteSelector.exact, textPositionSelector)
           }
-        }
-      }
-    } else if (textQuoteSelector && textPositionSelector) { // It is a text of PDF
-      range = DOMTextUtils.tryRetrieveRangeTextPositionSelector(textPositionSelector, textQuoteSelector.exact)
-      if (!range) {
-        if (exhaustive) { // Try by hard exhaustive
-          range = DOMTextUtils.tryRetrieveRangeTextSelector(document.body, textQuoteSelector)
         }
       }
     }
     return range
   }
 
-  static tryRetrieveRangeTextPositionSelector (textPositionSelector, exactText) {
-    let possibleRange = domAnchorTextPosition.toRange(document.body, textPositionSelector.start, textPositionSelector.end)
+  static retrieveRangeForPDFDocument ({fragmentSelector, textPositionSelector, textQuoteSelector, exhaustive}) {
+    let fragmentElement
+    let range
+    if (fragmentSelector.page) {
+      // Check only in corresponding page
+      let pageElement = document.querySelector('.page[data-page-number="' + fragmentSelector.page + '"][data-loaded="true"]')
+      if (_.isElement(pageElement)) {
+        fragmentElement = pageElement
+      } else {
+        console.debug('Document page is not loaded, annotation missing.')
+        return null
+      }
+    }
+    range = DOMTextUtils.tryRetrieveRangeTextPositionSelector(textPositionSelector, textQuoteSelector.exact, fragmentElement)
+    if (!range) {
+      if (exhaustive) { // Try by hard exhaustive
+        range = DOMTextUtils.tryRetrieveRangeTextSelector(fragmentElement, textQuoteSelector)
+      }
+    }
+    return range
+  }
+
+  static tryRetrieveRangeTextPositionSelector (textPositionSelector, exactText, fragmentElement = document.body) {
+    let possibleRange = domAnchorTextPosition.toRange(fragmentElement, textPositionSelector.start, textPositionSelector.end)
     if (possibleRange && possibleRange.toString() === exactText) {
       return possibleRange
     } else {
