@@ -1,7 +1,7 @@
 {
   "name": "review-and-go",
   "private": true,
-  "version": "0.1.4",
+  "version": "0.1.3",
   "description": "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
   "scripts": {
     "start": "npm run dev:chrome",
@@ -16,7 +16,8 @@
     "dev:opera": "gulp --watch --vendor=opera",
     "dev:edge": "gulp --watch --vendor=edge",
     "lint": "standard",
-    "postinstall": "npm install node-sass"
+    "postinstall": "npm install node-sass",
+    "test": "mocha test/**/*.js"
   },
   "standard": {
     "globals": [
