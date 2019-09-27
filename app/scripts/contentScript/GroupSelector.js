@@ -50,8 +50,24 @@ class GroupSelector {
     // Load all the groups belonged to current user
     this.retrieveGroups((err, groups) => {
       if (err) {
-
+        callback(err)
       } else {
+        // If initialization annotation exist, load the corresponding group
+        let initAnnotation = window.abwa.annotationBasedInitializer.initAnnotation
+        if (_.isObject(initAnnotation) && _.has(initAnnotation, 'group')) {
+          let group = _.find(window.abwa.groupSelector.groups, (group) => { return group.id === initAnnotation.group })
+          if (_.isObject(group)) {
+            this.currentGroup = group
+            // Save current group in GoogleStorage
+            ChromeStorage.setData(this.selectedGroupNamespace, {data: JSON.stringify(this.currentGroup)}, ChromeStorage.local)
+            if (_.isFunction(callback)) {
+              callback()
+            }
+            // Group is loaded, don't need to continue
+            return
+          }
+        }
+        // If not found, try the following: get last used group, load default group or create a new default group
         ChromeStorage.getData(this.selectedGroupNamespace, ChromeStorage.local, (err, savedCurrentGroup) => {
           if (!err && !_.isEmpty(savedCurrentGroup) && _.has(savedCurrentGroup, 'data')) {
             // Parse saved current group
