@@ -169,7 +169,7 @@ class TagManager {
       let tagName = this.retrieveTagNameByPrefix(this.model.groupAnnotations[i].tags, (this.model.namespace + ':' + this.model.config.grouped.subgroup))
       let groupBelongedTo = this.retrieveTagNameByPrefix(this.model.groupAnnotations[i].tags, (this.model.namespace + ':' + this.model.config.grouped.relation))
       if (tagName && groupBelongedTo) {
-        if (_.isArray(tagGroupsAnnotations[groupBelongedTo].tags)) {
+        if (_.isObject(tagGroupsAnnotations[groupBelongedTo]) && _.isArray(tagGroupsAnnotations[groupBelongedTo].tags)) {
           // Load options from annotation text body
           let options = jsYaml.load(tagAnnotation.text)
           tagGroupsAnnotations[groupBelongedTo].tags.push(new Tag({
