@@ -142,7 +142,6 @@ class TextAnnotator extends ContentAnnotator {
 
   createAnnotationEventHandler () {
     return (event) => {
-      let selectors = []
       // If selection is empty, return null
       if (document.getSelection().toString().length === 0) {
         // If tag element is not checked, no navigation allowed
@@ -160,40 +159,7 @@ class TextAnnotator extends ContentAnnotator {
         return
       }
       let range = document.getSelection().getRangeAt(0)
-      // Create FragmentSelector
-      if (_.findIndex(window.abwa.contentTypeManager.documentType.selectors, (elem) => { return elem === 'FragmentSelector' }) !== -1) {
-        let fragmentSelector = null
-        if (window.abwa.contentTypeManager.documentType === ContentTypeManager.documentTypes.pdf) {
-          fragmentSelector = PDFTextUtils.getFragmentSelector(range)
-        } else {
-          fragmentSelector = DOMTextUtils.getFragmentSelector(range)
-        }
-        if (fragmentSelector) {
-          selectors.push(fragmentSelector)
-        }
-      }
-      // Create RangeSelector
-      if (_.findIndex(window.abwa.contentTypeManager.documentType.selectors, (elem) => { return elem === 'RangeSelector' }) !== -1) {
-        let rangeSelector = DOMTextUtils.getRangeSelector(range)
-        if (rangeSelector) {
-          selectors.push(rangeSelector)
-        }
-      }
-      // Create TextPositionSelector
-      if (_.findIndex(window.abwa.contentTypeManager.documentType.selectors, (elem) => { return elem === 'TextPositionSelector' }) !== -1) {
-        let rootElement = window.abwa.contentTypeManager.getDocumentRootElement()
-        let textPositionSelector = DOMTextUtils.getTextPositionSelector(range, rootElement)
-        if (textPositionSelector) {
-          selectors.push(textPositionSelector)
-        }
-      }
-      // Create TextQuoteSelector
-      if (_.findIndex(window.abwa.contentTypeManager.documentType.selectors, (elem) => { return elem === 'TextQuoteSelector' }) !== -1) {
-        let textQuoteSelector = DOMTextUtils.getTextQuoteSelector(range)
-        if (textQuoteSelector) {
-          selectors.push(textQuoteSelector)
-        }
-      }
+      let selectors = TextAnnotator.getSelectors(range)
       // Construct the annotation to send to storage
       let annotation = TextAnnotator.constructAnnotation(selectors, event.detail.tags)
       window.abwa.storageManager.client.createNewAnnotation(annotation, (err, annotation) => {
@@ -212,6 +178,45 @@ class TextAnnotator extends ContentAnnotator {
         }
       })
     }
+  }
+
+  static getSelectors (range) {
+    let selectors = []
+    // Create FragmentSelector
+    if (_.findIndex(window.abwa.contentTypeManager.documentType.selectors, (elem) => { return elem === 'FragmentSelector' }) !== -1) {
+      let fragmentSelector = null
+      if (window.abwa.contentTypeManager.documentType === ContentTypeManager.documentTypes.pdf) {
+        fragmentSelector = PDFTextUtils.getFragmentSelector(range)
+      } else {
+        fragmentSelector = DOMTextUtils.getFragmentSelector(range)
+      }
+      if (fragmentSelector) {
+        selectors.push(fragmentSelector)
+      }
+    }
+    // Create RangeSelector
+    if (_.findIndex(window.abwa.contentTypeManager.documentType.selectors, (elem) => { return elem === 'RangeSelector' }) !== -1) {
+      let rangeSelector = DOMTextUtils.getRangeSelector(range)
+      if (rangeSelector) {
+        selectors.push(rangeSelector)
+      }
+    }
+    // Create TextPositionSelector
+    if (_.findIndex(window.abwa.contentTypeManager.documentType.selectors, (elem) => { return elem === 'TextPositionSelector' }) !== -1) {
+      let rootElement = window.abwa.contentTypeManager.getDocumentRootElement()
+      let textPositionSelector = DOMTextUtils.getTextPositionSelector(range, rootElement)
+      if (textPositionSelector) {
+        selectors.push(textPositionSelector)
+      }
+    }
+    // Create TextQuoteSelector
+    if (_.findIndex(window.abwa.contentTypeManager.documentType.selectors, (elem) => { return elem === 'TextQuoteSelector' }) !== -1) {
+      let textQuoteSelector = DOMTextUtils.getTextQuoteSelector(range)
+      if (textQuoteSelector) {
+        selectors.push(textQuoteSelector)
+      }
+    }
+    return selectors
   }
 
   static constructAnnotation (selectors, tags) {
@@ -780,8 +785,8 @@ class TextAnnotator extends ContentAnnotator {
       }
     } else { // Else, try to find the annotation by data-annotation-id element attribute
       let firstElementToScroll = document.querySelector('[data-annotation-id="' + annotation.id + '"]')
-      // TODO What is this?? Is it correct
-      if (!_.isElement(firstElementToScroll) && !_.isNumber(this.initializationTimeout)) {
+      // If go to annotation is done by init annotation and it is not found, wait for some seconds for ajax content to be loaded and try again to go to annotation
+      if (!_.isElement(firstElementToScroll) && !_.isNumber(this.initializationTimeout)) { // It is done only once, if timeout does not exist previously (otherwise it won't finish never calling goToAnnotation
         this.initializationTimeout = setTimeout(() => {
           console.debug('Trying to scroll to init annotation in 2 seconds')
           this.initAnnotatorByAnnotation()
