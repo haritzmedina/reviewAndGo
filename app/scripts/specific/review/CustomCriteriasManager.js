@@ -385,10 +385,12 @@ class CustomCriteriasManager {
         build: () => {
           return {
             callback: (key) => {
+              // Get latest version of tag
+              let currentTagGroup = _.find(window.abwa.tagManager.currentTags, currentTag => currentTag.config.annotation.id === tagGroup.config.annotation.id)
               if (key === 'delete') {
-                this.deleteCriteriaHandler(tagGroup)
+                this.deleteCriteriaHandler(currentTagGroup)
               } else if (key === 'modify') {
-                this.modifyCriteriaHandler(tagGroup)
+                this.modifyCriteriaHandler(currentTagGroup)
               }
             },
             items: items

@@ -626,6 +626,7 @@ class TextAnnotator extends ContentAnnotator {
       swal({
         html: '<h3 class="criterionName">' + criterionName + '</h3>' + poleChoiceRadio + '<textarea id="swal-textarea" class="swal2-textarea" placeholder="Type your feedback here...">' + form.comment + '</textarea>' + '<input placeholder="Suggest literature from DBLP" id="swal-input1" class="swal2-input"><ul id="literatureList">' + suggestedLiteratureHtml(form.suggestedLiterature) + '</ul>',
         showLoaderOnConfirm: true,
+        position: 'bottom',
         width: '40em',
         preConfirm: () => {
           let newComment = $('#swal-textarea').val()

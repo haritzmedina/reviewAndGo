@@ -125,25 +125,31 @@ class GroupSelector {
     $.get(sidebarURL, (html) => {
       // Append sidebar to content
       $('#abwaSidebarContainer').append($.parseHTML(html))
-      if (!window.abwa.storageManager.isLoggedIn()) {
-        // Display login/sign up form
-        $('#notLoggedInGroupContainer').attr('aria-hidden', 'false')
-        // Hide group container
-        $('#loggedInGroupContainer').attr('aria-hidden', 'true')
-        // Hide purposes wrapper
-        $('#purposesWrapper').attr('aria-hidden', 'true')
-        // Start listening to when is logged in continuously
-        chrome.runtime.sendMessage({scope: 'hypothesis', cmd: 'startListeningLogin'})
-        // Open the sidebar to notify user that needs to log in
-        window.abwa.sidebar.openSidebar()
-        if (_.isFunction(callback)) {
-          callback(new Error('Is not logged in'))
+      window.abwa.storageManager.isLoggedIn((err, isLoggedIn) => {
+        if (err) {
+          callback(new Error('Unexpected error while checking permission to store annotations. Please contact admin.'))
+        } else {
+          if (!isLoggedIn) {
+            // Display login/sign up form
+            $('#notLoggedInGroupContainer').attr('aria-hidden', 'false')
+            // Hide group container
+            $('#loggedInGroupContainer').attr('aria-hidden', 'true')
+            // Hide purposes wrapper
+            $('#purposesWrapper').attr('aria-hidden', 'true')
+            // Start listening to when is logged in continuously
+            chrome.runtime.sendMessage({scope: 'hypothesis', cmd: 'startListeningLogin'})
+            // Open the sidebar to notify user that needs to log in
+            window.abwa.sidebar.openSidebar()
+            if (_.isFunction(callback)) {
+              callback(new Error('Is not logged in'))
+            }
+          } else {
+            if (_.isFunction(callback)) {
+              callback()
+            }
+          }
         }
-      } else {
-        if (_.isFunction(callback)) {
-          callback()
-        }
-      }
+      })
     })
   }
 

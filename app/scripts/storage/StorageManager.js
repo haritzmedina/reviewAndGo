@@ -6,8 +6,10 @@ class StorageManager {
     this.storageUrl = 'https://localannotationsdatabase.org'
   }
 
-  isLoggedIn () {
-    return true
+  isLoggedIn (callback) {
+    if (_.isFunction(callback)) {
+      callback(null, true)
+    }
   }
 
   logIn (callback) {

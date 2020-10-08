@@ -4,6 +4,8 @@ const HypothesisClient = require('hypothesis-api-client')
 
 const StorageManager = require('../StorageManager')
 
+const HypothesisClientInterface = require('./HypothesisClientInterface')
+
 const reloadIntervalInSeconds = 10 // Reload the hypothesis client every 10 seconds
 
 class HypothesisClientManager extends StorageManager {
@@ -11,19 +13,37 @@ class HypothesisClientManager extends StorageManager {
     super()
     this.client = null
     this.hypothesisToken = null
-    this.reloadInterval = null
+    this.storageMetadata = {
+      annotationUrl: 'https://hypothes.is/api/annotations/',
+      storageUrl: 'https://hypothes.is/api',
+      groupUrl: 'https://hypothes.is/api/groups/',
+      userUrl: 'https://hypothes.is/api/users/'
+    }
   }
 
   init (callback) {
-    this.reloadClient(() => {
-      // Start reloading of client
-      this.reloadInterval = setInterval(() => {
-        this.reloadClient()
-      }, reloadIntervalInSeconds * 1000)
-      if (_.isFunction(callback)) {
-        callback()
-      }
-    })
+    if (window.background) {
+      this.reloadClient(() => {
+        // Start reloading of client
+        this.reloadInterval = setInterval(() => {
+          this.reloadClient()
+        }, reloadIntervalInSeconds * 1000)
+        if (_.isFunction(callback)) {
+          callback()
+        }
+      })
+    } else {
+      // Check if user is logged in hypothesis
+      chrome.runtime.sendMessage({ scope: 'hypothesis', cmd: 'getToken' }, (token) => {
+        if (this.hypothesisToken !== token) {
+          this.hypothesisToken = token
+        }
+        this.client = new HypothesisClientInterface()
+        if (_.isFunction(callback)) {
+          callback()
+        }
+      })
+    }
   }
 
   reloadClient (callback) {
@@ -52,7 +72,7 @@ class HypothesisClientManager extends StorageManager {
         })
       }
     } else {
-      chrome.runtime.sendMessage({scope: 'hypothesis', cmd: 'getToken'}, (token) => {
+      chrome.runtime.sendMessage({ scope: 'hypothesis', cmd: 'getToken' }, (token) => {
         if (this.hypothesisToken !== token) {
           this.hypothesisToken = token
           if (this.hypothesisToken) {
@@ -68,27 +88,37 @@ class HypothesisClientManager extends StorageManager {
     }
   }
 
-  isLoggedIn () {
-    return !_.isEmpty(this.hypothesisToken)
+  isLoggedIn (callback) {
+    callback(null, !_.isEmpty(this.hypothesisToken))
+  }
+
+  constructSearchUrl ({ groupId }) {
+    return this.annotationServerMetadata.groupUrl + groupId
   }
 
   logIn (callback) {
     // TODO Check if user grant permission to access hypothesis account
-    if (!this.isLoggedIn()) {
-      this.askUserToLogInHypothesis((err, token) => {
-        if (err) {
-          callback(err)
+    this.isLoggedIn((err, isLogged) => {
+      if (err) {
+        console.error(err)
+      } else {
+        if (!isLogged) {
+          this.askUserToLogInHypothesis((err, token) => {
+            if (err) {
+              callback(err)
+            } else {
+              callback(null, token)
+            }
+          })
         } else {
-          callback(null, token)
+          callback(null, this.hypothesisToken)
         }
-      })
-    } else {
-      callback(null, this.hypothesisToken)
-    }
+      }
+    })
   }
 
   askUserToLogInHypothesis (callback) {
-    let swal = require('sweetalert2')
+    const swal = require('sweetalert2').default
     // Ask question
     swal({
       title: 'Hypothes.is login required', // TODO i18n
@@ -98,13 +128,13 @@ class HypothesisClientManager extends StorageManager {
     }).then((result) => {
       if (result.value) {
         // Prompt hypothesis login form
-        chrome.runtime.sendMessage({scope: 'hypothesis', cmd: 'userLoginForm'}, (result) => {
+        chrome.runtime.sendMessage({ scope: 'hypothesis', cmd: 'userLoginForm' }, (result) => {
           if (result.error) {
             if (_.isFunction(callback)) {
               callback(new Error(result.error))
             }
           } else {
-            this.reloadHypothesisClient(() => {
+            this.reloadClient(() => {
               if (_.isFunction(callback)) {
                 callback(null, this.hypothesisToken)
               }
