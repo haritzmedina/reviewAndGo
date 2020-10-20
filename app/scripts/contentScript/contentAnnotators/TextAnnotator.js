@@ -692,9 +692,17 @@ class TextAnnotator extends ContentAnnotator {
         select: function (event, ui) {
           let content = ''
           if (ui.item.info.authors !== null && Array.isArray(ui.item.info.authors.author)) {
-            content += ui.item.info.authors.author.join(', ') + ': '
+            if (_.isObject(ui.item.info.authors.author[0])) {
+              content += ui.item.info.authors.author.map(a => a.text).join(', ') + ': '
+            } else {
+              content += ui.item.info.authors.author.join(', ') + ': '
+            }
           } else if (ui.item.info.authors !== null) {
-            content += ui.item.info.authors.author + ': '
+            if (_.has(ui.item.info.authors.author, 'text')) {
+              content += ui.item.info.authors.author.text + ': '
+            } else {
+              content += ui.item.info.authors.author + ': '
+            }
           }
           if (ui.item.info.title !== null) {
             content += ui.item.info.title
@@ -702,12 +710,12 @@ class TextAnnotator extends ContentAnnotator {
           if (ui.item.info.year !== null) {
             content += ' (' + ui.item.info.year + ')'
           }
-          let a = document.createElement('a')
+          const a = document.createElement('a')
           a.className = 'removeReference'
           a.addEventListener('click', function (e) {
             $(e.target).closest('li').remove()
           })
-          let li = document.createElement('li')
+          const li = document.createElement('li')
           $(li).append(a, '<span title="' + content + '">' + content + '</span>')
           $('#literatureList').append(li)
           setTimeout(function () {
