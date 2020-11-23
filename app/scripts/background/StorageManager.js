@@ -3,10 +3,10 @@ const ChromeStorage = require('../utils/ChromeStorage')
 class StorageManager {
   init () {
     // Initialize replier for requests related to storage
-    this.initResponsers()
+    this.initRespondent()
   }
 
-  initResponsers () {
+  initRespondent () {
     chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       if (request.scope === 'storage') {
         if (request.cmd === 'getSelectedStorage') {
@@ -32,6 +32,7 @@ class StorageManager {
             }
           })
         }
+        return true
       }
     })
   }

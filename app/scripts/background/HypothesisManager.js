@@ -1,10 +1,6 @@
-const DOM = require('../utils/DOM')
-const $ = require('jquery')
 const HypothesisClientManager = require('../storage/hypothesis/HypothesisClientManager')
 const HypothesisBackgroundManager = require('../storage/hypothesis/HypothesisBackgroundManager')
-const checkHypothesisLoggedIntervalInSeconds = 20 // fetch token every X seconds
-const checkHypothesisLoggedInWhenPromptInSeconds = 0.5 // When user is prompted to login, the checking should be with higher period
-const maxTries = 10 // max tries before deleting the token
+const HypothesisManagerOAuth = require('./HypothesisManagerOAuth')
 
 class HypothesisManager {
   constructor () {
@@ -12,183 +8,41 @@ class HypothesisManager {
     this.token = null
     // Define tries before logout
     this.tries = 0
+    // Hypothesis oauth manager
+    this.hypothesisManagerOAuth = null
   }
 
   init () {
-    // Try to load token for first time
-    this.retrieveHypothesisToken((err, token) => {
-      this.setToken(err, token)
+    this.hypothesisManagerOAuth = new HypothesisManagerOAuth()
+    this.hypothesisManagerOAuth.init(() => {
+      // Init hypothesis client manager
+      this.initHypothesisClientManager()
     })
 
-    // Init hypothesis client manager
-    this.initHypothesisClientManager()
     // Init hypothesis background manager, who listens to commands from contentScript
     this.initHypothesisBackgroundManager()
-
-    // Create an observer to check if user is logged to hypothesis
-    this.createRetryHypothesisTokenRetrieve()
-
-    // Initialize replier for login form authentication
-    this.initShowHypothesisLoginForm()
-
-    // Initialize replier for requests of hypothesis related metadata
-    this.initResponserForGetToken()
-  }
-
-  createRetryHypothesisTokenRetrieve (intervalSeconds = checkHypothesisLoggedIntervalInSeconds) {
-    const intervalHandler = () => {
-      this.retrieveHypothesisToken((err, token) => {
-        this.setToken(err, token)
-      })
-    }
-    this.retrieveTokenInterval = setInterval(intervalHandler, intervalSeconds * 1000)
-  }
-
-  changeTokenRetrieveInterval (seconds = checkHypothesisLoggedIntervalInSeconds) {
-    clearInterval(this.retrieveTokenInterval)
-    this.createRetryHypothesisTokenRetrieve(seconds)
   }
 
   retrieveHypothesisToken (callback) {
-    const callSettings = {
-      async: true,
-      crossDomain: true,
-      url: 'https://hypothes.is/account/developer',
-      method: 'GET'
-    }
-
-    DOM.scrapElement(callSettings, '#token', (error, resultNodes) => {
-      if (error) {
-        callback(error)
-      } else {
-        if (!resultNodes[0]) {
-          $.post('https://hypothes.is/account/developer', () => {
-            DOM.scrapElement(callSettings, '#token', (error, resultNodes) => {
-              if (error) {
-                callback(error)
-              } else {
-                const hypothesisToken = resultNodes[0].value
-                callback(null, hypothesisToken)
-              }
-            })
-          })
+    if (this.hypothesisManagerOAuth.checkTokenIsExpired()) {
+      this.hypothesisManagerOAuth.refreshHypothesisToken((err, tokens) => {
+        if (err) {
+          callback(new Error('Unable to retrieve token'))
         } else {
-          const hypothesisToken = resultNodes[0].value
-          callback(null, hypothesisToken)
+          callback(null, this.hypothesisManagerOAuth.tokens.accessToken)
         }
-      }
-    })
-  }
-
-  setToken (err, token) {
-    if (err) {
-      console.debug('The token is unreachable')
-      if (this.tries >= maxTries) { // The token is unreachable after some tries, probably the user is logged out
-        this.token = null // Probably the website is down or the user has been logged out
-        console.debug('The token is deleted after unsuccessful %s tries', maxTries)
-      } else {
-        this.tries += 1 // The token is unreachable, add a done try
-        console.debug('The token is unreachable for %s time(s), but is maintained %s', this.tries, this.token)
-      }
+      })
     } else {
-      console.debug('User is logged in Hypothesis. His token is %s', token)
-      this.token = token
-      this.tries = 0
+      callback(null, this.hypothesisManagerOAuth.tokens.accessToken)
     }
-  }
-
-  initShowHypothesisLoginForm () {
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      if (request.scope === 'hypothesis') {
-        if (request.cmd === 'userLoginForm') {
-          // Create new tab on google chrome
-          chrome.tabs.create({ url: 'https://hypothes.is/login' }, (tab) => {
-            // Retrieve hypothesis token periodically
-            const interval = setInterval(() => {
-              this.retrieveHypothesisToken((err, token) => {
-                if (err) {
-                  console.debug('Checking again in %s seconds', checkHypothesisLoggedInWhenPromptInSeconds)
-                } else {
-                  // Once logged in, take the token and close the tab
-                  this.token = token
-                  chrome.tabs.remove(tab.id, () => {
-                    clearInterval(interval)
-                    sendResponse({ token: this.token })
-                  })
-                }
-              })
-            }, checkHypothesisLoggedInWhenPromptInSeconds * 1000)
-            // Set event for when user close the tab
-            const closeTabListener = (closedTabId) => {
-              if (closedTabId === tab.id && !this.token) {
-                // Remove listener for hypothesis token
-                clearInterval(interval)
-                // Hypothes.is login tab is closed
-                sendResponse({ error: 'Hypothesis tab closed intentionally' })
-              }
-              chrome.tabs.onRemoved.removeListener(closeTabListener)
-            }
-            chrome.tabs.onRemoved.addListener(closeTabListener)
-          })
-        }
-      }
-      return true
-    })
-  }
-
-  initResponserForGetToken () {
-    chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-      if (request.scope === 'hypothesis') {
-        if (request.cmd === 'getToken') {
-          sendResponse(this.token)
-        } else if (request.cmd === 'startListeningLogin') {
-          this.changeTokenRetrieveInterval(checkHypothesisLoggedInWhenPromptInSeconds) // Reduce to 0.5 seconds
-        } else if (request.cmd === 'stopListeningLogin') {
-          this.changeTokenRetrieveInterval(checkHypothesisLoggedIntervalInSeconds) // Token retrieve to 20 seconds
-        } else if (request.cmd === 'getUserProfileMetadata') {
-          this.retrieveUserProfileMetadata((err, metadata) => {
-            if (err) {
-              sendResponse({error: 'Unable to retrieve profile metadata'})
-            } else {
-              sendResponse({metadata: metadata})
-            }
-          })
-          return true // Async response
-        }
-      }
-    })
-  }
-
-  retrieveUserProfileMetadata (callback) {
-    let callSettings = {
-      'async': true,
-      'crossDomain': true,
-      'url': 'https://hypothes.is/account/profile',
-      'method': 'GET'
-    }
-    $.ajax(callSettings).done((resultString) => {
-      let tempWrapper = document.createElement('div')
-      tempWrapper.innerHTML = resultString
-      try {
-        callback(null, {
-          displayName: tempWrapper.querySelector('[name="display_name"]').value,
-          description: tempWrapper.querySelector('[name="description"]').value,
-          location: tempWrapper.querySelector('[name="location"]').value,
-          link: tempWrapper.querySelector('[name="link"]').value,
-          orcid: tempWrapper.querySelector('[name="orcid"]').value
-        })
-      } catch (e) {
-        callback(e)
-      }
-    }).fail((error) => {
-      callback(error)
-    })
   }
 
   initHypothesisClientManager () {
     this.annotationServerManager = new HypothesisClientManager()
     this.annotationServerManager.init((err) => {
-      console.error('Unable to initialize hypothesis client manager. Error: ' + err.message)
+      if (err) {
+        console.debug('Unable to initialize hypothesis client manager. Error: ' + err.message)
+      }
     })
   }
 

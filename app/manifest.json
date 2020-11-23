@@ -39,5 +39,6 @@
     "file://*/*",
     "unlimitedStorage"
   ],
-  "web_accessible_resources": ["pages/*.html", "content/*", "images/*"]
+  "web_accessible_resources": ["pages/*.html", "content/*", "images/*"],
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAyxi8M+JFR2oEdi+LrIIpaUNu1B/Rmb8RRRvyJL7FUoh8ytg0G3a3Jq7Y6CpIaCU6bdrfSAGXteLTJJMerc3nFzLLTp0ylbzfFeEucPbSzZrQHXgiqW6DKc/TmvlcajS5ycfXwLUM2sDRy+BgD0FwEQ6bsR/6rWz1YbCB4BqKyVM/vXBy2qSOo3QVUvQeY+KURZyYsjD+91Lw/hMZdc2sYYf7MO+73UKtRyTZ5bqFceIHl0PHEjbHQa6WZ6gTx7xBo2jmtwhpQlUXkhEzM9rsKWrQ0HnaNpePJuvShOzt+ab61Q06clnnLTY42RwyqTCZhzZx+NzrGTFysOPzVRfcGwIDAQAB"
 }

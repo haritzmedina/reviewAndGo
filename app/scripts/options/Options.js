@@ -2,6 +2,7 @@ const Alerts = require('../utils/Alerts')
 const FileUtils = require('../utils/FileUtils')
 const LocalStorageManager = require('../storage/local/LocalStorageManager')
 const FileSaver = require('file-saver')
+const _ = require('lodash')
 
 class Options {
   init () {
@@ -10,10 +11,13 @@ class Options {
       // Get value
       if (event.target.selectedOptions && event.target.selectedOptions[0] && event.target.selectedOptions[0].value) {
         this.setStorage(event.target.selectedOptions[0].value)
+        // Show/hide configuration for selected storage
+        this.showSelectedStorageConfiguration(event.target.selectedOptions[0].value)
       }
     })
-    chrome.runtime.sendMessage({scope: 'storage', cmd: 'getSelectedStorage'}, ({storage}) => {
+    chrome.runtime.sendMessage({scope: 'storage', cmd: 'getSelectedStorage'}, ({storage = 'localStorage'}) => {
       document.querySelector('#storageDropdown').value = storage || 'localStorage'
+      this.showSelectedStorageConfiguration(storage || 'localStorage')
     })
     // Local storage restore
     document.querySelector('#restoreDatabaseButton').addEventListener('click', () => {
@@ -65,6 +69,23 @@ class Options {
         }
       })
     })
+    // Hypothesis login
+    this.hypothesisConfigurationContainerElement = document.querySelector('#hypothesisConfigurationCard')
+    this.hypothesisConfigurationContainerElement.querySelector('#hypothesisLogin').addEventListener('click', this.createHypothesisLoginEventHandler())
+    this.hypothesisConfigurationContainerElement.querySelector('#hypothesisLogout').addEventListener('click', this.createHypothesisLogoutEventHandler())
+    this.hypothesisConfigurationContainerElement.querySelector('#hypothesisLoggedInUsername').addEventListener('click', this.createDisplayHypothesisLoginInfoEventHandler())
+    // Get token and username if logged in
+    chrome.runtime.sendMessage({scope: 'hypothesis', cmd: 'getToken'}, ({ token }) => {
+      if (_.isString(token)) {
+        this.hypothesisToken = token
+        chrome.runtime.sendMessage({scope: 'hypothesis', cmd: 'getUserProfileMetadata'}, (profile) => {
+          this.hypothesisConfigurationContainerElement.querySelector('#hypothesisLoggedInUsername').innerText = profile.metadata.displayName
+        })
+        this.hypothesisConfigurationContainerElement.querySelector('#hypothesisLoginContainer').setAttribute('aria-hidden', 'true')
+      } else {
+        this.hypothesisConfigurationContainerElement.querySelector('#hypothesisLoggedInContainer').setAttribute('aria-hidden', 'true')
+      }
+    })
   }
 
   restoreDatabase (jsonObject, callback) {
@@ -102,6 +123,58 @@ class Options {
     }, ({storage}) => {
       console.debug('Storage selected ' + storage)
     })
+  }
+
+  showSelectedStorageConfiguration (selectedStorage) {
+    // Hide all storage configurations
+    let storageConfigurationCards = document.querySelectorAll('.storageConfiguration')
+    storageConfigurationCards.forEach((storageConfigurationCard) => {
+      storageConfigurationCard.setAttribute('aria-hidden', 'true')
+    })
+    // Show corresponding selected storage configuration card
+    let selectedStorageConfigurationCard = document.querySelector('#' + selectedStorage + 'ConfigurationCard')
+    if (_.isElement(selectedStorageConfigurationCard)) {
+      selectedStorageConfigurationCard.setAttribute('aria-hidden', 'false')
+    }
+  }
+
+  createHypothesisLoginEventHandler () {
+    return () => {
+      chrome.runtime.sendMessage({
+        scope: 'hypothesis',
+        cmd: 'userLoginForm'
+      }, ({token}) => {
+        this.hypothesisToken = token
+        chrome.runtime.sendMessage({scope: 'hypothesis', cmd: 'getUserProfileMetadata'}, (profile) => {
+          document.querySelector('#hypothesisLoggedInUsername').innerText = profile.metadata.displayName
+          document.querySelector('#hypothesisLoggedInContainer').setAttribute('aria-hidden', 'false')
+        })
+        document.querySelector('#hypothesisLoginContainer').setAttribute('aria-hidden', 'true')
+      })
+    }
+  }
+
+  createHypothesisLogoutEventHandler () {
+    return () => {
+      chrome.runtime.sendMessage({
+        scope: 'hypothesis',
+        cmd: 'userLogout'
+      }, ({token}) => {
+        document.querySelector('#hypothesisLoggedInContainer').setAttribute('aria-hidden', 'true')
+        document.querySelector('#hypothesisLoginContainer').setAttribute('aria-hidden', 'false')
+        this.hypothesisToken = 'Unknown'
+        document.querySelector('#hypothesisLoggedInUsername').innerText = 'Unknown user'
+      })
+    }
+  }
+
+  createDisplayHypothesisLoginInfoEventHandler () {
+    return () => {
+      Alerts.infoAlert({
+        title: 'You are logged in Hypothes.is',
+        text: 'Token: ' + window.options.hypothesisToken
+      })
+    }
   }
 }
 
