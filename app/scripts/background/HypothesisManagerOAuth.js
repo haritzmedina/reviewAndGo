@@ -27,7 +27,7 @@ class HypothesisManagerOAuth {
     // Load tokens from storage
     this.loadTokensFromStorage((err, tokens) => {
       if (err) {
-        console.debug('Unable to load tokens from storage. User need to login again.')
+        console.warn('Unable to load tokens from storage. User need to login again.')
       } else {
         console.debug('Correctly loaded tokens from storage')
         this.tokens = tokens
@@ -46,6 +46,7 @@ class HypothesisManagerOAuth {
       this.client.refreshToken(this.tokens.refreshToken).then((tokens) => {
         // Save refresh token in chrome storage
         this.saveTokensInStorage(tokens)
+        this.tokens = tokens
       })
     } else {
       this.authorize((err) => {
@@ -71,7 +72,7 @@ class HypothesisManagerOAuth {
 
     let promise = this.client.authorize(window, authWindow)
 
-    promise.catch((reject) => {
+    promise.catch(() => {
       // Return user has closed login window
       if (_.isFunction(callback)) {
         callback(new Error('Unable to autorize Hypothes.is.'))
@@ -106,7 +107,7 @@ class HypothesisManagerOAuth {
   }
 
   saveTokensInStorage (tokens, callback) {
-    ChromeStorage.setData('hypothesisTokens', {data: JSON.stringify(tokens)}, ChromeStorage.local, (err, response) => {
+    ChromeStorage.setData('hypothesisTokens', { data: JSON.stringify(tokens) }, ChromeStorage.local, (err, response) => {
       console.debug('Saved token in storage')
       if (_.isFunction(callback)) {
         callback(err, response)
@@ -119,30 +120,43 @@ class HypothesisManagerOAuth {
       if (request.scope === 'hypothesis') {
         if (request.cmd === 'getToken') {
           if (this.checkTokenIsExpired()) {
-            this.refreshHypothesisToken((err, tokens) => {
+            this.refreshHypothesisToken((err) => {
               if (err) {
-                sendResponse({error: 'Unable to retrieve token'})
+                sendResponse({ error: 'Unable to retrieve token' })
               } else {
-                sendResponse({token: this.tokens.accessToken})
+                sendResponse({ token: this.tokens.accessToken })
               }
             })
             return true // Async response
           } else {
-            sendResponse({token: this.tokens.accessToken})
+            sendResponse({ token: this.tokens.accessToken })
+          }
+        } else if (request.cmd === 'getTokens') {
+          if (this.checkTokenIsExpired()) {
+            this.refreshHypothesisToken((err) => {
+              if (err) {
+                sendResponse({ error: 'Unable to retrieve token' })
+              } else {
+                sendResponse({ tokens: this.tokens })
+              }
+            })
+            return true // Async response
+          } else {
+            sendResponse({ tokens: this.tokens })
           }
         } else if (request.cmd === 'userLoginForm') {
           this.authorize((err, tokens) => {
             if (err) {
-              sendResponse({error: 'Unable to authorize Hypothesis client'})
+              sendResponse({ error: 'Unable to authorize Hypothesis client' })
             } else {
-              sendResponse({token: tokens.accessToken})
+              sendResponse({ token: tokens.accessToken })
             }
           })
           return true // Async response
         } else if (request.cmd === 'userLogout') {
           this.logout((err) => {
             if (err) {
-              sendResponse({error: 'Unable to logout from hypothes.is. Maybe token is already expired or connection to the server is unavailable right now.'})
+              sendResponse({ error: 'Unable to logout from hypothes.is. Maybe token is already expired or connection to the server is unavailable right now.' })
             } else {
               sendResponse({})
             }
@@ -151,9 +165,9 @@ class HypothesisManagerOAuth {
         } else if (request.cmd === 'getUserProfileMetadata') {
           this.retrieveUserProfileMetadata((err, metadata) => {
             if (err) {
-              sendResponse({error: 'Unable to retrieve profile metadata'})
+              sendResponse({ error: 'Unable to retrieve profile metadata' })
             } else {
-              sendResponse({metadata: metadata})
+              sendResponse({ metadata: metadata })
             }
           })
           return true // Async response
@@ -164,10 +178,10 @@ class HypothesisManagerOAuth {
 
   retrieveUserProfileMetadata (callback) {
     let callSettings = {
-      'async': true,
-      'crossDomain': true,
-      'url': 'https://hypothes.is/account/profile',
-      'method': 'GET'
+      async: true,
+      crossDomain: true,
+      url: 'https://hypothes.is/account/profile',
+      method: 'GET'
     }
     $.ajax(callSettings).done((resultString) => {
       let tempWrapper = document.createElement('div')

@@ -6,7 +6,7 @@ const StorageManager = require('../StorageManager')
 
 const HypothesisClientInterface = require('./HypothesisClientInterface')
 
-const reloadIntervalInSeconds = 10 // Reload the hypothesis client every 10 seconds
+const reloadIntervalInSeconds = 1 // Reload the hypothesis client every 10 seconds
 
 class HypothesisClientManager extends StorageManager {
   constructor () {
@@ -34,7 +34,7 @@ class HypothesisClientManager extends StorageManager {
       })
     } else {
       // Check if user is logged in hypothesis
-      chrome.runtime.sendMessage({ scope: 'hypothesis', cmd: 'getToken' }, (token) => {
+      chrome.runtime.sendMessage({ scope: 'hypothesis', cmd: 'getToken' }, ({ token }) => {
         if (this.hypothesisToken !== token) {
           this.hypothesisToken = token
         }
@@ -61,11 +61,11 @@ class HypothesisClientManager extends StorageManager {
         }
       })
     } else {
-      chrome.runtime.sendMessage({ scope: 'hypothesis', cmd: 'getToken' }, (tokens) => {
-        if (this.hypothesisToken !== tokens.token) {
-          this.hypothesisToken = tokens.token
+      chrome.runtime.sendMessage({ scope: 'hypothesis', cmd: 'getToken' }, ({ token }) => {
+        if (this.hypothesisToken !== token) {
+          this.hypothesisToken = token
           if (this.hypothesisToken) {
-            this.client = new HypothesisClient(tokens.token)
+            this.client = new HypothesisClient(token)
           } else {
             this.client = new HypothesisClient()
           }
@@ -78,11 +78,15 @@ class HypothesisClientManager extends StorageManager {
   }
 
   isLoggedIn (callback) {
-    callback(null, !_.isEmpty(this.hypothesisToken))
+    if (_.isFunction(callback)) {
+      chrome.runtime.sendMessage({ scope: 'hypothesis', cmd: 'getToken' }, ({ token }) => {
+        callback(null, !_.isEmpty(token))
+      })
+    }
   }
 
   constructSearchUrl ({ groupId }) {
-    return this.annotationServerMetadata.groupUrl + groupId
+    return this.storageMetadata.groupUrl + groupId
   }
 
   logIn (callback) {
