@@ -7,7 +7,7 @@ const hypothesisSettings = require('../../settings/hypothesis.json')
 
 const OAuthClient = require('../utils/oauth-client')
 
-const minutesBeforeToTreatTokenAsExpired = 59 // When the token has less than 20 minutes to refresh
+const minutesBeforeToTreatTokenAsExpired = 10 // When the token has less than 10 minutes to refresh
 
 /**
  * HypothesisManager handles hypothes.is-client-related operations in the background, login, logout, token management (autorize, refresh, revoke, store), and user metadata
@@ -205,9 +205,7 @@ class HypothesisManagerOAuth {
   checkTokenIsExpired (callback) {
     if (this.tokens) {
       // Before X minutes to expire the token it is treated as expired to refresh again
-      if (this.tokens.expiresAt <= Date.now() - 1000 * 60 * minutesBeforeToTreatTokenAsExpired) {
-        return true
-      }
+      return this.tokens.expiresAt - 1000 * 60 * minutesBeforeToTreatTokenAsExpired < Date.now()
     } else {
       return true
     }
